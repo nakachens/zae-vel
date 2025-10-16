@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
@@ -270,44 +269,6 @@ class AudioManager {
     this.playlist = [];
   }
 }
-
-const [albumsLoaded, setAlbumsLoaded] = useState(false);
-
-useEffect(() => {
-  const checkAlbums = () => {
-    const allAlbums = [
-      './albums/1.jpg',
-      './albums/2.jpg',
-      './albums/3.jpg',
-      './albums/4.jfif',
-      './albums/4.jpg',
-      './albums/5.jpg',
-      './albums/7.png'
-    ];
-    
-    const loaded = allAlbums.every(src => 
-      globalAssetPreloader.getCachedImage(src)
-    );
-    
-    setAlbumsLoaded(loaded);
-  };
-  
-  checkAlbums();
-}, []);
-
-// For the kaoru gif:
-<img 
-  src={globalAssetPreloader.getCachedImage('./assets/kaoru2.gif')?.src || './assets/kaoru2.gif'}
-  alt="Kaoru Character"
-  style={{
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    borderRadius: '6px',
-    opacity: albumsLoaded ? 1 : 0,
-    transition: 'opacity 0.3s'
-  }}
-/>
 
 // create global instance
 const globalAudioManager = new AudioManager();
@@ -899,10 +860,9 @@ const handleVolumeMouseDown = (event) => {
                 <div 
                 className={`album-cover ${audioState.isPlaying ? 'playing' : ''} ${getCurrentSong().audioId?.startsWith('uploaded-') ? 'uploaded-cover' : ''}`}
                 style={{ 
-  background: getCurrentSong().coverImage 
-    ? `url(${globalAssetPreloader.getCachedImage(getCurrentSong().coverImage)?.src || getCurrentSong().coverImage}) center/cover no-repeat, ${getCurrentSong().coverColor}`
-    : getCurrentSong().coverColor
-}}
+                  background: getCurrentSong().coverImage 
+                  ? `url(${getCurrentSong().coverImage}) center/cover no-repeat, ${getCurrentSong().coverColor || 'linear-gradient(135deg, #8B4513, #CD853F)'}`: getCurrentSong().coverColor || 'linear-gradient(135deg, #8B4513, #CD853F)'
+                }}
                 >
                   {!getCurrentSong().coverImage && (getCurrentSong().title?.toUpperCase() || 'SELECT A SONG FROM PLAYLIST')}
                 </div>
