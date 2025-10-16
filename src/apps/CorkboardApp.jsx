@@ -1813,28 +1813,6 @@ function CorkboardApp({ isFullscreen = false }) {
   const shouldShowToolbar = isFullscreen;
   const shouldShowHamburger = !isFullscreen;
 
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
-
-useEffect(() => {
-  lazyLoadAssets(CORKBOARD_ASSETS).then(() => {
-    setAssetsLoaded(true);
-  });
-}, []);
-
-if (!assetsLoaded) {
-  return (
-    <div style={{
-      textAlign: 'center',
-      padding: '50px',
-      fontFamily: 'monospace',
-      fontSize: '18px',
-      color: '#8B7355'
-    }}>
-      Loading corkboard...
-    </div>
-  );
-}
-
   // Listen for storage events to update saved projects
   useEffect(() => {
     const handleStorageChange = () => {
