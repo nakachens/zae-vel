@@ -274,6 +274,7 @@ class AudioManager {
 const globalAudioManager = new AudioManager();
 
 const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
   // playlist 
   const initialPlaylist = [
     {
@@ -364,6 +365,62 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const fileInputRef = useRef(null);
   const clickSoundRef = useRef(null);
   const unsubscribeRef = useRef(null);
+
+  // Add this useEffect near the beginning
+  useEffect(() => {
+    const preloadAssets = async () => {
+      // Preload kaoru gif
+      const kaoruImg = new Image();
+      await new Promise((resolve) => {
+        kaoruImg.onload = resolve;
+        kaoruImg.onerror = resolve;
+        kaoruImg.src = './assets/kaoru2.gif';
+      });
+      
+      // Preload all album covers
+      const albumPromises = [
+        './albums/1.jpg',
+        './albums/2.jpg',
+        './albums/3.jpg',
+        './albums/4.jfif',
+        './albums/4.jpg',
+        './albums/5.jpg',
+        './albums/7.png'
+      ].map(src => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve;
+          img.src = src;
+        });
+      });
+      
+      await Promise.all(albumPromises);
+      setAssetsLoaded(true);
+    };
+    
+    preloadAssets();
+  }, []);
+  
+  // Show loading state while assets load
+  if (!assetsLoaded) {
+    return (
+      <div className="music-player-container">
+        <div className="app-container">
+          <div className="loading-message" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            fontFamily: 'Courier New, monospace',
+            color: '#E5DCC8'
+          }}>
+            Loading music player...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // click sound setup
   useEffect(() => {

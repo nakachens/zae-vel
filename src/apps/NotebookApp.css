@@ -605,3 +605,30 @@
 .notebook-app-wrapper * {
   font-family: inherit;
 }
+
+/* Force font loading */
+.notebook-app-wrapper {
+  font-family: 'Courier New', monospace;
+}
+
+.notebook-app-wrapper * {
+  font-family: inherit;
+}
+
+.fantasy-title,
+.mystical-elements {
+  font-family: 'Courier New', monospace !important;
+}
+
+.editor {
+  font-family: 'Courier New', monospace !important;
+}
+
+/* Ensure fonts render immediately */
+.notebook-app-wrapper::before {
+  content: 'Loading Test';
+  font-family: 'Courier New', monospace;
+  position: absolute;
+  left: -9999px;
+  visibility: hidden;
+}

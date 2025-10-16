@@ -7,7 +7,7 @@ export class AssetPreloader {
   }
 
   // Preload images with retry logic
-  preloadImage(src, retries = 2) {
+  preloadImage(src, retries = 3) {
     if (this.loadedAssets.has(src)) {
       return Promise.resolve(this.loadedAssets.get(src));
     }
@@ -31,7 +31,7 @@ export class AssetPreloader {
             this.failedAssets.add(src);
             this.loadingPromises.delete(src);
             console.warn(`Failed to load image after retries: ${src}`);
-            resolve(null); // Resolve with null instead of rejecting
+            resolve(null);
           }
         };
         img.src = src;
@@ -44,7 +44,7 @@ export class AssetPreloader {
   }
 
   // Preload audio files
-  preloadAudio(src, retries = 2) {
+  preloadAudio(src, retries = 3) {
     if (this.loadedAssets.has(src)) {
       return Promise.resolve(this.loadedAssets.get(src));
     }
@@ -101,26 +101,24 @@ export class AssetPreloader {
             document.fonts.add(font);
             
             // Force immediate rendering for critical fonts
-            if (fontFamily === 'zozafont') {
-              const testEl = document.createElement('div');
-              testEl.style.cssText = `
-                position: fixed;
-                left: -9999px;
-                top: -9999px;
-                visibility: hidden;
-                font-family: "${fontFamily}", monospace;
-                font-size: 64px;
-                font-weight: bold;
-              `;
-              testEl.textContent = "zae'vel TIME TO LOG IN?";
-              document.body.appendChild(testEl);
-              
-              // Force layout
-              testEl.offsetHeight;
-              testEl.getBoundingClientRect();
-              
-              setTimeout(() => testEl.remove(), 100);
-            }
+            const testEl = document.createElement('div');
+            testEl.style.cssText = `
+              position: fixed;
+              left: -9999px;
+              top: -9999px;
+              visibility: hidden;
+              font-family: "${fontFamily}", monospace;
+              font-size: 64px;
+              font-weight: bold;
+            `;
+            testEl.textContent = "zae'vel TIME TO LOG IN? LOADING The quill awaits";
+            document.body.appendChild(testEl);
+            
+            // Force layout multiple times
+            testEl.offsetHeight;
+            testEl.getBoundingClientRect();
+            
+            setTimeout(() => testEl.remove(), 500);
             
             this.loadedAssets.set(fontKey, font);
             this.loadingPromises.delete(fontKey);
@@ -148,7 +146,7 @@ export class AssetPreloader {
           this.loadedAssets.set(fontKey, true);
           this.loadingPromises.delete(fontKey);
           resolve(true);
-        }, 300);
+        }, 500);
       }
     });
 
@@ -156,7 +154,7 @@ export class AssetPreloader {
     return promise;
   }
 
-  // Preload Google Fonts
+  // Preload Google Fonts with forced rendering
   preloadGoogleFont(fontFamily, weights = ['400'], styles = ['normal']) {
     const fontKey = `google-${fontFamily}`;
     
@@ -182,7 +180,7 @@ export class AssetPreloader {
           loadPromises.push(
             document.fonts.load(fontString)
               .then(() => {
-                // Force render for critical fonts
+                // Force render with sample text
                 const testEl = document.createElement('div');
                 testEl.style.cssText = `
                   position: fixed;
@@ -191,11 +189,12 @@ export class AssetPreloader {
                   font-family: "${fontFamily}";
                   font-weight: ${weight};
                   font-style: ${style};
+                  font-size: 16px;
                 `;
-                testEl.textContent = 'Test';
+                testEl.textContent = 'Loading Test Text The quill awaits your thoughts';
                 document.body.appendChild(testEl);
                 testEl.offsetHeight;
-                setTimeout(() => testEl.remove(), 50);
+                setTimeout(() => testEl.remove(), 200);
                 return true;
               })
               .catch(() => {
@@ -274,6 +273,10 @@ export const CRITICAL_ASSETS = [
   { type: 'font', fontFamily: 'zozafont', src: './public/zozafont.ttf' },
   { type: 'google-font', fontFamily: 'Crimson Text', weights: ['400', '600'], styles: ['normal', 'italic'] },
   { type: 'google-font', fontFamily: 'Lora', weights: ['400', '500', '600'], styles: ['normal', 'italic'] },
+  { type: 'google-font', fontFamily: 'Courier New', weights: ['400', '700'], styles: ['normal'] },
+  { type: 'google-font', fontFamily: 'Comic Sans MS', weights: ['400'], styles: ['normal'] },
+  { type: 'google-font', fontFamily: 'Nunito', weights: ['400', '600', '700'], styles: ['normal'] },
+  { type: 'google-font', fontFamily: 'Fredoka One', weights: ['400'], styles: ['normal'] },
   
   // === DESKTOP WALLPAPER (Show first) ===
   { type: 'image', src: './assets/1.jpg' },
@@ -306,6 +309,65 @@ export const CRITICAL_ASSETS = [
   { type: 'image', src: './assets/folder.png' },
   { type: 'image', src: './assets/heart.png' },
   { type: 'image', src: './assets/settings.png' },
+  
+  // === LEAVES GAME ASSETS (CRITICAL!) ===
+  { type: 'image', src: './hehe/basket.png' },
+  { type: 'image', src: './hehe/leaf-1.png' },
+  { type: 'image', src: './hehe/leaf-2.png' },
+  { type: 'image', src: './hehe/leaf-3.png' },
+  { type: 'audio', src: './hehe/catch2.mp3' },
+  { type: 'audio', src: './hehe/clickfr.mp3' },
+  { type: 'audio', src: './hehe/home-music.mp3' },
+  { type: 'audio', src: './hehe/game-music.mp3' },
+  
+  // === TIC TAC TOE ASSETS ===
+  { type: 'image', src: './assets/silly.jpg' },
+  
+  // === MUSIC PLAYER ASSETS (CRITICAL!) ===
+  { type: 'image', src: './assets/kaoru2.gif' },
+  { type: 'image', src: './albums/1.jpg' },
+  { type: 'image', src: './albums/2.jpg' },
+  { type: 'image', src: './albums/3.jpg' },
+  { type: 'image', src: './albums/4.jfif' },
+  { type: 'image', src: './albums/4.jpg' },
+  { type: 'image', src: './albums/5.jpg' },
+  { type: 'image', src: './albums/7.png' },
+  
+  // === CORKBOARD ASSETS (CRITICAL!) ===
+  { type: 'image', src: '/corkboard/corkboard.jpg' },
+  { type: 'image', src: '/corkboard/boardpin.png' },
+  { type: 'audio', src: '/corkboard/audio/click.mp3' },
+  { type: 'audio', src: '/corkboard/audio/paper.mp3' },
+  { type: 'audio', src: '/corkboard/audio/music.mp3' },
+  
+  // ALL Stickers - preload all
+  { type: 'image', src: '/corkboard/sticker1.png' },
+  { type: 'image', src: '/corkboard/sticker2.png' },
+  { type: 'image', src: '/corkboard/sticker3.png' },
+  { type: 'image', src: '/corkboard/sticker4.png' },
+  { type: 'image', src: '/corkboard/sticker5.png' },
+  { type: 'image', src: '/corkboard/sticker6.png' },
+  { type: 'image', src: '/corkboard/sticker8.png' },
+  { type: 'image', src: '/corkboard/sticker9.png' },
+  { type: 'image', src: '/corkboard/sticker10.png' },
+  { type: 'image', src: '/corkboard/sticker11.png' },
+  { type: 'image', src: '/corkboard/sticker12.png' },
+  { type: 'image', src: '/corkboard/sticker13.png' },
+  { type: 'image', src: '/corkboard/sticker14.png' },
+  { type: 'image', src: '/corkboard/sticker15.png' },
+  { type: 'image', src: '/corkboard/sticker16.png' },
+  { type: 'image', src: '/corkboard/sticker17.png' },
+  
+  // ALL Polaroids - preload all
+  { type: 'image', src: '/corkboard/polaroids/1.png' },
+  { type: 'image', src: '/corkboard/polaroids/2.png' },
+  { type: 'image', src: '/corkboard/polaroids/3.png' },
+  { type: 'image', src: '/corkboard/polaroids/4.png' },
+  { type: 'image', src: '/corkboard/polaroids/5.png' },
+  { type: 'image', src: '/corkboard/polaroids/6.png' },
+  { type: 'image', src: '/corkboard/polaroids/7.png' },
+  { type: 'image', src: '/corkboard/polaroids/8.png' },
+  { type: 'image', src: '/corkboard/polaroids/9.png' },
 ];
 
 // SECONDARY ASSETS - Load during login screen
@@ -317,66 +379,22 @@ export const SECONDARY_ASSETS = [
   // === ADDITIONAL SOUNDS ===
   { type: 'audio', src: './flip.mp3' },
   { type: 'audio', src: './keyboard.mp3' },
+  { type: 'audio', src: './hehe/eat.mp3' },
+  { type: 'audio', src: './memorygame-music.mp3' },
+  { type: 'audio', src: './cardflip.mp3' },
   
   // === FILE ICONS ===
   { type: 'image', src: './assets/img.png' },
   { type: 'image', src: './assets/txt.png' },
-];
-
-// CORKBOARD ASSETS - Load when corkboard opens
-export const CORKBOARD_ASSETS = [
-  // Background and UI
-  { type: 'image', src: '/corkboard/corkboard.jpg' },
-  { type: 'image', src: '/corkboard/boardpin.png' },
   
-  // Audio
-  { type: 'audio', src: '/corkboard/audio/click.mp3' },
-  { type: 'audio', src: '/corkboard/audio/paper.mp3' },
-  { type: 'audio', src: '/corkboard/audio/music.mp3' },
-  
-  // Stickers (sample preload - rest lazy load)
-  { type: 'image', src: '/corkboard/sticker1.png' },
-  { type: 'image', src: '/corkboard/sticker2.png' },
-  { type: 'image', src: '/corkboard/sticker3.png' },
-  
-  // Polaroids (sample preload)
-  { type: 'image', src: '/corkboard/polaroids/1.png' },
-  { type: 'image', src: '/corkboard/polaroids/2.png' },
-];
-
-// MUSIC PLAYER ASSETS - Load when music player opens
-export const MUSIC_ASSETS = [
-  { type: 'image', src: './assets/kaoru2.gif' },
-  { type: 'image', src: './albums/1.jpg' },
-  { type: 'image', src: './albums/2.jpg' },
-  { type: 'image', src: './albums/3.jpg' },
-  { type: 'image', src: './albums/4.jfif' },
-  { type: 'image', src: './albums/4.jpg' },
-  { type: 'image', src: './albums/5.jpg' },
-  { type: 'image', src: './albums/7.png' },
-];
-
-// GAME ASSETS - Load when games open
-export const GAME_ASSETS = [
-  { type: 'image', src: './hehe/basket.png' },
-  { type: 'image', src: './hehe/leaf-1.png' },
-  { type: 'image', src: './hehe/leaf-2.png' },
-  { type: 'image', src: './hehe/leaf-3.png' },
-  { type: 'audio', src: './hehe/catch2.mp3' },
-  { type: 'audio', src: './hehe/home-music.mp3' },
-  { type: 'audio', src: './hehe/game-music.mp3' },
-  { type: 'audio', src: './hehe/clickfr.mp3' },
-  { type: 'audio', src: './hehe/eat.mp3' },
-  { type: 'audio', src: './memorygame-music.mp3' },
-  { type: 'audio', src: './cardflip.mp3' },
-];
-
-// ACHIEVEMENTS ASSETS - Load when achievements opens
-export const ACHIEVEMENTS_ASSETS = [
+  // === ACHIEVEMENTS AUDIO ===
   { type: 'audio', src: './achievements/audios/click.mp3' },
   { type: 'audio', src: './achievements/audios/unlock.mp3' },
   { type: 'audio', src: './achievements/audios/page-flip.mp3' },
 ];
+
+// Remove the separate CORKBOARD_ASSETS, MUSIC_ASSETS, GAME_ASSETS exports
+// as they're now in CRITICAL_ASSETS
 
 // SETTINGS EASTER EGG ASSETS - Lazy load
 export const SETTINGS_ASSETS = [

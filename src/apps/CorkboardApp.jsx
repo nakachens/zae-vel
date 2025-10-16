@@ -1773,6 +1773,7 @@ function Star({ letterNumber, position, isFullscreen, onLetterClick, reaction })
 }
 // main corkboard app
 function CorkboardApp({ isFullscreen = false }) {
+    const [assetsReady, setAssetsReady] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState(null);
   const [stickyNotes, setStickyNotes] = useState([]);
   const [polaroids, setPolaroids] = useState([]);
@@ -1803,6 +1804,57 @@ function CorkboardApp({ isFullscreen = false }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [savedProjectsCache, setSavedProjectsCache] = useState([]);
   const [starPositions, setStarPositions] = useState(() => generateStarPositions(false));
+
+  // Add this useEffect to verify assets are loaded
+  useEffect(() => {
+    // Check if critical assets are in the preloader cache
+    const checkAssets = async () => {
+      // Just verify a few key images
+      const testImages = [
+        '/corkboard/corkboard.jpg',
+        '/corkboard/boardpin.png',
+        '/corkboard/sticker1.png',
+        '/corkboard/polaroids/1.png'
+      ];
+      
+      // All should be preloaded already, just verify
+      await Promise.all(testImages.map(src => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve; // Still continue even if one fails
+          img.src = src;
+        });
+      }));
+      
+      setAssetsReady(true);
+    };
+    
+    checkAssets();
+  }, []);
+  
+  // Show loading while verifying
+  if (!assetsReady) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'monospace',
+        background: 'linear-gradient(to bottom, #fff8dc, #fffacd)'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: '#3E2B27'
+        }}>
+          <div style={{ fontSize: '40px', marginBottom: '10px' }}>🎨</div>
+          <div>Loading corkboard...</div>
+        </div>
+      </div>
+    );
+  }
   
   const clickAudioRef = useRef(null);
   const paperAudioRef = useRef(null);

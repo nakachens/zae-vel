@@ -5,7 +5,7 @@ function LoadingScreen({ onLoadingComplete }) {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('zae\'vel LOADING...');
   const [currentAsset, setCurrentAsset] = useState('');
-  const [phase, setPhase] = useState('initial'); // initial, fonts, assets, finalizing
+  const [phase, setPhase] = useState('initial');
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -24,23 +24,23 @@ function LoadingScreen({ onLoadingComplete }) {
       };
 
       try {
-        // === PHASE 1: CRITICAL FONTS (0-15%) ===
+        // === PHASE 1: CRITICAL FONTS (0-20%) ===
         setPhase('fonts');
         updateProgress(0, totalAssets, 'Loading system fonts...', 'zozafont');
 
-        // Load zozafont first (most critical)
+        // Load zozafont first
         const zozafont = CRITICAL_ASSETS.find(a => a.fontFamily === 'zozafont');
         if (zozafont) {
           await globalAssetPreloader.preloadFont(
             zozafont.fontFamily,
             zozafont.src,
-            zozafont.descriptors
+            { ...zozafont.descriptors, display: 'block' }
           );
           loadedCount++;
           updateProgress(loadedCount, totalAssets, 'zozafont loaded', '');
         }
 
-        // Load Google Fonts in parallel
+        // Load ALL Google Fonts in parallel (including notebook fonts)
         const googleFonts = CRITICAL_ASSETS.filter(a => a.type === 'google-font');
         await Promise.all(
           googleFonts.map(async (font) => {
@@ -54,17 +54,20 @@ function LoadingScreen({ onLoadingComplete }) {
           })
         );
 
-        // === PHASE 2: CRITICAL ASSETS (15-70%) ===
+        // Extra font wait to ensure rendering
+        await globalAssetPreloader.waitForFonts();
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // === PHASE 2: CRITICAL IMAGES (20-85%) ===
         setPhase('assets');
         const criticalNonFonts = CRITICAL_ASSETS.filter(
           a => a.type !== 'font' && a.type !== 'google-font'
         );
 
-        // Group assets by type for optimized loading
         const imageAssets = criticalNonFonts.filter(a => a.type === 'image');
         const audioAssets = criticalNonFonts.filter(a => a.type === 'audio');
 
-        // Load wallpaper first (high priority for first impression)
+        // Load wallpaper first
         const wallpaper = imageAssets.find(a => a.src.includes('1.jpg'));
         if (wallpaper) {
           updateProgress(loadedCount, totalAssets, 'Loading desktop...', 'wallpaper');
@@ -72,23 +75,66 @@ function LoadingScreen({ onLoadingComplete }) {
           loadedCount++;
         }
 
-        // Load pet animations (critical for interaction)
-        const petAnimations = imageAssets.filter(a => a.src.includes('animations/'));
+        // Load LEAVES GAME assets (critical!)
+        updateProgress(loadedCount, totalAssets, 'Loading leaves game...', 'game assets');
+        const leavesAssets = imageAssets.filter(a => a.src.includes('hehe/'));
+        await Promise.all(
+          leavesAssets.map(async (asset) => {
+            await globalAssetPreloader.preloadImage(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading leaves game...', asset.src.split('/').pop());
+          })
+        );
+
+        // Load TIC TAC TOE pfp
+        updateProgress(loadedCount, totalAssets, 'Loading tic tac toe...', 'profile');
+        const tttPfp = imageAssets.find(a => a.src.includes('silly.jpg'));
+        if (tttPfp) {
+          await globalAssetPreloader.preloadImage(tttPfp.src);
+          loadedCount++;
+        }
+
+        // Load MUSIC PLAYER assets (critical!)
+        updateProgress(loadedCount, totalAssets, 'Loading music player...', 'albums');
+        const musicAssets = imageAssets.filter(a => 
+          a.src.includes('kaoru2.gif') || a.src.includes('albums/')
+        );
+        await Promise.all(
+          musicAssets.map(async (asset) => {
+            await globalAssetPreloader.preloadImage(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading music player...', asset.src.split('/').pop());
+          })
+        );
+
+        // Load CORKBOARD assets (critical!)
+        updateProgress(loadedCount, totalAssets, 'Loading corkboard...', 'stickers & polaroids');
+        const corkboardAssets = imageAssets.filter(a => a.src.includes('corkboard/'));
+        
+        // Batch load corkboard assets (5 at a time for performance)
+        const corkboardBatches = [];
+        for (let i = 0; i < corkboardAssets.length; i += 5) {
+          corkboardBatches.push(corkboardAssets.slice(i, i + 5));
+        }
+
+        for (const batch of corkboardBatches) {
+          await Promise.all(
+            batch.map(async (asset) => {
+              await globalAssetPreloader.preloadImage(asset.src);
+              loadedCount++;
+              updateProgress(loadedCount, totalAssets, 'Loading corkboard...', asset.src.split('/').pop());
+            })
+          );
+        }
+
+        // Load pet animations
         updateProgress(loadedCount, totalAssets, 'Loading pet animations...', 'hakuchin');
+        const petAnimations = imageAssets.filter(a => a.src.includes('animations/'));
         await Promise.all(
           petAnimations.map(async (asset) => {
             await globalAssetPreloader.preloadImage(asset.src);
             loadedCount++;
             updateProgress(loadedCount, totalAssets, 'Loading pet animations...', asset.src.split('/').pop());
-          })
-        );
-
-        // Load core sounds
-        updateProgress(loadedCount, totalAssets, 'Loading sounds...', 'click.mp3');
-        await Promise.all(
-          audioAssets.map(async (asset) => {
-            await globalAssetPreloader.preloadAudio(asset.src);
-            loadedCount++;
           })
         );
 
@@ -100,14 +146,16 @@ function LoadingScreen({ onLoadingComplete }) {
           loadedCount++;
         }
 
-        // Load app icons in parallel (batch of 5 at a time for performance)
+        // Load app icons
+        updateProgress(loadedCount, totalAssets, 'Loading app icons...', 'icons');
         const appIcons = imageAssets.filter(a => 
           a.src.includes('assets/') && 
           !a.src.includes('1.jpg') &&
-          !a.src.includes('zhong.jpg')
+          !a.src.includes('zhong.jpg') &&
+          !a.src.includes('silly.jpg') &&
+          !a.src.includes('kaoru')
         );
         
-        updateProgress(loadedCount, totalAssets, 'Loading app icons...', 'icons');
         const iconBatches = [];
         for (let i = 0; i < appIcons.length; i += 5) {
           iconBatches.push(appIcons.slice(i, i + 5));
@@ -123,7 +171,17 @@ function LoadingScreen({ onLoadingComplete }) {
           );
         }
 
-        // === PHASE 3: SECONDARY ASSETS (70-95%) ===
+        // Load ALL AUDIO (including game sounds)
+        updateProgress(loadedCount, totalAssets, 'Loading sounds...', 'audio');
+        await Promise.all(
+          audioAssets.map(async (asset) => {
+            await globalAssetPreloader.preloadAudio(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
+          })
+        );
+
+        // === PHASE 3: SECONDARY ASSETS (85-98%) ===
         setPhase('secondary');
         updateProgress(loadedCount, totalAssets, 'Loading additional assets...', '');
 
@@ -143,24 +201,22 @@ function LoadingScreen({ onLoadingComplete }) {
           })
         ]);
 
-        // === PHASE 4: FINALIZATION (95-100%) ===
+        // === PHASE 4: FINALIZATION (98-100%) ===
         setPhase('finalizing');
         updateProgress(loadedCount, totalAssets, 'Finalizing...', '');
 
-        // Wait for all fonts to be fully ready
+        // Final font check
         await globalAssetPreloader.waitForFonts();
-
-        // Final verification for critical fonts
         if (document.fonts && document.fonts.ready) {
           await document.fonts.ready;
         }
 
-        // Small delay to ensure everything is settled
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Extra delay to ensure everything is settled
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         updateProgress(totalAssets, totalAssets, 'Welcome to zae\'vel!', '');
 
-        // Show welcome message briefly before transitioning
+        // Show welcome message
         await new Promise(resolve => setTimeout(resolve, 800));
 
         // Trigger completion
@@ -170,7 +226,6 @@ function LoadingScreen({ onLoadingComplete }) {
 
       } catch (error) {
         console.error('Loading error:', error);
-        // Even on error, allow the app to load
         if (isMountedRef.current && onLoadingComplete) {
           onLoadingComplete();
         }
@@ -184,7 +239,6 @@ function LoadingScreen({ onLoadingComplete }) {
     };
   }, [onLoadingComplete]);
 
-  // Dynamic loading messages based on phase
   const getPhaseMessage = () => {
     switch (phase) {
       case 'fonts':
@@ -226,12 +280,10 @@ function LoadingScreen({ onLoadingComplete }) {
       </div>
 
       <div className="text-center relative z-10">
-        {/* Logo */}
         <div className="text-6xl mb-6 animate-pulse" style={{ color: '#E5DCC8' }}>
           🌧️
         </div>
 
-        {/* Title */}
         <div 
           className="text-4xl mb-2 font-bold"
           style={{
@@ -243,8 +295,6 @@ function LoadingScreen({ onLoadingComplete }) {
         >
           zae'vel
         </div>
-
-        {/* Subtitle */}
         <div 
           className="text-sm mb-8 opacity-70"
           style={{
@@ -256,7 +306,6 @@ function LoadingScreen({ onLoadingComplete }) {
           Specialised Computing Experience
         </div>
 
-        {/* Status message */}
         <div 
           className="text-base mb-4"
           style={{
@@ -268,7 +317,6 @@ function LoadingScreen({ onLoadingComplete }) {
           {loadingText}
         </div>
 
-        {/* Progress bar */}
         <div 
           className="w-96 h-4 border-2 mx-auto mb-3"
           style={{ 
@@ -288,7 +336,6 @@ function LoadingScreen({ onLoadingComplete }) {
           />
         </div>
 
-        {/* Progress details */}
         <div 
           className="text-xs opacity-60"
           style={{
@@ -301,7 +348,6 @@ function LoadingScreen({ onLoadingComplete }) {
           {currentAsset && ` • ${currentAsset}`}
         </div>
 
-        {/* Phase indicator */}
         <div 
           className="text-xs mt-4 opacity-50"
           style={{
