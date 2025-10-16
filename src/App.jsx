@@ -44,6 +44,8 @@ const openApp = async (app) => {
     await lazyLoadAssets(GAME_ASSETS);
   }
 };
+import { globalAssetPreloader } from './AssetPreloader';
+
 //asset finder
 const getAssetPath = (path) => {
   // Check if we're in Electron environment
@@ -2957,6 +2959,27 @@ export default function RetroOS() {
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [nextZIndex, setNextZIndex] = useState(10);
   const [isWiFiOpen, setIsWiFiOpen] = useState(false);
+
+  // Check if assets are ready before rendering anything
+const [appReady, setAppReady] = useState(false);
+
+useEffect(() => {
+  // Wait a bit to ensure loading screen has time to load assets
+  const checkReady = () => {
+    const stats = globalAssetPreloader.getStats();
+    if (stats.loaded > 50) { // At least 50 assets loaded
+      setAppReady(true);
+    } else {
+      setTimeout(checkReady, 100);
+    }
+  };
+  
+  checkReady();
+}, []);
+
+if (!appReady) {
+  return <LoadingScreen onLoadingComplete={() => setAppReady(true)} />;
+}
   
   //  state to track which windows are being closed
   const [closingWindows, setClosingWindows] = useState(new Set());

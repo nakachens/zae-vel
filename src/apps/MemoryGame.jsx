@@ -1,9 +1,48 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Settings } from 'lucide-react';
 
 const MemoryGame = () => {
   const autumnSymbols = ['🍂', '🍄', '🎃', '🌰', '🍁', '🦉', '🕷️', '🌙'];
+
+  const [albumsLoaded, setAlbumsLoaded] = useState(false);
+
+useEffect(() => {
+  const checkAlbums = () => {
+    const allAlbums = [
+      './albums/1.jpg',
+      './albums/2.jpg',
+      './albums/3.jpg',
+      './albums/4.jfif',
+      './albums/4.jpg',
+      './albums/5.jpg',
+      './albums/7.png'
+    ];
+    
+    const loaded = allAlbums.every(src => 
+      globalAssetPreloader.getCachedImage(src)
+    );
+    
+    setAlbumsLoaded(loaded);
+  };
+  
+  checkAlbums();
+}, []);
+
+// For the kaoru gif:
+<img 
+  src={globalAssetPreloader.getCachedImage('./assets/kaoru2.gif')?.src || './assets/kaoru2.gif'}
+  alt="Kaoru Character"
+  style={{
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    borderRadius: '6px',
+    opacity: albumsLoaded ? 1 : 0,
+    transition: 'opacity 0.3s'
+  }}
+/>
   
   // audio refs
   const backgroundMusicRef = useRef(null);

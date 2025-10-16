@@ -598,3 +598,10 @@
         justify-content: center;
     }
 }
+.notebook-app-wrapper {
+  font-family: 'Courier New', monospace !important;
+}
+
+.notebook-app-wrapper * {
+  font-family: inherit;
+}

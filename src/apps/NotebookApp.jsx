@@ -2,6 +2,15 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import './NotebookApp.css';
+useEffect(() => {
+  // Ensure fonts are loaded
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      console.log('Notebook fonts ready');
+    });
+  }
+  
+  loadCurrentState();
 
 const NotebookApp = () => {
   const [notes, setNotes] = useState([]);
@@ -668,3 +677,4 @@ The quill awaits your thoughts, dreams, and whispered secrets..."
 };
 
 export default NotebookApp;
+}, []);
