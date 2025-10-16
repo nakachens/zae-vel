@@ -1,8 +1,6 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 
 const AutumnTicTacToe = () => {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [board, setBoard] = useState(['', '', '', '', '', '', '', '', '']);
   const [currentPlayer, setCurrentPlayer] = useState('X');
   const [gameActive, setGameActive] = useState(true);
@@ -39,13 +37,6 @@ const AutumnTicTacToe = () => {
   useEffect(() => {
     audioRef.current = new Audio('/click.mp3');
     audioRef.current.volume = 0.3;
-  }, []);
-
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setImageLoaded(true);
-    img.onerror = () => setImageLoaded(true); // Still show even if fails
-    img.src = './assets/silly.jpg';
   }, []);
 
   const startGame = () => {

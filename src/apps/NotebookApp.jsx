@@ -1,11 +1,9 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import './NotebookApp.css';
 
 const NotebookApp = () => {
-  const [fontsLoaded, setFontsLoaded] = useState(false);
   const [notes, setNotes] = useState([]);
   const [currentNoteId, setCurrentNoteId] = useState(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
@@ -99,59 +97,6 @@ const NotebookApp = () => {
       loadNotesFromStorage();
     }
   };
-  
-  useEffect(() => {
-    const loadFonts = async () => {
-      if (document.fonts) {
-        await document.fonts.load('400 16px "Courier New"');
-        await document.fonts.load('700 16px "Courier New"');
-        await document.fonts.load('400 16px "Comic Sans MS"');
-        await document.fonts.load('400 16px "Nunito"');
-        await document.fonts.load('600 16px "Nunito"');
-        await document.fonts.load('700 16px "Nunito"');
-        
-        // Force render with test elements
-        const testEl = document.createElement('div');
-        testEl.style.cssText = `
-          position: fixed;
-          left: -9999px;
-          visibility: hidden;
-        `;
-        testEl.innerHTML = `
-          <div style="font-family: 'Courier New', monospace;">Test</div>
-          <div style="font-family: 'Comic Sans MS', cursive;">Test</div>
-          <div style="font-family: 'Nunito', sans-serif;">Test</div>
-        `;
-        document.body.appendChild(testEl);
-        testEl.offsetHeight; // Force layout
-        setTimeout(() => testEl.remove(), 100);
-      }
-      
-      // Wait a bit more to ensure fonts are ready
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setFontsLoaded(true);
-    };
-    
-    loadFonts();
-  }, []);
-  
-  // Don't render until fonts are loaded
-  if (!fontsLoaded) {
-    return (
-      <div className="notebook-app-wrapper">
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          fontFamily: 'Courier New, monospace',
-          color: '#1E1A19'
-        }}>
-          Loading notebook...
-        </div>
-      </div>
-    );
-  }
 
   useEffect(() => {
     loadCurrentState();

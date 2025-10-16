@@ -1,22 +1,20 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// Import assets directly
+// assets
 import basketImg from './hehe/basket.png';
 import leaf1Img from './hehe/leaf-1.png';
 import leaf2Img from './hehe/leaf-2.png';
 import leaf3Img from './hehe/leaf-3.png';
 
-// Keep audio imports as is
+// audios
 import homeMusic from './hehe/home-music.mp3';
 import gameMusic from './hehe/game-music.mp3';
 import clickSound from './hehe/clickfr.mp3';
 import catchSound from './hehe/catch2.mp3';
 
 const FallingLeavesGame = () => {
-  // ===== ALL STATE HOOKS =====
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [gameState, setGameState] = useState('menu');
+  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'paused', 'instructions', 'highscores'
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
     return parseInt(localStorage.getItem('leafGameHighScore') || '0');
@@ -24,40 +22,42 @@ const FallingLeavesGame = () => {
   const [basketPosition, setBasketPosition] = useState(175);
   const [leaves, setLeaves] = useState([]);
   const [keysPressed, setKeysPressed] = useState({});
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(0.5); // vol control (0 to 1)
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [prevVolume, setPrevVolume] = useState(0.5);
-
-  // ===== ALL REF HOOKS =====
+  const [prevVolume, setPrevVolume] = useState(0.5); 
+  
   const gameLoopRef = useRef();
   const leafIdCounter = useRef(0);
   const basketPositionRef = useRef(175);
-  const basketVelocityRef = useRef(0);
+  const basketVelocityRef = useRef(0); 
   const caughtLeafIds = useRef(new Set());
   const lastLeafSpawnTime = useRef(0);
   const activeLeafPositions = useRef([]);
   const keysPressedRef = useRef({});
   const lastFrameTime = useRef(0);
   const animationFrameId = useRef(null);
+  
+  // audio refs
   const homeAudioRef = useRef(null);
   const gameAudioRef = useRef(null);
   const clickAudioRef = useRef(null);
   const catchAudioRef = useRef(null);
 
-  // ===== GAME CONSTANTS =====
+  // game constants
   const GAME_WIDTH = 400;
   const GAME_HEIGHT = 400;
   const BASKET_WIDTH = 50;
   const LEAF_SIZE = 20;
   const LEAF_FALL_SPEED = 1.5;
-  const BASKET_ACCELERATION = 0.2;
-  const BASKET_MAX_SPEED = 5;
-  const BASKET_DECELERATION = 0.15;
+  const BASKET_ACCELERATION = 0.2; 
+  const BASKET_MAX_SPEED = 5; 
+  const BASKET_DECELERATION = 0.15; 
   const MIN_LEAF_HORIZONTAL_SPACING = 80;
   const MIN_LEAF_VERTICAL_SPACING = 150;
   const MIN_SPAWN_INTERVAL = 2000;
 
+  // leaves
   const leafImages = [leaf1Img, leaf2Img, leaf3Img];
 
   const styles = {
