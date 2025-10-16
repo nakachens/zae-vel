@@ -1,13 +1,11 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { globalAssetPreloader } from './AssetPreloader';
 
 // assets
-// Keep fallback imports
-import basketImgFallback from './hehe/basket.png';
-import leaf1ImgFallback from './hehe/leaf-1.png';
-import leaf2ImgFallback from './hehe/leaf-2.png';
-import leaf3ImgFallback from './hehe/leaf-3.png';
+import basketImg from './hehe/basket.png';
+import leaf1Img from './hehe/leaf-1.png';
+import leaf2Img from './hehe/leaf-2.png';
+import leaf3Img from './hehe/leaf-3.png';
 
 // audios
 import homeMusic from './hehe/home-music.mp3';
@@ -16,36 +14,6 @@ import clickSound from './hehe/clickfr.mp3';
 import catchSound from './hehe/catch2.mp3';
 
 const FallingLeavesGame = () => {
-   // Use preloaded images instead of direct imports
-  const basketImg = globalAssetPreloader.getCachedImage('./hehe/basket.png') || basketImgFallback;
-  const leaf1Img = globalAssetPreloader.getCachedImage('./hehe/leaf-1.png') || leaf1ImgFallback;
-  const leaf2Img = globalAssetPreloader.getCachedImage('./hehe/leaf-2.png') || leaf2ImgFallback;
-  const leaf3Img = globalAssetPreloader.getCachedImage('./hehe/leaf-3.png') || leaf3ImgFallback;
-
-  useEffect(() => {
-  const ensureDecoded = async () => {
-    const criticalImages = [
-      './hehe/basket.png',
-      './hehe/leaf-1.png',
-      './hehe/leaf-2.png',
-      './hehe/leaf-3.png'
-    ];
-    
-    for (const src of criticalImages) {
-      const img = globalAssetPreloader.getCachedImage(src);
-      if (img) {
-        try {
-          await img.decode();
-        } catch (e) {
-          console.warn(`Decode failed for ${src}:`, e);
-        }
-      }
-    }
-  };
-  
-  ensureDecoded();
-}, []);
-  
   const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'paused', 'instructions', 'highscores'
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(() => {
