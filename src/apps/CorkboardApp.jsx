@@ -2644,7 +2644,7 @@ const handleZIndexChange = (id, type, direction) => {
                 fontSize: '20px'
               }}
             >
-            (๑>؂•̀๑)
+            {`(๑>؂•̀๑)`}
             </button>
             
             {showMobileMenu && (

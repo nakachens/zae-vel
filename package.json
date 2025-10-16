@@ -6,19 +6,20 @@
   "main": "public/electron.cjs",
   "homepage": "./",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview",
-  "electron": "electron .",
-  "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-  "electron-pack": "npm run build && electron-builder",
-  "preelectron-pack": "npm run build",
-  "build-electron": "npm run build && electron-builder --publish=never",
-  "dist": "npm run build && electron-builder --publish=always"
-},
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "electron-pack": "npm run build && electron-builder",
+    "preelectron-pack": "npm run build",
+    "build-electron": "npm run build && electron-builder --publish=never",
+    "dist": "npm run build && electron-builder --publish=always"
+  },
   "dependencies": {
     "framer-motion": "^12.23.16",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
@@ -46,41 +47,41 @@
     "wait-on": "^9.0.1"
   },
   "build": {
-  "appId": "com.yourname.zozos",
-  "productName": "zozOS",
-  "directories": {
-    "output": "dist-electron"
-  },
+    "appId": "com.yourname.zozos",
+    "productName": "zozOS",
+    "directories": {
+      "output": "dist-electron"
+    },
     "files": [
-    "dist/**/*",
-    "public/electron.cjs",
-    "public/assets/**/*",
-    "public/soundzz/**/*",
-    "public/albums/**/*"
-  ],
-  "extraResources": [
-    {
-      "from": "public/assets",
-      "to": "assets"
-    },
-    {
-      "from": "public/soundzz", 
-      "to": "soundzz"
-    },
-    {
-      "from": "public/albums",
-      "to": "albums"
-    }
-  ]
-},
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "public/assets/zozo-icon.icns"
-    },
-    "win": {
-      "icon": "public/assets/zozo-icon.ico"
-    },
-    "linux": {
-      "icon": "public/assets/zozo-icon.png"
+      "dist/**/*",
+      "public/electron.cjs",
+      "public/assets/**/*",
+      "public/soundzz/**/*",
+      "public/albums/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "public/assets",
+        "to": "assets"
+      },
+      {
+        "from": "public/soundzz",
+        "to": "soundzz"
+      },
+      {
+        "from": "public/albums",
+        "to": "albums"
+      }
+    ]
+  },
+  "mac": {
+    "category": "public.app-category.productivity",
+    "icon": "public/assets/zozo-icon.icns"
+  },
+  "win": {
+    "icon": "public/assets/zozo-icon.ico"
+  },
+  "linux": {
+    "icon": "public/assets/zozo-icon.png"
   }
 }
