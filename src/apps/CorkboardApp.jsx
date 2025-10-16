@@ -1822,7 +1822,17 @@ useEffect(() => {
 }, []);
 
 if (!assetsLoaded) {
-  return <div style={{...}}>Loading corkboard...</div>;
+  return (
+    <div style={{
+      textAlign: 'center',
+      padding: '50px',
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#8B7355'
+    }}>
+      Loading corkboard...
+    </div>
+  );
 }
 
   // Listen for storage events to update saved projects
