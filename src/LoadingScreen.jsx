@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { globalAssetPreloader, CRITICAL_ASSETS, MUSIC_ASSETS, CORKBOARD_ASSETS } from './AssetPreloader';
+import { globalAssetPreloader, CRITICAL_ASSETS, SECONDARY_ASSETS } from './AssetPreloader';
 
 function LoadingScreen({ onLoadingComplete }) {
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('zae\'vel LOADING...');
   const [currentAsset, setCurrentAsset] = useState('');
-  const [phase, setPhase] = useState('initial');
+  const [phase, setPhase] = useState('initial'); // initial, fonts, assets, finalizing
   const isMountedRef = useRef(true);
 
   useEffect(() => {
     isMountedRef.current = true;
 
     const loadAssets = async () => {
-      const allAssets = [...CRITICAL_ASSETS, ...MUSIC_ASSETS, ...CORKBOARD_ASSETS];
-      const totalAssets = allAssets.length;
+      const totalAssets = CRITICAL_ASSETS.length + SECONDARY_ASSETS.length;
       let loadedCount = 0;
 
       const updateProgress = (loaded, total, message, asset = '') => {
@@ -29,7 +28,7 @@ function LoadingScreen({ onLoadingComplete }) {
         setPhase('fonts');
         updateProgress(0, totalAssets, 'Loading system fonts...', 'zozafont');
 
-        // Load zozafont first
+        // Load zozafont first (most critical)
         const zozafont = CRITICAL_ASSETS.find(a => a.fontFamily === 'zozafont');
         if (zozafont) {
           await globalAssetPreloader.preloadFont(
@@ -38,10 +37,10 @@ function LoadingScreen({ onLoadingComplete }) {
             zozafont.descriptors
           );
           loadedCount++;
-          updateProgress(loadedCount, totalAssets, 'zozafont loaded ✓', '');
+          updateProgress(loadedCount, totalAssets, 'zozafont loaded', '');
         }
 
-        // Load all Google Fonts in parallel
+        // Load Google Fonts in parallel
         const googleFonts = CRITICAL_ASSETS.filter(a => a.type === 'google-font');
         await Promise.all(
           googleFonts.map(async (font) => {
@@ -55,32 +54,26 @@ function LoadingScreen({ onLoadingComplete }) {
           })
         );
 
-        // Force font rendering with extra time
-        await globalAssetPreloader.waitForFonts();
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // === PHASE 2: CRITICAL ASSETS (15-70%) ===
+        setPhase('assets');
+        const criticalNonFonts = CRITICAL_ASSETS.filter(
+          a => a.type !== 'font' && a.type !== 'google-font'
+        );
 
-        // === PHASE 2: CRITICAL IMAGES (15-40%) ===
-        setPhase('critical-images');
-        const criticalImages = CRITICAL_ASSETS.filter(a => a.type === 'image');
+        // Group assets by type for optimized loading
+        const imageAssets = criticalNonFonts.filter(a => a.type === 'image');
+        const audioAssets = criticalNonFonts.filter(a => a.type === 'audio');
 
-        // Wallpaper first
-        const wallpaper = criticalImages.find(a => a.src.includes('1.jpg'));
+        // Load wallpaper first (high priority for first impression)
+        const wallpaper = imageAssets.find(a => a.src.includes('1.jpg'));
         if (wallpaper) {
           updateProgress(loadedCount, totalAssets, 'Loading desktop...', 'wallpaper');
           await globalAssetPreloader.preloadImage(wallpaper.src);
           loadedCount++;
         }
 
-        // Login image
-        const loginImage = criticalImages.find(a => a.src.includes('zhong.jpg'));
-        if (loginImage) {
-          updateProgress(loadedCount, totalAssets, 'Loading profile...', 'profile');
-          await globalAssetPreloader.preloadImage(loginImage.src);
-          loadedCount++;
-        }
-
-        // Pet animations
-        const petAnimations = criticalImages.filter(a => a.src.includes('animations/'));
+        // Load pet animations (critical for interaction)
+        const petAnimations = imageAssets.filter(a => a.src.includes('animations/'));
         updateProgress(loadedCount, totalAssets, 'Loading pet animations...', 'hakuchin');
         await Promise.all(
           petAnimations.map(async (asset) => {
@@ -90,80 +83,31 @@ function LoadingScreen({ onLoadingComplete }) {
           })
         );
 
-        // === PHASE 3: GAME ASSETS (40-55%) ===
-        setPhase('game-assets');
-        
-        // Leaves game assets (CRITICAL!)
-        const leavesAssets = CRITICAL_ASSETS.filter(a => 
-          a.src && (a.src.includes('hehe/basket') || a.src.includes('hehe/leaf'))
-        );
-        updateProgress(loadedCount, totalAssets, 'Loading leaves game...', 'basket & leaves');
+        // Load core sounds
+        updateProgress(loadedCount, totalAssets, 'Loading sounds...', 'click.mp3');
         await Promise.all(
-          leavesAssets.map(async (asset) => {
-            await globalAssetPreloader.preloadImage(asset.src);
+          audioAssets.map(async (asset) => {
+            await globalAssetPreloader.preloadAudio(asset.src);
             loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading leaves game...', asset.src.split('/').pop());
           })
         );
 
-        // TicTacToe pfp
-        const tictactoePfp = criticalImages.find(a => a.src.includes('silly.jpg'));
-        if (tictactoePfp) {
-          updateProgress(loadedCount, totalAssets, 'Loading tictactoe...', 'zhongli pfp');
-          await globalAssetPreloader.preloadImage(tictactoePfp.src);
+        // Load login image
+        const loginImage = imageAssets.find(a => a.src.includes('zhong.jpg'));
+        if (loginImage) {
+          updateProgress(loadedCount, totalAssets, 'Loading profile...', 'profile picture');
+          await globalAssetPreloader.preloadImage(loginImage.src);
           loadedCount++;
         }
 
-        // === PHASE 4: MUSIC PLAYER ASSETS (55-65%) ===
-        setPhase('music-assets');
-        updateProgress(loadedCount, totalAssets, 'Loading music player...', 'albums');
-        
-        // Kaoru GIF
-        const kaoruGif = criticalImages.find(a => a.src.includes('kaoru2.gif'));
-        if (kaoruGif) {
-          await globalAssetPreloader.preloadImage(kaoruGif.src);
-          loadedCount++;
-        }
-
-        // All album covers
-        await Promise.all(
-          MUSIC_ASSETS.map(async (asset) => {
-            await globalAssetPreloader.preloadImage(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading albums...', asset.src.split('/').pop());
-          })
-        );
-
-        // === PHASE 5: CORKBOARD ASSETS (65-85%) ===
-        setPhase('corkboard');
-        updateProgress(loadedCount, totalAssets, 'Loading corkboard...', 'polaroids & stickers');
-        
-        await Promise.all(
-          CORKBOARD_ASSETS.map(async (asset) => {
-            if (asset.type === 'image') {
-              await globalAssetPreloader.preloadImage(asset.src);
-            } else if (asset.type === 'audio') {
-              await globalAssetPreloader.preloadAudio(asset.src);
-            }
-            loadedCount++;
-            if (loadedCount % 3 === 0) { // Update every 3 assets to avoid too many renders
-              updateProgress(loadedCount, totalAssets, 'Loading corkboard...', asset.src.split('/').pop());
-            }
-          })
-        );
-
-        // === PHASE 6: REMAINING CRITICAL ASSETS (85-95%) ===
-        setPhase('remaining');
-        updateProgress(loadedCount, totalAssets, 'Loading remaining assets...', '');
-
-        // App icons
-        const appIcons = criticalImages.filter(a => 
+        // Load app icons in parallel (batch of 5 at a time for performance)
+        const appIcons = imageAssets.filter(a => 
           a.src.includes('assets/') && 
           !a.src.includes('1.jpg') &&
-          !a.src.includes('kaoru') &&
-          !a.src.includes('silly.jpg')
+          !a.src.includes('zhong.jpg')
         );
         
+        updateProgress(loadedCount, totalAssets, 'Loading app icons...', 'icons');
         const iconBatches = [];
         for (let i = 0; i < appIcons.length; i += 5) {
           iconBatches.push(appIcons.slice(i, i + 5));
@@ -179,57 +123,45 @@ function LoadingScreen({ onLoadingComplete }) {
           );
         }
 
-        // Audio files
-        const audioAssets = CRITICAL_ASSETS.filter(a => a.type === 'audio');
-        await Promise.all(
-          audioAssets.map(async (asset) => {
+        // === PHASE 3: SECONDARY ASSETS (70-95%) ===
+        setPhase('secondary');
+        updateProgress(loadedCount, totalAssets, 'Loading additional assets...', '');
+
+        const secondaryImages = SECONDARY_ASSETS.filter(a => a.type === 'image');
+        const secondaryAudio = SECONDARY_ASSETS.filter(a => a.type === 'audio');
+
+        await Promise.all([
+          ...secondaryImages.map(async (asset) => {
+            await globalAssetPreloader.preloadImage(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading characters...', asset.src.split('/').pop());
+          }),
+          ...secondaryAudio.map(async (asset) => {
             await globalAssetPreloader.preloadAudio(asset.src);
             loadedCount++;
             updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
           })
-        );
+        ]);
 
-        // === PHASE 7: FINALIZATION (95-100%) ===
+        // === PHASE 4: FINALIZATION (95-100%) ===
         setPhase('finalizing');
         updateProgress(loadedCount, totalAssets, 'Finalizing...', '');
 
         // Wait for all fonts to be fully ready
         await globalAssetPreloader.waitForFonts();
 
-        // Final verification with extra delay for decoding
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Double-check critical assets
-        const criticalCheck = [
-          './hehe/basket.png',
-          './hehe/leaf-1.png',
-          './albums/1.jpg',
-          './assets/kaoru2.gif',
-          '/corkboard/sticker1.png',
-          '/corkboard/polaroids/1.png'
-        ];
-
-        let allReady = true;
-        for (const src of criticalCheck) {
-          if (!globalAssetPreloader.getCachedImage(src)) {
-            console.warn(`Critical asset not ready: ${src}`);
-            allReady = false;
-          }
+        // Final verification for critical fonts
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
         }
 
-        if (!allReady) {
-          console.warn('Some critical assets not ready, adding extra delay...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        // Small delay to ensure everything is settled
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         updateProgress(totalAssets, totalAssets, 'Welcome to zae\'vel!', '');
 
-        // Show welcome message briefly
+        // Show welcome message briefly before transitioning
         await new Promise(resolve => setTimeout(resolve, 800));
-
-        // Log loading stats
-        const stats = globalAssetPreloader.getStats();
-        console.log(`✓ Loading complete: ${stats.loaded} loaded, ${stats.failed} failed`);
 
         // Trigger completion
         if (isMountedRef.current && onLoadingComplete) {
@@ -257,18 +189,12 @@ function LoadingScreen({ onLoadingComplete }) {
     switch (phase) {
       case 'fonts':
         return 'Preparing typography...';
-      case 'critical-images':
-        return 'Loading desktop environment...';
-      case 'game-assets':
-        return 'Setting up games...';
-      case 'music-assets':
-        return 'Preparing music library...';
-      case 'corkboard':
-        return 'Loading your memories...';
-      case 'remaining':
-        return 'Almost there...';
+      case 'assets':
+        return 'Loading interface...';
+      case 'secondary':
+        return 'Polishing details...';
       case 'finalizing':
-        return 'Finishing touches...';
+        return 'Almost ready...';
       default:
         return 'Starting up...';
     }

@@ -4,11 +4,10 @@ export class AssetPreloader {
     this.loadedAssets = new Map();
     this.loadingPromises = new Map();
     this.failedAssets = new Set();
-    this.imageCache = new Map(); // Cache decoded images
   }
 
-  // Enhanced image preloading with decode() for instant rendering
-  preloadImage(src, retries = 3) {
+  // Preload images with retry logic
+  preloadImage(src, retries = 2) {
     if (this.loadedAssets.has(src)) {
       return Promise.resolve(this.loadedAssets.get(src));
     }
@@ -17,46 +16,26 @@ export class AssetPreloader {
       return this.loadingPromises.get(src);
     }
 
-    const promise = new Promise((resolve) => {
+    const promise = new Promise((resolve, reject) => {
       const attemptLoad = (attemptsLeft) => {
         const img = new Image();
-        
-        // Critical: Set crossOrigin before src
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = async () => {
-          try {
-            // Decode image to ensure it's ready for rendering
-            await img.decode();
-            this.loadedAssets.set(src, img);
-            this.imageCache.set(src, img);
-            this.loadingPromises.delete(src);
-            console.log(`✓ Loaded and decoded: ${src}`);
-            resolve(img);
-          } catch (decodeError) {
-            console.warn(`Decode failed for ${src}, but image loaded:`, decodeError);
-            this.loadedAssets.set(src, img);
-            this.loadingPromises.delete(src);
-            resolve(img);
-          }
+        img.onload = () => {
+          this.loadedAssets.set(src, img);
+          this.loadingPromises.delete(src);
+          resolve(img);
         };
-        
         img.onerror = () => {
           if (attemptsLeft > 0) {
-            console.log(`Retry loading ${src}, ${attemptsLeft} attempts left`);
-            setTimeout(() => attemptLoad(attemptsLeft - 1), 300);
+            setTimeout(() => attemptLoad(attemptsLeft - 1), 200);
           } else {
             this.failedAssets.add(src);
             this.loadingPromises.delete(src);
-            console.error(`✗ Failed to load: ${src}`);
-            resolve(null);
+            console.warn(`Failed to load image after retries: ${src}`);
+            resolve(null); // Resolve with null instead of rejecting
           }
         };
-        
-        // Set src last
         img.src = src;
       };
-      
       attemptLoad(retries);
     });
 
@@ -64,8 +43,8 @@ export class AssetPreloader {
     return promise;
   }
 
-  // Enhanced audio preloading with full buffer loading
-  preloadAudio(src, retries = 3) {
+  // Preload audio files
+  preloadAudio(src, retries = 2) {
     if (this.loadedAssets.has(src)) {
       return Promise.resolve(this.loadedAssets.get(src));
     }
@@ -77,41 +56,24 @@ export class AssetPreloader {
     const promise = new Promise((resolve) => {
       const attemptLoad = (attemptsLeft) => {
         const audio = new Audio();
-        
-        // Ensure full loading
-        audio.preload = 'auto';
-        
-        const onCanPlay = () => {
+        audio.oncanplaythrough = () => {
           this.loadedAssets.set(src, audio);
           this.loadingPromises.delete(src);
-          console.log(`✓ Audio loaded: ${src}`);
           resolve(audio);
-          
-          // Clean up listeners
-          audio.removeEventListener('canplaythrough', onCanPlay);
-          audio.removeEventListener('error', onError);
         };
-        
-        const onError = () => {
-          audio.removeEventListener('canplaythrough', onCanPlay);
-          audio.removeEventListener('error', onError);
-          
+        audio.onerror = () => {
           if (attemptsLeft > 0) {
-            console.log(`Retry audio ${src}, ${attemptsLeft} attempts left`);
-            setTimeout(() => attemptLoad(attemptsLeft - 1), 300);
+            setTimeout(() => attemptLoad(attemptsLeft - 1), 200);
           } else {
             this.failedAssets.add(src);
             this.loadingPromises.delete(src);
-            console.error(`✗ Failed to load audio: ${src}`);
+            console.warn(`Failed to load audio after retries: ${src}`);
             resolve(null);
           }
         };
-        
-        audio.addEventListener('canplaythrough', onCanPlay);
-        audio.addEventListener('error', onError);
+        audio.preload = 'auto';
         audio.src = src;
       };
-      
       attemptLoad(retries);
     });
 
@@ -119,7 +81,7 @@ export class AssetPreloader {
     return promise;
   }
 
-  // Enhanced font preloading with forced rendering
+  // Preload custom fonts (zozafont)
   preloadFont(fontFamily, src, descriptors = {}) {
     const fontKey = `${fontFamily}-${src}`;
     
@@ -134,50 +96,40 @@ export class AssetPreloader {
     const promise = new Promise((resolve) => {
       if ('FontFace' in window) {
         const font = new FontFace(fontFamily, `url(${src})`, descriptors);
-        
         font.load()
           .then(() => {
             document.fonts.add(font);
             
-            // CRITICAL: Force immediate font rendering with multiple techniques
-            const preRenderDiv = document.createElement('div');
-            preRenderDiv.style.cssText = `
-              position: fixed;
-              left: -9999px;
-              top: -9999px;
-              visibility: hidden;
-              font-family: "${fontFamily}", monospace;
-              font-size: 64px;
-              font-weight: bold;
-              white-space: pre;
-              pointer-events: none;
-            `;
-            
-            // Render all common characters to force font decode
-            preRenderDiv.textContent = `zae'vel TIME TO LOG IN? LOADING ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()`;
-            document.body.appendChild(preRenderDiv);
-            
-            // Force multiple reflows to ensure font is decoded
-            preRenderDiv.offsetHeight;
-            preRenderDiv.getBoundingClientRect();
-            window.getComputedStyle(preRenderDiv).fontFamily;
-            
-            // Keep element for 200ms to ensure render, then remove
-            setTimeout(() => {
-              if (preRenderDiv.parentNode) {
-                preRenderDiv.remove();
-              }
-            }, 200);
+            // Force immediate rendering for critical fonts
+            if (fontFamily === 'zozafont') {
+              const testEl = document.createElement('div');
+              testEl.style.cssText = `
+                position: fixed;
+                left: -9999px;
+                top: -9999px;
+                visibility: hidden;
+                font-family: "${fontFamily}", monospace;
+                font-size: 64px;
+                font-weight: bold;
+              `;
+              testEl.textContent = "zae'vel TIME TO LOG IN?";
+              document.body.appendChild(testEl);
+              
+              // Force layout
+              testEl.offsetHeight;
+              testEl.getBoundingClientRect();
+              
+              setTimeout(() => testEl.remove(), 100);
+            }
             
             this.loadedAssets.set(fontKey, font);
             this.loadingPromises.delete(fontKey);
-            console.log(`✓ Font loaded and rendered: ${fontFamily}`);
             resolve(font);
           })
           .catch((error) => {
             this.failedAssets.add(fontKey);
             this.loadingPromises.delete(fontKey);
-            console.error(`✗ Failed to load font: ${fontFamily}`, error);
+            console.warn(`Failed to load font: ${fontFamily}`, error);
             resolve(null);
           });
       } else {
@@ -196,7 +148,7 @@ export class AssetPreloader {
           this.loadedAssets.set(fontKey, true);
           this.loadingPromises.delete(fontKey);
           resolve(true);
-        }, 500);
+        }, 300);
       }
     });
 
@@ -204,7 +156,7 @@ export class AssetPreloader {
     return promise;
   }
 
-  // Enhanced Google Fonts preloading
+  // Preload Google Fonts
   preloadGoogleFont(fontFamily, weights = ['400'], styles = ['normal']) {
     const fontKey = `google-${fontFamily}`;
     
@@ -218,7 +170,7 @@ export class AssetPreloader {
 
     const promise = new Promise((resolve) => {
       if (!document.fonts) {
-        setTimeout(() => resolve(true), 800);
+        setTimeout(() => resolve(true), 500);
         return;
       }
 
@@ -227,43 +179,36 @@ export class AssetPreloader {
       weights.forEach(weight => {
         styles.forEach(style => {
           const fontString = `${style === 'italic' ? 'italic ' : ''}${weight} 16px "${fontFamily}"`;
-          
-          const fontPromise = document.fonts.load(fontString)
-            .then(() => {
-              // Force render with actual content
-              const testEl = document.createElement('div');
-              testEl.style.cssText = `
-                position: fixed;
-                left: -9999px;
-                visibility: hidden;
-                font-family: "${fontFamily}";
-                font-weight: ${weight};
-                font-style: ${style};
-                font-size: 32px;
-                white-space: pre;
-              `;
-              testEl.textContent = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-              document.body.appendChild(testEl);
-              
-              testEl.offsetHeight;
-              testEl.getBoundingClientRect();
-              
-              setTimeout(() => testEl.remove(), 100);
-              return true;
-            })
-            .catch(() => {
-              console.warn(`Failed to load ${fontString}`);
-              return false;
-            });
-            
-          loadPromises.push(fontPromise);
+          loadPromises.push(
+            document.fonts.load(fontString)
+              .then(() => {
+                // Force render for critical fonts
+                const testEl = document.createElement('div');
+                testEl.style.cssText = `
+                  position: fixed;
+                  left: -9999px;
+                  visibility: hidden;
+                  font-family: "${fontFamily}";
+                  font-weight: ${weight};
+                  font-style: ${style};
+                `;
+                testEl.textContent = 'Test';
+                document.body.appendChild(testEl);
+                testEl.offsetHeight;
+                setTimeout(() => testEl.remove(), 50);
+                return true;
+              })
+              .catch(() => {
+                console.warn(`Failed to load ${fontString}`);
+                return false;
+              })
+          );
         });
       });
 
       Promise.all(loadPromises).then(() => {
         this.loadedAssets.set(fontKey, true);
         this.loadingPromises.delete(fontKey);
-        console.log(`✓ Google Font loaded: ${fontFamily}`);
         resolve(true);
       });
     });
@@ -272,18 +217,15 @@ export class AssetPreloader {
     return promise;
   }
 
-  // Wait for all fonts with timeout
-  waitForFonts(timeout = 5000) {
+  // Wait for all fonts to be ready
+  waitForFonts() {
     if (document.fonts && document.fonts.ready) {
-      return Promise.race([
-        document.fonts.ready,
-        new Promise(resolve => setTimeout(resolve, timeout))
-      ]);
+      return document.fonts.ready;
     }
     return Promise.resolve();
   }
 
-  // Preload multiple assets with detailed progress
+  // Preload multiple assets with progress tracking
   async preloadAssets(assets, onProgress) {
     const total = assets.length;
     let loaded = 0;
@@ -300,22 +242,17 @@ export class AssetPreloader {
           await this.preloadGoogleFont(asset.fontFamily, asset.weights, asset.styles);
         }
       } catch (error) {
-        console.error(`Asset failed: ${asset.src || asset.fontFamily}`, error);
+        console.warn(`Asset failed: ${asset.src || asset.fontFamily}`, error);
       } finally {
         loaded++;
         if (onProgress) {
-          onProgress(loaded, total, asset);
+          onProgress(loaded, total);
         }
       }
     });
 
     await Promise.all(promises);
     return true;
-  }
-
-  // Get cached image for instant use
-  getCachedImage(src) {
-    return this.imageCache.get(src);
   }
 
   // Get loading statistics
@@ -331,36 +268,30 @@ export class AssetPreloader {
 // Global instance
 export const globalAssetPreloader = new AssetPreloader();
 
-// ============================================================================
-// CRITICAL ASSETS - ENHANCED AND COMPREHENSIVE
-// ============================================================================
-
+// CRITICAL ASSETS - Must load before app starts
 export const CRITICAL_ASSETS = [
-  // === FONTS (HIGHEST PRIORITY) ===
-  { type: 'font', fontFamily: 'zozafont', src: './public/zozafont.ttf', descriptors: { weight: 'normal', style: 'normal' } },
+  // === FONTS (Highest Priority) ===
+  { type: 'font', fontFamily: 'zozafont', src: './public/zozafont.ttf' },
   { type: 'google-font', fontFamily: 'Crimson Text', weights: ['400', '600'], styles: ['normal', 'italic'] },
   { type: 'google-font', fontFamily: 'Lora', weights: ['400', '500', '600'], styles: ['normal', 'italic'] },
-  { type: 'google-font', fontFamily: 'Courier New', weights: ['400', '700'], styles: ['normal'] },
-  { type: 'google-font', fontFamily: 'Nunito', weights: ['400', '600', '700'], styles: ['normal'] },
-  { type: 'google-font', fontFamily: 'Fredoka One', weights: ['400'], styles: ['normal'] },
   
-  // === DESKTOP & LOGIN ===
+  // === DESKTOP WALLPAPER (Show first) ===
   { type: 'image', src: './assets/1.jpg' },
+  
+  // === LOGIN ASSETS ===
   { type: 'image', src: './zhong.jpg' },
   
   // === CORE SOUNDS ===
   { type: 'audio', src: './click.mp3' },
-  { type: 'audio', src: './keyboard.mp3' },
-  { type: 'audio', src: './flip.mp3' },
   
-  // === PET ANIMATIONS ===
+  // === PET ANIMATIONS (Critical for interactivity) ===
   { type: 'image', src: './animations/walking_right.gif' },
   { type: 'image', src: './animations/walking_left.gif' },
   { type: 'image', src: './animations/click_right.gif' },
   { type: 'image', src: './animations/click-left.gif' },
   { type: 'image', src: './animations/drag.png' },
   
-  // === APP ICONS ===
+  // === APP ICONS (Desktop visibility) ===
   { type: 'image', src: './assets/calc.png' },
   { type: 'image', src: './assets/music.png' },
   { type: 'image', src: './assets/weather.png' },
@@ -375,32 +306,47 @@ export const CRITICAL_ASSETS = [
   { type: 'image', src: './assets/folder.png' },
   { type: 'image', src: './assets/heart.png' },
   { type: 'image', src: './assets/settings.png' },
-  
-  // === LEAVES GAME ASSETS (CRITICAL!) ===
-  { type: 'image', src: './hehe/basket.png' },
-  { type: 'image', src: './hehe/leaf-1.png' },
-  { type: 'image', src: './hehe/leaf-2.png' },
-  { type: 'image', src: './hehe/leaf-3.png' },
-  { type: 'audio', src: './hehe/catch2.mp3' },
-  { type: 'audio', src: './hehe/home-music.mp3' },
-  { type: 'audio', src: './hehe/game-music.mp3' },
-  { type: 'audio', src: './hehe/clickfr.mp3' },
-  { type: 'audio', src: './hehe/eat.mp3' },
-  
-  // === TICTACTOE ASSETS ===
-  { type: 'image', src: './assets/silly.jpg' },
-  
-  // === CHARACTER IMAGES ===
-  { type: 'image', src: './assets/kaoru.gif' },
-  { type: 'image', src: './assets/kaoru2.gif' },
-  { type: 'image', src: './assets/hehe.gif' },
 ];
 
-// ============================================================================
-// MUSIC PLAYER ASSETS - Load immediately after critical
-// ============================================================================
+// SECONDARY ASSETS - Load during login screen
+export const SECONDARY_ASSETS = [
+  // === CHARACTER IMAGES ===
+  { type: 'image', src: './assets/kaoru.gif' },
+  { type: 'image', src: './assets/hehe.gif' },
+  
+  // === ADDITIONAL SOUNDS ===
+  { type: 'audio', src: './flip.mp3' },
+  { type: 'audio', src: './keyboard.mp3' },
+  
+  // === FILE ICONS ===
+  { type: 'image', src: './assets/img.png' },
+  { type: 'image', src: './assets/txt.png' },
+];
 
+// CORKBOARD ASSETS - Load when corkboard opens
+export const CORKBOARD_ASSETS = [
+  // Background and UI
+  { type: 'image', src: '/corkboard/corkboard.jpg' },
+  { type: 'image', src: '/corkboard/boardpin.png' },
+  
+  // Audio
+  { type: 'audio', src: '/corkboard/audio/click.mp3' },
+  { type: 'audio', src: '/corkboard/audio/paper.mp3' },
+  { type: 'audio', src: '/corkboard/audio/music.mp3' },
+  
+  // Stickers (sample preload - rest lazy load)
+  { type: 'image', src: '/corkboard/sticker1.png' },
+  { type: 'image', src: '/corkboard/sticker2.png' },
+  { type: 'image', src: '/corkboard/sticker3.png' },
+  
+  // Polaroids (sample preload)
+  { type: 'image', src: '/corkboard/polaroids/1.png' },
+  { type: 'image', src: '/corkboard/polaroids/2.png' },
+];
+
+// MUSIC PLAYER ASSETS - Load when music player opens
 export const MUSIC_ASSETS = [
+  { type: 'image', src: './assets/kaoru2.gif' },
   { type: 'image', src: './albums/1.jpg' },
   { type: 'image', src: './albums/2.jpg' },
   { type: 'image', src: './albums/3.jpg' },
@@ -410,69 +356,29 @@ export const MUSIC_ASSETS = [
   { type: 'image', src: './albums/7.png' },
 ];
 
-// ============================================================================
-// CORKBOARD ASSETS - Most critical for your use case
-// ============================================================================
-
-export const CORKBOARD_ASSETS = [
-  // Background
-  { type: 'image', src: '/corkboard/corkboard.jpg' },
-  { type: 'image', src: '/corkboard/boardpin.png' },
-  
-  // Audio
-  { type: 'audio', src: '/corkboard/audio/click.mp3' },
-  { type: 'audio', src: '/corkboard/audio/paper.mp3' },
-  { type: 'audio', src: '/corkboard/audio/music.mp3' },
-  
-  // ALL Stickers (preload all to avoid delays)
-  { type: 'image', src: '/corkboard/sticker1.png' },
-  { type: 'image', src: '/corkboard/sticker2.png' },
-  { type: 'image', src: '/corkboard/sticker3.png' },
-  { type: 'image', src: '/corkboard/sticker4.png' },
-  { type: 'image', src: '/corkboard/sticker5.png' },
-  { type: 'image', src: '/corkboard/sticker6.png' },
-  { type: 'image', src: '/corkboard/sticker8.png' },
-  { type: 'image', src: '/corkboard/sticker9.png' },
-  { type: 'image', src: '/corkboard/sticker10.png' },
-  { type: 'image', src: '/corkboard/sticker11.png' },
-  { type: 'image', src: '/corkboard/sticker12.png' },
-  { type: 'image', src: '/corkboard/sticker13.png' },
-  { type: 'image', src: '/corkboard/sticker14.png' },
-  { type: 'image', src: '/corkboard/sticker15.png' },
-  { type: 'image', src: '/corkboard/sticker16.png' },
-  { type: 'image', src: '/corkboard/sticker17.png' },
-  
-  // ALL Polaroids (preload all)
-  { type: 'image', src: '/corkboard/polaroids/1.png' },
-  { type: 'image', src: '/corkboard/polaroids/2.png' },
-  { type: 'image', src: '/corkboard/polaroids/3.png' },
-  { type: 'image', src: '/corkboard/polaroids/4.png' },
-  { type: 'image', src: '/corkboard/polaroids/5.png' },
-  { type: 'image', src: '/corkboard/polaroids/6.png' },
-  { type: 'image', src: '/corkboard/polaroids/7.png' },
-  { type: 'image', src: '/corkboard/polaroids/8.png' },
-  { type: 'image', src: '/corkboard/polaroids/9.png' },
-];
-
-// ============================================================================
-// GAME ASSETS - Secondary priority
-// ============================================================================
-
+// GAME ASSETS - Load when games open
 export const GAME_ASSETS = [
+  { type: 'image', src: './hehe/basket.png' },
+  { type: 'image', src: './hehe/leaf-1.png' },
+  { type: 'image', src: './hehe/leaf-2.png' },
+  { type: 'image', src: './hehe/leaf-3.png' },
+  { type: 'audio', src: './hehe/catch2.mp3' },
+  { type: 'audio', src: './hehe/home-music.mp3' },
+  { type: 'audio', src: './hehe/game-music.mp3' },
+  { type: 'audio', src: './hehe/clickfr.mp3' },
+  { type: 'audio', src: './hehe/eat.mp3' },
   { type: 'audio', src: './memorygame-music.mp3' },
   { type: 'audio', src: './cardflip.mp3' },
 ];
 
-// ============================================================================
-// ACHIEVEMENTS & MISC
-// ============================================================================
-
+// ACHIEVEMENTS ASSETS - Load when achievements opens
 export const ACHIEVEMENTS_ASSETS = [
   { type: 'audio', src: './achievements/audios/click.mp3' },
   { type: 'audio', src: './achievements/audios/unlock.mp3' },
   { type: 'audio', src: './achievements/audios/page-flip.mp3' },
 ];
 
+// SETTINGS EASTER EGG ASSETS - Lazy load
 export const SETTINGS_ASSETS = [
   { type: 'audio', src: './soundzz/error.mp3' },
   { type: 'audio', src: './soundzz/cutscene.mp3' },
@@ -482,7 +388,7 @@ export const SETTINGS_ASSETS = [
   { type: 'image', src: './childe.png' },
 ];
 
-// Lazy loader utility
+// Lazy loader utility for on-demand loading
 export async function lazyLoadAssets(assetGroup) {
   return await globalAssetPreloader.preloadAssets(assetGroup);
 }

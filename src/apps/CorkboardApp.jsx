@@ -4,33 +4,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 
-const [assetsReady, setAssetsReady] = useState(false);
-
-useEffect(() => {
-  // Check if corkboard assets are loaded
-  const checkAssets = async () => {
-    const criticalAssets = [
-      '/corkboard/corkboard.jpg',
-      '/corkboard/boardpin.png',
-      '/corkboard/sticker1.png',
-      '/corkboard/polaroids/1.png'
-    ];
-    
-    const allLoaded = criticalAssets.every(src => 
-      globalAssetPreloader.getCachedImage(src)
-    );
-    
-    if (!allLoaded) {
-      console.log('Corkboard assets not ready, loading...');
-      await lazyLoadAssets(CORKBOARD_ASSETS);
-    }
-    
-    setAssetsReady(true);
-  };
-  
-  checkAssets();
-}, []);
-
 // letter contents
 const letterContents = {
   1: `yara u started college last september and you just.. LIKE YOURE HITTING THAT POTENTIAL BRO . im seeing that progress, that motivation, that grind,
@@ -2607,7 +2580,7 @@ const handleZIndexChange = (id, type, direction) => {
     height: '100vh',
     position: 'relative',
     overflow: 'hidden',
-    backgroundImage: `url(${globalAssetPreloader.getCachedImage('/corkboard/corkboard.jpg')?.src || '/corkboard/corkboard.jpg'})`,
+    backgroundImage: 'url(/corkboard/corkboard.jpg)',
     backgroundSize: '100% 100%',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat'

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import React, { useState, useEffect, useRef } from 'react';
 
 const AutumnTicTacToe = () => {
@@ -11,30 +10,6 @@ const AutumnTicTacToe = () => {
   const [showGamePopup, setShowGamePopup] = useState(false);
   const [showStatsPopup, setShowStatsPopup] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
-
-  const [pfpLoaded, setPfpLoaded] = useState(false);
-
-useEffect(() => {
-  const cachedPfp = globalAssetPreloader.getCachedImage('./assets/silly.jpg');
-  if (cachedPfp) {
-    setPfpLoaded(true);
-  }
-}, []);
-
-// In the render, use cached image:
-<img 
-  src={globalAssetPreloader.getCachedImage('./assets/silly.jpg')?.src || './assets/silly.jpg'}
-  alt="Zhongli"
-  style={{
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
-    objectFit: 'cover',
-    opacity: pfpLoaded ? 1 : 0,
-    transition: 'opacity 0.3s'
-  }}
-  onLoad={() => setPfpLoaded(true)}
-/>
   
   const audioRef = useRef(null);
 
