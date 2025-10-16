@@ -28,22 +28,6 @@ import WiFiSidebar from './extras/WiFiSidebar';
 import TxtFileApp from './extras/TxtFileApp';
 import { FolderApp, fileContents } from './extras/FolderApp';
 import ImageViewerApp from './extras/ImageViewerApp';
-
-import { lazyLoadAssets, CORKBOARD_ASSETS, MUSIC_ASSETS, GAME_ASSETS } from './AssetPreloader';
-
-// When opening corkboard:
-const openApp = async (app) => {
-  if (app.id === 'yara') {
-    // Lazy load corkboard assets
-    await lazyLoadAssets(CORKBOARD_ASSETS);
-  } else if (app.id === 'music') {
-    // Lazy load music assets
-    await lazyLoadAssets(MUSIC_ASSETS);
-  } else if (app.id === 'leaves' || app.id === 'memory') {
-    // Lazy load game assets
-    await lazyLoadAssets(GAME_ASSETS);
-  }
-
 //asset finder
 const getAssetPath = (path) => {
   // Check if we're in Electron environment
