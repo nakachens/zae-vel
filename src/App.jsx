@@ -43,6 +43,7 @@ const openApp = async (app) => {
     // Lazy load game assets
     await lazyLoadAssets(GAME_ASSETS);
   }
+};
 //asset finder
 const getAssetPath = (path) => {
   // Check if we're in Electron environment
