@@ -380,364 +380,354 @@ const WhispersOfSeptember = () => {
   const currentPoem = poems[currentPoemIndex];
 
   const styles = {
-    poetryApp: {
+  poetryApp: {
     fontFamily: "'Courier Prime', monospace",
     background: 'transparent',
-    color: isNightMode ? '#080b3fff' : '#2c1810',
+    color: isNightMode ? '#E5DCC8' : '#1E1A19',
     width: '100%',
     height: '100%',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  appContainer: {
-    width: '100%', 
-    height: '100%', 
-    maxWidth: '400px', 
-    maxHeight: '430px', 
-    background: 'transparent',
-    border: isNightMode 
-      ? '3px solid #533483'
-      : '3px solid #d4c4a8',
-    borderRadius: '15px',
+ appContainer: {
+  width: '100%', 
+  height: '100%', 
+  maxWidth: '400px', 
+  maxHeight: '430px', 
+  background: isNightMode ? '#1E1A19' : '#E5DCC8',
+  border: isNightMode 
+    ? '3px solid #7C8B6A'
+    : '3px solid #3E2B27',
+  borderRadius: '15px',
   position: 'relative',
   overflow: 'hidden',
   boxShadow: isNightMode
-    ? '0 0 0 1px rgba(255,255,255,0.1), 0 8px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)'
-    : '0 0 0 1px rgba(0,0,0,0.1), 0 8px 25px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+    ? '0 0 0 1px rgba(229,220,200,0.1), 0 8px 25px rgba(0,0,0,0.5), inset 0 1px 0 rgba(229,220,200,0.05)'
+    : '0 0 0 1px rgba(30,26,25,0.1), 0 8px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(198,193,181,0.1)',
   transition: 'all 0.6s ease',
   display: 'flex',
   flexDirection: 'column'
 },
-    containerBefore: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: isNightMode
-        ? 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(233,69,96,0.05) 2px, rgba(233,69,96,0.05) 4px)'
-        : 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)',
-      pointerEvents: 'none',
-      zIndex: 100
-    },
-    topControls: {
-      position: 'absolute',
-      top: '10px',
-      right: '10px',
-      display: 'flex',
-      gap: '8px',
-      zIndex: 200
-    },
-    controlBtn: {
-      width: '28px',
-      height: '28px',
-      border: isNightMode 
-        ? '2px solid #533483'
-        : '2px solid #d4c4a8',
-      background: isNightMode ? '#0f3460' : '#f9f6ef',
-      color: isNightMode ? '#eee6d3' : '#2c1810',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontSize: '12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'all 0.3s ease',
-      boxShadow: '1px 1px 2px rgba(0,0,0,0.1)'
-    },
-    activeControlBtn: {
-      background: isNightMode ? '#e94560' : '#8b4513',
-      color: 'white',
-      borderColor: isNightMode ? '#e94560' : '#8b4513'
-    },
-    header: {
-      textAlign: 'center',
-      padding: '35px 10px 15px',
-      borderBottom: isNightMode 
-        ? '2px dashed #533483'
-        : '2px dashed #d4c4a8',
-      flexShrink: 0
-    },
-    appTitle: {
-      fontFamily: "'Special Elite', cursive",
-      fontSize: '1.4rem',
-      marginBottom: '5px',
-      textShadow: '1px 1px 0px rgba(0,0,0,0.1)',
-      letterSpacing: '-0.5px'
-    },
-    subtitle: {
-      fontSize: '0.75rem',
-      opacity: 0.7,
-      fontStyle: 'italic',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px'
-    },
-    content: {
-      padding: '15px',
-      flex: 1,
-      overflowY: 'auto',
-      scrollbarWidth: 'none',
-      msOverflowStyle: 'none',
-      display: 'flex',
-      flexDirection: 'column'
-    },
-    navButtons: {
-      display: 'flex',
-      gap: '8px',
-      marginBottom: '12px',
-      flexShrink: 0
-    },
-    navBtn: {
-      flex: 1,
-      padding: '8px',
-      background: isNightMode ? '#0f3460' : '#f9f6ef',
-      color: isNightMode ? '#eee6d3' : '#2c1810',
-      border: isNightMode 
-        ? '2px solid #533483'
-        : '2px solid #d4c4a8',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontFamily: "'Courier Prime', monospace",
-      fontSize: '0.7rem',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      transition: 'all 0.3s ease'
-    },
-    activeNavBtn: {
-      background: isNightMode ? '#e94560' : '#8b4513',
-      color: 'white',
-      borderColor: isNightMode ? '#e94560' : '#8b4513'
-    },
-    poemCard: {
-      background: isNightMode ? '#f9f6ef' : '#f9f6ef',
-      border: isNightMode 
-        ? '2px solid #533483'
-        : '2px solid #d4c4a8',
-      borderRadius: '8px',
-      padding: '15px 12px',
-      marginBottom: '12px',
-      position: 'relative',
-      transition: 'all 0.5s ease',
-      boxShadow: isNightMode
-        ? '2px 2px 0px #533483, 0 0 0 1px rgba(255,255,255,0.05)'
-        : '2px 2px 0px #d4c4a8, 0 0 0 1px rgba(0,0,0,0.05)',
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: 0
-    },
-    poemCardBefore: {
-      position: 'absolute',
-      left: '6px',
-      top: '10px',
-      bottom: '10px',
-      width: '4px',
-      background: isNightMode
-        ? `radial-gradient(circle, #1a1a2e 40%, transparent 40%), #0f3460`
-        : `radial-gradient(circle, #f4f1e8 40%, transparent 40%), #f9f6ef`,
-      backgroundSize: '4px 15px',
-      backgroundRepeat: 'repeat-y'
-    },
-    poemText: {
-      fontSize: '0.8rem',
-      lineHeight: '1.5',
-      margin: '0 0 10px 15px',
-      whiteSpace: 'pre-line',
-      fontWeight: '400',
-      flex: 1,
-      overflowY: 'auto'
-    },
-    poemAuthor: {
-      fontSize: '0.75rem',
-      textAlign: 'right',
-      marginRight: '8px',
-      fontStyle: 'italic',
-      opacity: 0.8,
-      flexShrink: 0
-    },
-    actionButtons: {
-      display: 'grid',
-      gridTemplateColumns: '0.8fr 0.8fr',
-      gap: '8px',
-      flexShrink: 0
-    },
-    actionBtn: {
-      padding: '8px 12px',
-      background: isNightMode ? '#e94560' : '#8b4513',
-      color: 'white',
-      border: isNightMode 
-        ? '2px solid #e94560'
-        : '2px solid #8b4513',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontFamily: "'Courier Prime', monospace",
-      fontSize: '0.7rem',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      transition: 'all 0.3s ease',
-      boxShadow: '1px 1px 0px rgba(0,0,0,0.2)'
-    },
-    fullWidthActionBtn: {
-      gridColumn: '1 / -1'
-    },
-    scrapbook: {
-      display: activeSection === 'scrapbook' ? 'flex' : 'none',
-      flex: 1,
-      overflowY: 'auto',
-      flexDirection: 'column'
-    },
-    savedPoem: {
-      background: isNightMode ? '#f9f6ef' : '#f9f6ef',
-      border: isNightMode 
-        ? '2px solid #533483'
-        : '2px solid #d4c4a8',
-      borderRadius: '6px',
-      padding: '10px',
-      marginBottom: '10px',
-      position: 'relative',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      transform: 'rotate(-0.5deg)',
-      flexShrink: 0
-    },
-    savedPoemEven: {
-      transform: 'rotate(0.5deg)'
-    },
-    savedPoemText: {
-      fontSize: '0.7rem',
-      lineHeight: '1.4',
-      margin: '0 0 8px 0',
-      display: '-webkit-box',
-      WebkitLineClamp: 2,
-      WebkitBoxOrient: 'vertical',
-      overflow: 'hidden'
-    },
-    savedPoemAuthor: {
-      fontSize: '0.65rem',
-      margin: '0',
-      fontStyle: 'italic',
-      opacity: 0.8
-    },
-    deleteBtn: {
-      position: 'absolute',
-      top: '5px',
-      right: '5px',
-      width: '16px',
-      height: '16px',
-      background: isNightMode ? '#e94560' : '#dc3545',
-      color: 'white',
-      border: 'none',
-      borderRadius: '50%',
-      cursor: 'pointer',
-      fontSize: '10px',
-      display: 'none',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    loading: {
-      textAlign: 'center',
-      padding: '30px 15px',
-      fontStyle: 'italic',
-      fontSize: '0.8rem'
-    },
-    loadingAfter: {
-      display: 'block',
-      width: '20px',
-      height: '20px',
-      border: isNightMode 
-        ? '2px solid #533483'
-        : '2px solid #d4c4a8',
-      borderTop: isNightMode 
-        ? '2px solid #e94560'
-        : '2px solid #8b4513',
-      borderRadius: '50%',
-      margin: '15px auto 0',
-      animation: 'spin 1s linear infinite'
-    },
-    emptyScrapbook: {
-      textAlign: 'center',
-      padding: '40px 15px',
-      opacity: 0.6,
-      fontStyle: 'italic',
-      fontSize: '0.8rem',
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    shareModal: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.8)',
-      display: shareModalOpen ? 'flex' : 'none',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    },
-    shareContent: {
-      background: isNightMode ? '#16213e' : '#faf7f0',
-      border: isNightMode 
-        ? '3px solid #533483'
-        : '3px solid #d4c4a8',
-      borderRadius: '15px',
-      padding: '25px',
-      maxWidth: '300px',
-      width: '85%',
-      textAlign: 'center'
-    },
-    shareTitle: {
-      fontFamily: "'Special Elite', cursive",
-      fontSize: '1.1rem',
-      marginBottom: '15px'
-    },
-    shareButtons: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '8px',
-      marginBottom: '15px'
-    },
-    shareBtn: {
-      padding: '8px',
-      border: isNightMode 
-        ? '2px solid #533483'
-        : '2px solid #d4c4a8',
-      background: isNightMode ? '#0f3460' : '#f9f6ef',
-      color: isNightMode ? '#eee6d3' : '#2c1810',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontFamily: "'Courier Prime', monospace",
-      fontSize: '0.7rem',
-      fontWeight: '700',
-      textDecoration: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '3px',
-      transition: 'all 0.3s ease'
-    },
-    shareBtnHover: {
-      background: isNightMode ? '#e94560' : '#8b4513',
-      color: 'white',
-      borderColor: isNightMode ? '#e94560' : '#8b4513',
-      transform: 'translateY(-1px)'
-    },
-    closeModal: {
-      background: isNightMode ? '#e94560' : '#8b4513',
-      color: 'white',
-      border: 'none',
-      padding: '8px 16px',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontFamily: "'Courier Prime', monospace",
-      fontWeight: '700',
-      fontSize: '0.8rem'
-    }
-  };
+  containerBefore: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: isNightMode
+      ? 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(139,42,42,0.05) 2px, rgba(139,42,42,0.05) 4px)'
+      : 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(30,26,25,0.03) 2px, rgba(30,26,25,0.03) 4px)',
+    pointerEvents: 'none',
+    zIndex: 100
+  },
+  topControls: {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    display: 'flex',
+    gap: '8px',
+    zIndex: 200
+  },
+  controlBtn: {
+    width: '28px',
+    height: '28px',
+    border: isNightMode 
+      ? '2px solid #7C8B6A'
+      : '2px solid #3E2B27',
+    background: isNightMode ? '#2A1F1D' : '#E5DCC8',
+    color: isNightMode ? '#E5DCC8' : '#1E1A19',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease',
+    boxShadow: '1px 1px 2px rgba(0,0,0,0.2)'
+  },
+  activeControlBtn: {
+    background: '#8B2A2A',
+    color: '#E5DCC8',
+    borderColor: '#8B2A2A'
+  },
+  header: {
+    textAlign: 'center',
+    padding: '35px 10px 15px',
+    borderBottom: isNightMode 
+      ? '2px dashed #7C8B6A'
+      : '2px dashed #3E2B27',
+    flexShrink: 0
+  },
+  appTitle: {
+    fontFamily: "'Special Elite', cursive",
+    fontSize: '1.4rem',
+    marginBottom: '5px',
+    textShadow: '1px 1px 0px rgba(0,0,0,0.2)',
+    letterSpacing: '-0.5px',
+    color: isNightMode ? '#E5DCC8' : '#1E1A19'
+  },
+  subtitle: {
+    fontSize: '0.75rem',
+    opacity: 0.7,
+    fontStyle: 'italic',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  content: {
+    padding: '15px',
+    flex: 1,
+    overflowY: 'auto',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  navButtons: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '12px',
+    flexShrink: 0
+  },
+  navBtn: {
+    flex: 1,
+    padding: '8px',
+    background: isNightMode ? '#2A1F1D' : '#E5DCC8',
+    color: isNightMode ? '#E5DCC8' : '#1E1A19',
+    border: isNightMode 
+      ? '2px solid #7C8B6A'
+      : '2px solid #3E2B27',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontFamily: "'Courier Prime', monospace",
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    transition: 'all 0.3s ease'
+  },
+  activeNavBtn: {
+    background: '#8B2A2A',
+    color: '#E5DCC8',
+    borderColor: '#8B2A2A'
+  },
+  poemCard: {
+  background: isNightMode ? '#2A1F1D' : '#E5DCC8',
+  border: isNightMode 
+    ? '2px solid #7C8B6A'
+    : '2px solid #3E2B27',
+  borderRadius: '8px',
+  padding: '15px 12px',
+  marginBottom: '12px',
+  position: 'relative',
+  transition: 'all 0.5s ease',
+  boxShadow: isNightMode
+    ? '2px 2px 0px #7C8B6A, 0 0 0 1px rgba(229,220,200,0.05)'
+    : '2px 2px 0px #3E2B27, 0 0 0 1px rgba(30,26,25,0.05)',
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0
+},
+  poemText: {
+  fontSize: '0.8rem',
+  lineHeight: '1.5',
+  margin: '0 0 10px 15px',
+  whiteSpace: 'pre-line',
+  fontWeight: '400',
+  flex: 1,
+  overflowY: 'auto',
+  color: isNightMode ? '#E5DCC8' : '#1E1A19'
+},
+  poemAuthor: {
+  fontSize: '0.75rem',
+  textAlign: 'right',
+  marginRight: '8px',
+  fontStyle: 'italic',
+  opacity: 0.8,
+  flexShrink: 0,
+  color: isNightMode ? '#C6C1B5' : '#3E2B27'
+},
+  actionButtons: {
+  display: 'grid',
+  gridTemplateColumns: '0.8fr 0.8fr',
+  gap: '8px',
+  flexShrink: 0
+},
+  actionBtn: {
+  padding: '8px 12px',
+  background: '#8B2A2A',
+  color: '#E5DCC8',
+  border: '2px solid #8B2A2A',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  fontFamily: "'Courier Prime', monospace",
+  fontSize: '0.7rem',
+  fontWeight: '700',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  transition: 'all 0.3s ease',
+  boxShadow: '1px 1px 0px rgba(0,0,0,0.3)'
+},
+  fullWidthActionBtn: {
+    gridColumn: '1 / -1'
+  },
+  scrapbook: {
+  display: activeSection === 'scrapbook' ? 'flex' : 'none',
+  flex: 1,
+  overflowY: 'auto',
+  flexDirection: 'column'
+},
+  savedPoem: {
+  background: isNightMode ? '#2A1F1D' : '#E5DCC8',
+  border: isNightMode 
+    ? '2px solid #7C8B6A'
+    : '2px solid #3E2B27',
+  borderRadius: '6px',
+  padding: '10px',
+  marginBottom: '10px',
+  position: 'relative',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  transform: 'rotate(-0.5deg)',
+  flexShrink: 0
+},
+  savedPoemEven: {
+    transform: 'rotate(0.5deg)'
+  },
+  savedPoemText: {
+  fontSize: '0.7rem',
+  lineHeight: '1.4',
+  margin: '0 0 8px 0',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+  color: isNightMode ? '#E5DCC8' : '#1E1A19'
+},
+  savedPoemAuthor: {
+  fontSize: '0.65rem',
+  margin: '0',
+  fontStyle: 'italic',
+  opacity: 0.8,
+  color: isNightMode ? '#C6C1B5' : '#3E2B27'
+},
+  deleteBtn: {
+    position: 'absolute',
+    top: '5px',
+    right: '5px',
+    width: '16px',
+    height: '16px',
+    background: '#8B2A2A',
+    color: '#E5DCC8',
+    border: 'none',
+    borderRadius: '50%',
+    cursor: 'pointer',
+    fontSize: '10px',
+    display: 'none',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  loading: {
+    textAlign: 'center',
+    padding: '30px 15px',
+    fontStyle: 'italic',
+    fontSize: '0.8rem'
+  },
+  loadingAfter: {
+    display: 'block',
+    width: '20px',
+    height: '20px',
+    border: isNightMode 
+      ? '2px solid #7C8B6A'
+      : '2px solid #3E2B27',
+    borderTop: '2px solid #8B2A2A',
+    borderRadius: '50%',
+    margin: '15px auto 0',
+    animation: 'spin 1s linear infinite'
+  },
+  emptyScrapbook: {
+    textAlign: 'center',
+    padding: '40px 15px',
+    opacity: 0.6,
+    fontStyle: 'italic',
+    fontSize: '0.8rem',
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  shareModal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.8)',
+    display: shareModalOpen ? 'flex' : 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000
+  },
+  shareContent: {
+    background: isNightMode ? '#2A1F1D' : '#E5DCC8',
+    border: isNightMode 
+      ? '3px solid #7C8B6A'
+      : '3px solid #3E2B27',
+    borderRadius: '15px',
+    padding: '25px',
+    maxWidth: '300px',
+    width: '85%',
+    textAlign: 'center'
+  },
+  shareTitle: {
+    fontFamily: "'Special Elite', cursive",
+    fontSize: '1.1rem',
+    marginBottom: '15px',
+    color: isNightMode ? '#E5DCC8' : '#1E1A19'
+  },
+  shareButtons: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+    marginBottom: '15px'
+  },
+  shareBtn: {
+    padding: '8px',
+    border: isNightMode 
+      ? '2px solid #7C8B6A'
+      : '2px solid #3E2B27',
+    background: isNightMode ? '#3E2B27' : '#C6C1B5',
+    color: isNightMode ? '#E5DCC8' : '#1E1A19',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontFamily: "'Courier Prime', monospace",
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    textDecoration: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '3px',
+    transition: 'all 0.3s ease'
+  },
+  shareBtnHover: {
+    background: '#8B2A2A',
+    color: '#E5DCC8',
+    borderColor: '#8B2A2A',
+    transform: 'translateY(-1px)'
+  },
+  closeModal: {
+    background: '#8B2A2A',
+    color: '#E5DCC8',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontFamily: "'Courier Prime', monospace",
+    fontWeight: '700',
+    fontSize: '0.8rem'
+  }
+};
 
   return (
     <div style={styles.poetryApp}>

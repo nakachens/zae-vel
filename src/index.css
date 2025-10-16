@@ -25,7 +25,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   user-select: none;
-  background: linear-gradient(135deg, #FEF7ED 0%, #FDBA74 100%);
+  background: linear-gradient(135deg, #3E2B27 0%, #1E1A19 100%);
 }
 
 #root {
@@ -46,27 +46,40 @@ body {
   transition: all 0.2s ease;
 }
 
+.autumn-button {
+  background: linear-gradient(to bottom, #C6C1B5, #A3B1A2);
+  border: 2px solid #1E1A19;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: 'Lora', serif;
+  font-size: 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+  color: #1E1A19;
+}
+
 .autumn-button:hover {
-  background: linear-gradient(to bottom, #FDE68A, #FBBF24);
+  background: linear-gradient(to bottom, #A3B1A2, #7C8B6A);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
 }
 
 .autumn-button:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .autumn-window {
-  background: linear-gradient(to bottom, #FEF7ED, #FED7AA);
-  border: 2px solid #D97706;
+  background: linear-gradient(to bottom, #3E2B27, #2A1F1D);
+  border: 2px solid #1E1A19;
   border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 }
 
 .autumn-titlebar {
-  background: linear-gradient(90deg, #F59E0B 0%, #EA580C 100%);
-  color: white;
+  background: linear-gradient(90deg, #8B2A2A 0%, #6B1F1F 100%);
+  color: #E5DCC8;
   padding: 8px 10px;
   font-size: 13px;
   display: flex;
@@ -78,7 +91,7 @@ body {
 }
 
 .autumn-titlebar.inactive {
-  background: linear-gradient(90deg, #D97706 0%, #B45309 100%);
+  background: linear-gradient(90deg, #5A1A1A 0%, #3E1212 100%);
   opacity: 0.8;
 }
 
@@ -88,19 +101,19 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: linear-gradient(to bottom, #FEF7ED, #FED7AA);
-  border: 1px solid #D97706;
+  background: linear-gradient(to bottom, #3E2B27, #2A1F1D);
+  border: 1px solid #1E1A19;
   border-radius: 7px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #F59E0B, #EA580C);
-  border: 1px solid #D97706;
+  background: linear-gradient(to bottom, #8B2A2A, #6B1F1F);
+  border: 1px solid #1E1A19;
   border-radius: 7px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #FBBF24, #F59E0B);
+  background: linear-gradient(to bottom, #A33333, #8B2A2A);
 }
 
 /* disable text selection for OS elements */
@@ -173,34 +186,34 @@ body {
 /* Warm glow effects */
 .warm-glow {
   box-shadow: 
-    0 0 20px rgba(251, 191, 36, 0.3),
-    0 0 40px rgba(249, 115, 22, 0.2),
-    0 0 60px rgba(234, 88, 12, 0.1);
+    0 0 20px rgba(139, 42, 42, 0.3),
+    0 0 40px rgba(107, 31, 31, 0.2),
+    0 0 60px rgba(62, 43, 39, 0.1);
 }
 
 /* text styles */
 .cozy-text {
   font-family: 'Crimson Text', serif;
-  color: #92400E;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  color: #E5DCC8;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 /* gradient backgrounds */
 .autumn-bg-primary {
   background: linear-gradient(135deg, 
-    #FEF7ED 0%, 
-    #FED7AA 25%, 
-    #FDBA74 50%, 
-    #FB923C 75%, 
-    #F97316 100%
+    #3E2B27 0%, 
+    #2A1F1D 25%, 
+    #1E1A19 50%, 
+    #252120 75%, 
+    #1E1A19 100%
   );
 }
 
 .autumn-bg-secondary {
   background: linear-gradient(135deg, 
-    #FFFBEB 0%, 
-    #FEF3C7 50%, 
-    #FDE68A 100%
+    #C6C1B5 0%, 
+    #A3B1A2 50%, 
+    #7C8B6A 100%
   );
 }
 

@@ -2,30 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/zozo-icon.png" />
+    <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>zozOS</title>
+    <title>zae'vel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- zozafont preload -->
+    <!-- Critical Font Preloads -->
     <link rel="preload" href="./public/zozafont.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="./public/Brick.ttf" as="font" type="font/ttf" crossorigin>
     
-    <!-- notebook fonts-->
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;500;600&display=block" rel="stylesheet">
+    <!-- Google Fonts with display=block for immediate rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=block" rel="stylesheet">
     
+    <!-- Font Face Definitions -->
     <style>
       @font-face {
         font-family: 'zozafont';
         src: url('./public/zozafont.ttf') format('truetype');
         font-display: block;
+        font-weight: normal;
+        font-style: normal;
       }
-     
-      @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@400;500;600&display=block');
       
+      /* Force immediate font loading */
       html::before {
-        content: 'zozOS TIME TO LOG IN?';
+        content: "zae'vel TIME TO LOG IN? LOADING";
         font-family: 'zozafont', monospace;
         position: absolute;
         left: -9999px;
@@ -33,85 +34,46 @@
         visibility: hidden;
         font-size: 64px;
         font-weight: bold;
+        pointer-events: none;
       }
       
       body::before {
-        content: 'Whispers of the Quill Dear diary magical entry Mysterious dude';
-        font-family: 'Dancing Script', cursive;
-        font-weight: 400;
-        position: absolute;
-        left: -9999px;
-        top: -9999px;
-        visibility: hidden;
-      }
-      
-      body::after {
-        content: 'Whispers of the Quill Dear diary magical entry';
+        content: 'Loading Preparing Starting';
         font-family: 'Crimson Text', serif;
         font-weight: 400;
         position: absolute;
         left: -9999px;
         top: -9999px;
         visibility: hidden;
+        pointer-events: none;
       }
-
-      html::after {
-        content: 'CLOCK Menu Applications';
-        font-family: 'Cinzel', serif;
+      
+      body::after {
+        content: 'System Interface Desktop';
+        font-family: 'Lora', serif;
         font-weight: 400;
         position: absolute;
         left: -9999px;
         top: -9999px;
         visibility: hidden;
-      }
-
-      head::before {
-        content: 'Mysterious dude Menu My Collected Thoughts Dear diary';
-        font-family: 'Dancing Script', cursive;
-        font-weight: 600;
-        position: absolute;
-        left: -9999px;
-        top: -9999px;
-        visibility: hidden;
-      }
-      
-      head::after {
-        content: 'zozOS AUTUMN OS LOADING';
-        font-family: 'zozafont', monospace;
-        font-weight: bold;
-        position: absolute;
-        left: -9999px;
-        top: -9999px;
-        visibility: hidden;
-        font-size: 32px;
+        pointer-events: none;
       }
     </style>
 
-    <!-- preloading animations -->
+    <!-- High Priority Assets - Desktop & Login -->
+    <link rel="preload" href="./assets/1.jpg" as="image">
+    <link rel="preload" href="./zhong.jpg" as="image">
+    <link rel="preload" href="./click.mp3" as="audio">
+    
+    <!-- Pet Animations (Critical for interaction) -->
     <link rel="preload" href="./animations/walking_right.gif" as="image">
     <link rel="preload" href="./animations/walking_left.gif" as="image">
     <link rel="preload" href="./animations/click_right.gif" as="image">
     <link rel="preload" href="./animations/click-left.gif" as="image">
     <link rel="preload" href="./animations/drag.png" as="image">
 
-    <!-- audio files -->
-    <link rel="preload" href="./click.mp3" as="audio">
-    <link rel="preload" href="./flip.mp3" as="audio">
-    <link rel="preload" href="./keyboard.mp3" as="audio">
-    <link rel="preload" href="./keyboardog.mp3" as="audio">
-
-    <!-- character images -->
-    <link rel="preload" href="./assets/kaoru2.gif" as="image">
-    <link rel="preload" href="./assets/kaoru.gif" as="image">
-    <link rel="preload" href="./assets/hehe.gif" as="image">
-    <link rel="preload" href="./assets/silly.jpg" as="image">
-    <link rel="preload" href="./assets/kaoruuu.gif" as="image">
-
-    <!-- wallpaper-->
-    <link rel="preload" href="./assets/desktop12.jpg" as="image">
-
-    <!-- icons-->
-    <link rel="preload" href="./assets/calculator.png" as="image">
+    <!-- Core App Icons -->
+    <link rel="preload" href="./assets/calc.png" as="image">
     <link rel="preload" href="./assets/music.png" as="image">
     <link rel="preload" href="./assets/weather.png" as="image">
     <link rel="preload" href="./assets/tictactoe.png" as="image">
@@ -123,59 +85,40 @@
     <link rel="preload" href="./assets/snakey.png" as="image">
     <link rel="preload" href="./assets/paint.png" as="image">
     <link rel="preload" href="./assets/folder.png" as="image">
-    <link rel="preload" href="./assets/img.png" as="image">
-    <link rel="preload" href="./assets/txt.png" as="image">
+    <link rel="preload" href="./assets/heart.png" as="image">
+    <link rel="preload" href="./assets/settings.png" as="image">
 
-    <!-- pfp -->
-    <link rel="preload" href="./caelus.jpg" as="image">
-    <link rel="preload" href="./assets/pfp.jpg" as="image">
+    <!-- Secondary Assets -->
+    <link rel="preload" href="./assets/kaoru.gif" as="image">
+    <link rel="preload" href="./assets/hehe.gif" as="image">
+    <link rel="preload" href="./flip.mp3" as="audio">
+    <link rel="preload" href="./keyboard.mp3" as="audio">
 
-    <!-- game assets-->
-    <link rel="preload" href="./hehe/basket.png" as="image">
-    <link rel="preload" href="./hehe/leaf-1.png" as="image">
-    <link rel="preload" href="./hehe/leaf-2.png" as="image">
-    <link rel="preload" href="./hehe/leaf-3.png" as="image">
-
-    <!-- album covers-->
-    <link rel="preload" href="./albums/1.jpg" as="image">
-    <link rel="preload" href="./albums/2.jpg" as="image">
-    <link rel="preload" href="./albums/3.jfif" as="image">
-    <link rel="preload" href="./albums/4.jpg" as="image">
-    <link rel="preload" href="./albums/5.jpg" as="image">
-
-    <!-- game audio files -->
-    <link rel="preload" href="./hehe/catch2.mp3" as="audio">
-    <link rel="preload" href="./hehe/home-music.mp3" as="audio">
-    <link rel="preload" href="./hehe/game-music.mp3" as="audio">
-    <link rel="preload" href="./hehe/clickfr.mp3" as="audio">
-    <link rel="preload" href="./hehe/eat.mp3" as="audio">
-
-    <!-- memory game's items -->
-    <link rel="preload" href="./memorygame-music.mp3" as="audio">
-    <link rel="preload" href="./cardflip.mp3" as="audio">
-
-    <!-- extras-->
-    <link rel="preload" href="./images/img-1.png" as="image">
-    <link rel="preload" href="./images/img-2.png" as="image">
-    <link rel="preload" href="./images/img-3.jpg" as="image">
-
-    <!-- bg-->
-    <link rel="preload" href="./calm-music.mp3" as="audio">
-    
+    <!-- Base Styles -->
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
       body {
         margin: 0;
         padding: 0;
         overflow: hidden;
-        background: linear-gradient(135deg, #FEF7ED 0%, #FDBA74 100%);
+        background: linear-gradient(135deg, #3E2B27 0%, #1E1A19 100%);
         font-family: 'Crimson Text', 'Georgia', serif;
+        width: 100vw;
+        height: 100vh;
       }
       
       #root {
         width: 100vw;
         height: 100vh;
+        position: relative;
       }
       
+      /* Loading Screen Styles */
       .loading-screen {
         position: fixed;
         top: 0;
@@ -183,17 +126,17 @@
         width: 100vw;
         height: 100vh;
         background: linear-gradient(135deg, 
-          #FEF7ED 0%, 
-          #FED7AA 25%, 
-          #FDBA74 50%, 
-          #FB923C 75%, 
-          #F97316 100%
+          #3E2B27 0%, 
+          #2A1F1D 25%, 
+          #1E1A19 50%, 
+          #252120 75%, 
+          #1E1A19 100%
         );
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        color: #92400E;
+        color: #E5DCC8;
         z-index: 9999;
         font-family: 'Crimson Text', serif;
       }
@@ -203,6 +146,7 @@
         margin-top: 24px;
         animation: blink 1.5s infinite ease-in-out;
         font-weight: 500;
+        color: #C6C1B5;
       }
       
       @keyframes blink {
@@ -225,17 +169,20 @@
         font-size: 12px;
         opacity: 0.7;
         font-style: italic;
-        color: #A16207;
+        color: #A3B1A2;
       }
       
       .os-title {
         font-size: 32px;
         margin-bottom: 8px;
         font-weight: 600;
-        color: #92400E;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        color: #E5DCC8;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-family: 'zozafont', monospace;
+        letter-spacing: 0.1em;
       }
 
+      /* Ambient Particles */
       .autumn-particles {
         position: absolute;
         width: 100%;
@@ -248,42 +195,85 @@
         position: absolute;
         font-size: 20px;
         animation: fall linear infinite;
-        opacity: 0.6;
+        opacity: 0.3;
       }
 
       @keyframes fall {
         0% {
           transform: translateY(-100vh) rotate(0deg);
-          opacity: 1;
+          opacity: 0.5;
         }
         100% {
           transform: translateY(100vh) rotate(360deg);
           opacity: 0;
         }
       }
+
+      /* Smooth transitions */
+      .window-smooth-transition {
+        transition: width 0.2s ease, height 0.2s ease, left 0.2s ease, top 0.2s ease;
+      }
+
+      .window-resizing {
+        transition: none !important;
+      }
+
+      .app-content-smooth {
+        transition: all 0.2s ease;
+      }
+
+      /* Prevent text selection during interactions */
+      .interactive-item {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
+
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #2A1F1D;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #7C8B6A;
+        border: 2px solid #2A1F1D;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #8B9A7A;
+      }
     </style>
   </head>
   <body>
     <div id="root">
+      <!-- Initial loading screen (replaced by React) -->
       <div class="loading-screen">
         <div class="autumn-particles">
-          <div class="particle" style="left: 10%; animation-duration: 3s; animation-delay: 0s;">🍂</div>
-          <div class="particle" style="left: 20%; animation-duration: 4s; animation-delay: 0.5s;">🍃</div>
-          <div class="particle" style="left: 30%; animation-duration: 3.5s; animation-delay: 1s;">🌰</div>
-          <div class="particle" style="left: 40%; animation-duration: 4.2s; animation-delay: 1.5s;">🍃</div>
-          <div class="particle" style="left: 50%; animation-duration: 3.8s; animation-delay: 2s;">🎋</div>
-          <div class="particle" style="left: 60%; animation-duration: 4.5s; animation-delay: 0.2s;">🍂</div>
-          <div class="particle" style="left: 70%; animation-duration: 3.2s; animation-delay: 1.8s;">🍃</div>
-          <div class="particle" style="left: 80%; animation-duration: 4.8s; animation-delay: 0.8s;">🌾</div>
-          <div class="particle" style="left: 90%; animation-duration: 3.6s; animation-delay: 2.3s;">🍃</div>
+          <div class="particle" style="left: 10%; animation-duration: 5s; animation-delay: 0s;">🌧️</div>
+          <div class="particle" style="left: 20%; animation-duration: 6s; animation-delay: 0.5s;">🍂</div>
+          <div class="particle" style="left: 30%; animation-duration: 5.5s; animation-delay: 1s;">💧</div>
+          <div class="particle" style="left: 40%; animation-duration: 6.2s; animation-delay: 1.5s;">🌫️</div>
+          <div class="particle" style="left: 50%; animation-duration: 5.8s; animation-delay: 2s;">🍂</div>
+          <div class="particle" style="left: 60%; animation-duration: 6.5s; animation-delay: 0.2s;">💧</div>
+          <div class="particle" style="left: 70%; animation-duration: 5.2s; animation-delay: 1.8s;">🌧️</div>
+          <div class="particle" style="left: 80%; animation-duration: 6.8s; animation-delay: 0.8s;">🍂</div>
+          <div class="particle" style="left: 90%; animation-duration: 5.6s; animation-delay: 2.3s;">💧</div>
         </div>
         
-        <div class="boot-logo">🍂</div>
-        <div class="os-title">AUTUMN OS</div>
-        <div class="version-text">Cozy Computing Experience</div>
-        <div class="loading-text">Warming up...</div>
+        <div class="boot-logo">🌧️</div>
+        <div class="os-title">zae'vel</div>
+        <div class="version-text">Specialised Computing Experience</div>
+        <div class="loading-text">Loading silently...</div>
       </div>
     </div>
+    
+    <!-- Main App Script -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

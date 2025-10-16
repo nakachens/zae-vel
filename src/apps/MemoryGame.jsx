@@ -281,10 +281,10 @@ const MemoryGame = () => {
         {/* header */}
         <div style={styles.header}>
           <h1 style={styles.title}>
-            🍂 Autumn Mysteries 🍂
+            Train ur brain haha (˶ᵔ ᵕ ᵔ˶)
           </h1>
           <p style={styles.subtitle}>
-            Uncover the secrets hidden in the autumn mist...
+            Uncover the secrets hidden in the autumn mist~
           </p>
           <div style={styles.controls}>
             <span style={styles.movesCounter}>

@@ -98,36 +98,37 @@ const CalculatorApp = () => {
   }, []);
 
   const styles = {
-  container: {
-    width: '100%',
-    height: '100%',
-    background: 'transparent',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: "'Courier Prime', monospace"
-  },
-  calculator: {
-    width: 'min(300px, 100%)', 
-    height: 'min(380px, 100%)', 
-    background: 'transparent',
-    borderRadius: '20px',
-    padding: '20px',
-    boxSizing: 'border-box', 
-    border: '2px solid #d4b896',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px'
-  },
+    container: {
+      width: '100%',
+      height: '100%',
+      background: 'transparent',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: "'Courier Prime', monospace"
+    },
+    calculator: {
+      width: 'min(300px, 100%)', 
+      height: 'min(380px, 100%)', 
+      background: 'transparent',
+      borderRadius: '20px',
+      padding: '20px',
+      boxSizing: 'border-box', 
+      border: '2px solid #3E2B27',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '15px',
+      boxShadow: '10px 10px 20px rgba(30, 26, 25, 0.4), -10px -10px 20px rgba(198, 193, 181, 0.2)'
+    },
     display: {
       width: '100%',
       height: '60px',
-      background: '#f9f2e7',
-      border: '2px solid #c9a876',
+      background: '#E5DCC8',
+      border: '2px solid #3E2B27',
       borderRadius: '10px',
       fontSize: '18px',
       fontWeight: '700',
-      color: '#8b4513',
+      color: '#1E1A19',
       textAlign: 'right',
       padding: '10px 15px',
       boxSizing: 'border-box',
@@ -153,26 +154,26 @@ const CalculatorApp = () => {
       cursor: 'pointer',
       padding: '0',
       minHeight: '45px',
-      boxShadow: '4px 4px 8px rgba(180, 140, 90, 0.3), -3px -3px 6px rgba(255, 250, 240, 0.8)',
+      boxShadow: '4px 4px 8px rgba(30, 26, 25, 0.3), -3px -3px 6px rgba(198, 193, 181, 0.5)',
       transition: 'transform 0.1s ease',
       fontFamily: "'Courier Prime', monospace"
     },
     number: {
-      background: '#f4e8d0',
-      color: '#8b4513'
+      background: '#C6C1B5',
+      color: '#1E1A19'
     },
     operator: {
-      background: '#d2b48c',
-      color: '#5d4037'
+      background: '#A3B1A2',
+      color: '#1E1A19'
     },
     equals: {
-      background: '#cd853f',
-      color: '#fff',
+      background: '#8B2A2A',
+      color: '#E5DCC8',
       gridRow: 'span 2'
     },
     clear: {
-      background: '#deb887',
-      color: '#8b4513',
+      background: '#7C8B6A',
+      color: '#E5DCC8',
       gridColumn: 'span 2'
     },
     zero: {

@@ -16,9 +16,9 @@ body {
   background: transparent; 
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 10px 10px 20px rgba(180, 140, 90, 0.3),
-              -10px -10px 20px rgba(255, 250, 240, 0.8);
-  border: 2px solid #d4b896;
+  box-shadow: 10px 10px 20px rgba(30, 26, 25, 0.4),
+              -10px -10px 20px rgba(198, 193, 181, 0.2);
+  border: 2px solid #3E2B27;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -28,12 +28,12 @@ body {
 .display {
   width: 100%;
   height: 60px;
-  background: #f9f2e7;
-  border: 2px solid #c9a876;
+  background: #E5DCC8;
+  border: 2px solid #3E2B27;
   border-radius: 10px;
   font-size: 18px;
   font-weight: 700;
-  color: #8b4513;
+  color: #1E1A19;
   text-align: right;
   padding: 10px 15px;
   box-sizing: border-box;
@@ -61,64 +61,65 @@ button {
   cursor: pointer;
   padding: 0;
   min-height: 45px;
-  box-shadow: 4px 4px 8px rgba(180, 140, 90, 0.3),
-              -3px -3px 6px rgba(255, 250, 240, 0.8);
+  box-shadow: 4px 4px 8px rgba(30, 26, 25, 0.3),
+              -3px -3px 6px rgba(198, 193, 181, 0.5);
   transition: transform 0.1s ease;
   font-family: 'Courier Prime', monospace;
 }
 
 button:active {
   transform: scale(0.95);
-  box-shadow: 2px 2px 4px rgba(180, 140, 90, 0.4),
-              -1px -1px 2px rgba(255, 250, 240, 0.9);
+  box-shadow: 2px 2px 4px rgba(30, 26, 25, 0.4),
+              -1px -1px 2px rgba(198, 193, 181, 0.6);
 }
 
 .number {
-  background: #f4e8d0;
-  color: #8b4513;
+  background: #C6C1B5;
+  color: #1E1A19;
 }
 
 .operator {
-  background: #d2b48c;
-  color: #5d4037;
+  background: #A3B1A2;
+  color: #1E1A19;
 }
 
 .equals {
-  background: #cd853f;
-  color: #fff;
+  background: #8B2A2A;
+  color: #E5DCC8;
   grid-row: span 2;
 }
 
 .clear {
-  background: #deb887;
-  color: #8b4513;
+  background: #7C8B6A;
+  color: #E5DCC8;
   grid-column: span 2;
 }
 
 .zero {
   grid-column: span 2;
 }
+
 .calculator,
 .calculator * {
   background: transparent !important;
 }
 
 .display {
-  background: #f9f2e7 !important;
+  background: #E5DCC8 !important;
 }
 
 .number {
-  background: #f4e8d0 !important;
+  background: #C6C1B5 !important;
 }
 
 .operator {
-  background: #d2b48c !important;
+  background: #A3B1A2 !important;
 }
 
 .equals {
-  background: #cd853f !important;
+  background: #8B2A2A !important;
 }
 
 .clear {
-  background: #deb887 !important;
+  background: #7C8B6A !important;
 }

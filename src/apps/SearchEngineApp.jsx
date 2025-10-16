@@ -103,8 +103,8 @@ const SearchEngine = () => {
     <div className="app-container">
       <div className="screen">
         <div className="header">
-          <div className="title">AUTUMN SEARCH</div>
-          <div className="subtitle">~ Retro Terminal v1.0 ~</div>
+          <div className="title">ZOOGLE</div>
+          <div className="subtitle">~ Retro Terminal v3.0 ~</div>
         </div>
 
         <div className="search-section">
@@ -141,19 +141,19 @@ const SearchEngine = () => {
         </div>
 
         <div className="news-section">
-          <div className="news-title">// AUTUMN HEADLINES //</div>
+          <div className="news-title">// ZAE'VEL RELEASE SPECIAL //</div>
           <div className="news-cards">
-            <div className="news-card" onClick={() => searchFor('September autumn weather')}>
-              <div className="news-headline">September is Here: The Season of Change Begins</div>
-              <div className="news-date">Sep 17, 2025</div>
+            <div className="news-card" onClick={() => searchFor('moon on 28th october 2006')}>
+              <div className="news-headline">Reports say; "The moon look especially beautiful on a certain day!"</div>
+              <div className="news-date">Oct 28, 2025</div>
             </div>
-            <div className="news-card" onClick={() => searchFor('seasonal depression autumn')}>
-              <div className="news-headline">Kaoru Hakaze: "September Makes Me Melancholy"</div>
+            <div className="news-card" onClick={() => searchFor('zaina name meaning')}>
+              <div className="news-headline">"What does beauty truly stands for?"</div>
               <div className="news-date">Sep 16, 2025</div>
             </div>
-            <div className="news-card" onClick={() => searchFor('autumn leaves fall foliage 2025')}>
-              <div className="news-headline">Peak Foliage: Nature's Greatest Show Returns</div>
-              <div className="news-date">Sep 15, 2025</div>
+            <div className="news-card" onClick={() => searchFor('benefits of solitude and reflection')}>
+              <div className="news-headline">Finding Peace in Stillness: The Art of Being Alone</div>
+              <div className="news-date">Oct 15, 2025</div>
             </div>
           </div>
         </div>

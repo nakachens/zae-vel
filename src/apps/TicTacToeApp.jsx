@@ -5,7 +5,7 @@ const AutumnTicTacToe = () => {
   const [currentPlayer, setCurrentPlayer] = useState('X');
   const [gameActive, setGameActive] = useState(true);
   const [playerWins, setPlayerWins] = useState(0);
-  const [kaoruWins, setKaoruWins] = useState(0);
+  const [zhongliWins, setZhongliWins] = useState(0);
   const [currentScreen, setCurrentScreen] = useState('home');
   const [showGamePopup, setShowGamePopup] = useState(false);
   const [showStatsPopup, setShowStatsPopup] = useState(false);
@@ -80,10 +80,10 @@ const AutumnTicTacToe = () => {
     }
 
     setCurrentPlayer('O');
-    setTimeout(() => kaoruMove(newBoard), 800);
+    setTimeout(() => zhongliMove(newBoard), 800);
   };
 
-  const kaoruMove = (currentBoard) => {
+  const zhongliMove = (currentBoard) => {
     if (!gameActive) return;
 
     const availableMoves = currentBoard.map((cell, index) => cell === '' ? index : null).filter(val => val !== null);
@@ -97,7 +97,7 @@ const AutumnTicTacToe = () => {
     setBoard(newBoard);
 
     if (checkWinner(newBoard)) {
-      endGame('Kaoru');
+      endGame('Zhongli');
       return;
     }
 
@@ -156,13 +156,13 @@ const AutumnTicTacToe = () => {
 
     let message = '';
     if (winner === 'Player') {
-      message = 'Gahh, you\'re good at this! 😤';
+      message = 'you have beaten me..as it seems...';
       setPlayerWins(prev => prev + 1);
-    } else if (winner === 'Kaoru') {
-      message = 'Hehe~ I won!';
-      setKaoruWins(prev => prev + 1);
+    } else if (winner === 'Zhongli') {
+      message = 'it seems like i have won this match..';
+      setZhongliWins(prev => prev + 1);
     } else {
-      message = 'A draw? Not bad, not bad... 🤔';
+      message = 'A tie is not a loss.. yet its also not a win.. do not think of getting cocky my dear';
     }
 
     setChatMessage(message);
@@ -191,24 +191,24 @@ const AutumnTicTacToe = () => {
     if (currentPlayer === 'X') {
       return 'Your turn! You are X';
     } else {
-      return 'Kaoru is thinking...';
+      return 'Zhongli is thinking...';
     }
   };
 
   const getOverallMessage = () => {
-    if (playerWins === 0 && kaoruWins === 0) {
+    if (playerWins === 0 && zhongliWins === 0) {
       return 'No matches played yet!';
-    } else if (playerWins > kaoruWins) {
+    } else if (playerWins > zhongliWins) {
       return '🎉 You won more matches!';
-    } else if (kaoruWins > playerWins) {
-      return 'Kaoru won more matches!';
+    } else if (zhongliWins > playerWins) {
+      return 'Zhong dong won more matches!';
     } else {
       return '🤝 It\'s tied overall!';
     }
   };
 
   const styles = {
-    container: {
+  container: {
     fontFamily: "'Nunito', sans-serif",
     background: 'transparent',
     width: '100%',
@@ -216,7 +216,7 @@ const AutumnTicTacToe = () => {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    color: '#8b4513',
+    color: '#1E1A19',
     position: 'relative',
     overflow: 'hidden'
   },
@@ -225,8 +225,8 @@ const AutumnTicTacToe = () => {
     borderRadius: '20px',
     padding: '12px', 
     boxSizing: 'border-box',
-    boxShadow: '0 15px 35px rgba(139, 69, 19, 0.15)',
-    border: '3px solid #d4a574',
+    boxShadow: '0 15px 35px rgba(30, 26, 25, 0.3)',
+    border: '3px solid #3E2B27',
     width: '100%',
     height: '100%',
     maxWidth: '360px',
@@ -236,219 +236,219 @@ const AutumnTicTacToe = () => {
     flexDirection: 'column',
     justifyContent: 'space-between'
   },
-    title: {
-      fontFamily: "'Fredoka One', cursive",
-      fontSize: '2em', 
-      color: '#a0522d',
-      marginBottom: '5px', 
-      textShadow: '2px 2px 4px rgba(139, 69, 19, 0.1)',
-      flexShrink: 0
-    },
-    button: {
-      background: 'linear-gradient(145deg, #deb887, #cd853f)',
-      border: 'none',
-      padding: '10px 20px',
-      borderRadius: '25px',
-      fontFamily: "'Nunito', sans-serif",
-      fontWeight: '600',
-      fontSize: '0.9em',
-      color: '#8b4513',
-      cursor: 'pointer',
-      margin: '6px',
-      transition: 'all 0.3s ease',
-      boxShadow: '0 4px 15px rgba(205, 133, 63, 0.3)'
-    },
-    homeScreen: {
-      display: currentScreen === 'home' ? 'flex' : 'none',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100%',
-      gap: '20px'
-    },
-    gameScreen: {
-      display: currentScreen === 'game' ? 'flex' : 'none',
-      flexDirection: 'column',
-      justifyContent: 'flex-start', 
-      height: '100%',
-      padding: '5px 0' 
-    },
-    homeButtonContainer: {
-      marginTop: 'auto', 
-      paddingTop: '10px'
-    },
-    gameBoard: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '6px',
-      margin: '10px auto', 
-      background: '#d4a574',
-      padding: '10px',
-      borderRadius: '15px',
-      boxShadow: 'inset 0 4px 8px rgba(139, 69, 19, 0.2)',
-      width: '210px', 
-      height: '210px',
-      aspectRatio: '1 / 1',
-      boxSizing: 'content-box'
-    },
-    cell: {
-      width: '60px',
-      height: '60px',
-      background: '#faf7f0',
-      border: 'none',
-      borderRadius: '10px',
-      fontFamily: "'Fredoka One', cursive",
-      fontSize: '1.5em',
-      color: '#8b4513',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 3px 10px rgba(139, 69, 19, 0.1)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: '60px',
-      minHeight: '60px',
-      flexShrink: 0
-    },
-    gameInfo: {
-      margin: '8px 0', 
-      fontWeight: '700',
-      fontSize: '0.9em', 
-      flexShrink: 0
-    },
-    popupOverlay: {
-      display: showGamePopup || showStatsPopup ? 'flex' : 'none',
-      position: 'absolute',
-      top: '0',
-      left: '0',
-      width: '100%',
-      height: '100%',
-      background: 'rgba(139, 69, 19, 0.4)',
-      zIndex: 10000,
-      backdropFilter: 'blur(3px)',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    popup: {
-      background: '#faf7f0',
-      padding: '25px',
-      borderRadius: '20px',
-      textAlign: 'center',
-      boxShadow: '0 20px 40px rgba(135, 56, 0, 0.3)',
-      border: '3px solid #d4a574',
-      minWidth: '260px',
-      maxWidth: '90%'
-    },
-    popupTitle: {
-      fontFamily: "'Fredoka One', cursive",
-      fontSize: '1.5em',
-      color: '#a0522d',
-      marginBottom: '15px'
-    },
-    popupText: {
-      marginBottom: '15px',
-      fontWeight: '600',
-      color: '#8b4513',
-      fontSize: '1em'
-    },
-    chatPopup: {
-      background: 'linear-gradient(135deg, #614812ff 0%, #c1aa71ff 100%)',
-      border: '3px solid #444',
-      color: 'white',
-      padding: '0',
-      borderRadius: '15px',
-      minWidth: '250px',
-      maxWidth: '280px',
-      overflow: 'hidden'
-    },
-    chatHeader: {
-      background: 'linear-gradient(135deg, #d4a574 0%, #cd853f 100%)',
-      padding: '10px 15px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      borderBottom: '2px solid #444'
-    },
-    chatPfp: {
-      width: '40px',
-      height: '40px',
-      borderRadius: '50%',
-      background: 'linear-gradient(135deg, #8b4513, #a0522d)',
-      border: '2px solid #faf7f0',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '1.2em',
-      color: '#faf7f0',
-      flexShrink: 0
-    },
-    chatName: {
-      fontFamily: "'Fredoka One', cursive",
-      fontSize: '1em',
-      color: '#2a2a2a',
-      textShadow: '1px 1px 2px rgba(255, 255, 255, 0.3)'
-    },
-    chatBody: {
-      padding: '15px',
-      background: 'linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%)',
-      position: 'relative'
-    },
-    chatDialogue: {
-      background: 'rgba(212, 165, 116, 0.15)',
-      border: '2px solid #d4a574',
-      borderRadius: '10px',
-      padding: '12px',
-      marginBottom: '15px',
-      position: 'relative'
-    },
-    chatText: {
-      fontFamily: "'Nunito', sans-serif",
-      fontSize: '0.95em',
-      color: '#f0e68c',
-      margin: '0',
-      textAlign: 'left',
-      lineHeight: '1.4'
-    },
-    chatButtons: {
-      display: 'flex',
-      gap: '8px',
-      justifyContent: 'center',
-      flexWrap: 'wrap'
-    },
-    chatBtn: {
-      background: 'linear-gradient(145deg, #d4a574, #cd853f)',
-      border: '2px solid #8b4513',
-      padding: '8px 15px',
-      borderRadius: '20px',
-      fontFamily: "'Nunito', sans-serif",
-      fontWeight: '600',
-      fontSize: '0.8em',
-      color: '#2a2a2a',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease'
-    },
-    stats: {
-      background: '#f5f2e8',
-      padding: '12px',
-      borderRadius: '10px',
-      margin: '12px 0',
-      border: '2px solid #e8dcc6'
-    },
-    statRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      margin: '6px 0',
-      fontWeight: '600',
-      fontSize: '0.9em'
-    },
-    winnerText: {
-      fontStyle: 'italic',
-      color: '#a0522d',
-      fontWeight: '700',
-      marginTop: '8px',
-      fontSize: '0.9em'
-    }
-  };
+  title: {
+    fontFamily: "'Fredoka One', cursive",
+    fontSize: '2em', 
+    color: '#3E2B27',
+    marginBottom: '5px', 
+    textShadow: '2px 2px 4px rgba(30, 26, 25, 0.2)',
+    flexShrink: 0
+  },
+  button: {
+    background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '25px',
+    fontFamily: "'Nunito', sans-serif",
+    fontWeight: '600',
+    fontSize: '0.9em',
+    color: '#1E1A19',
+    cursor: 'pointer',
+    margin: '6px',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(62, 43, 39, 0.3)'
+  },
+  homeScreen: {
+    display: currentScreen === 'home' ? 'flex' : 'none',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    gap: '20px'
+  },
+  gameScreen: {
+    display: currentScreen === 'game' ? 'flex' : 'none',
+    flexDirection: 'column',
+    justifyContent: 'flex-start', 
+    height: '100%',
+    padding: '5px 0' 
+  },
+  homeButtonContainer: {
+    marginTop: 'auto', 
+    paddingTop: '10px'
+  },
+  gameBoard: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '6px',
+    margin: '10px auto', 
+    background: '#7C8B6A',
+    padding: '10px',
+    borderRadius: '15px',
+    boxShadow: 'inset 0 4px 8px rgba(30, 26, 25, 0.3)',
+    width: '210px', 
+    height: '210px',
+    aspectRatio: '1 / 1',
+    boxSizing: 'content-box'
+  },
+  cell: {
+    width: '60px',
+    height: '60px',
+    background: '#E5DCC8',
+    border: 'none',
+    borderRadius: '10px',
+    fontFamily: "'Fredoka One', cursive",
+    fontSize: '1.5em',
+    color: '#1E1A19',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 3px 10px rgba(30, 26, 25, 0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '60px',
+    minHeight: '60px',
+    flexShrink: 0
+  },
+  gameInfo: {
+    margin: '8px 0', 
+    fontWeight: '700',
+    fontSize: '0.9em', 
+    flexShrink: 0
+  },
+  popupOverlay: {
+    display: showGamePopup || showStatsPopup ? 'flex' : 'none',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    background: 'rgba(30, 26, 25, 0.5)',
+    zIndex: 10000,
+    backdropFilter: 'blur(3px)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  popup: {
+    background: '#E5DCC8',
+    padding: '25px',
+    borderRadius: '20px',
+    textAlign: 'center',
+    boxShadow: '0 20px 40px rgba(30, 26, 25, 0.4)',
+    border: '3px solid #3E2B27',
+    minWidth: '260px',
+    maxWidth: '90%'
+  },
+  popupTitle: {
+    fontFamily: "'Fredoka One', cursive",
+    fontSize: '1.5em',
+    color: '#3E2B27',
+    marginBottom: '15px'
+  },
+  popupText: {
+    marginBottom: '15px',
+    fontWeight: '600',
+    color: '#1E1A19',
+    fontSize: '1em'
+  },
+  chatPopup: {
+    background: 'linear-gradient(135deg, #3E2B27 0%, #2A1F1D 100%)',
+    border: '3px solid #1E1A19',
+    color: 'white',
+    padding: '0',
+    borderRadius: '15px',
+    minWidth: '250px',
+    maxWidth: '280px',
+    overflow: 'hidden'
+  },
+  chatHeader: {
+    background: 'linear-gradient(135deg, #7C8B6A 0%, #A3B1A2 100%)',
+    padding: '10px 15px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    borderBottom: '2px solid #1E1A19'
+  },
+  chatPfp: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #8B2A2A, #6B1F1F)',
+    border: '2px solid #E5DCC8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.2em',
+    color: '#E5DCC8',
+    flexShrink: 0
+  },
+  chatName: {
+    fontFamily: "'Fredoka One', cursive",
+    fontSize: '1em',
+    color: '#1E1A19',
+    textShadow: '1px 1px 2px rgba(229, 220, 200, 0.3)'
+  },
+  chatBody: {
+    padding: '15px',
+    background: 'linear-gradient(135deg, #3E2B27 0%, #2A1F1D 100%)',
+    position: 'relative'
+  },
+  chatDialogue: {
+    background: 'rgba(124, 139, 106, 0.15)',
+    border: '2px solid #7C8B6A',
+    borderRadius: '10px',
+    padding: '12px',
+    marginBottom: '15px',
+    position: 'relative'
+  },
+  chatText: {
+    fontFamily: "'Nunito', sans-serif",
+    fontSize: '0.95em',
+    color: '#E5DCC8',
+    margin: '0',
+    textAlign: 'left',
+    lineHeight: '1.4'
+  },
+  chatButtons: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center',
+    flexWrap: 'wrap'
+  },
+  chatBtn: {
+    background: 'linear-gradient(145deg, #7C8B6A, #A3B1A2)',
+    border: '2px solid #1E1A19',
+    padding: '8px 15px',
+    borderRadius: '20px',
+    fontFamily: "'Nunito', sans-serif",
+    fontWeight: '600',
+    fontSize: '0.8em',
+    color: '#1E1A19',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  stats: {
+    background: '#C6C1B5',
+    padding: '12px',
+    borderRadius: '10px',
+    margin: '12px 0',
+    border: '2px solid #A3B1A2'
+  },
+  statRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    margin: '6px 0',
+    fontWeight: '600',
+    fontSize: '0.9em'
+  },
+  winnerText: {
+    fontStyle: 'italic',
+    color: '#3E2B27',
+    fontWeight: '700',
+    marginTop: '8px',
+    fontSize: '0.9em'
+  }
+};
 
   return (
     <>
@@ -465,7 +465,7 @@ const AutumnTicTacToe = () => {
 
           {/* gamescreen*/}
           <div style={styles.gameScreen}>
-            <h1 style={styles.title}>🍂 Playing...</h1>
+            <h1 style={styles.title}>ദ്ദി ˉ͈̀꒳ˉ͈́ )✧ Playing...</h1>
             <div style={styles.gameInfo}>{getGameInfo()}</div>
             <div style={styles.gameBoard}>
               {board.map((cell, index) => (
@@ -484,17 +484,17 @@ const AutumnTicTacToe = () => {
               style={styles.button} 
               onClick={goHome}
               onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 20px rgba(205, 133, 63, 0.4)';
-                e.target.style.background = 'linear-gradient(145deg, #f0e68c, #daa520)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 15px rgba(205, 133, 63, 0.3)';
-                e.target.style.background = 'linear-gradient(145deg, #deb887, #cd853f)';
-              }}
+  e.target.style.transform = 'translateY(-2px)';
+  e.target.style.boxShadow = '0 6px 20px rgba(62, 43, 39, 0.4)';
+  e.target.style.background = 'linear-gradient(145deg, #A3B1A2, #7C8B6A)';
+}}
+onMouseLeave={(e) => {
+  e.target.style.transform = 'translateY(0)';
+  e.target.style.boxShadow = '0 4px 15px rgba(62, 43, 39, 0.3)';
+  e.target.style.background = 'linear-gradient(145deg, #C6C1B5, #A3B1A2)';
+}}
             >
-              🏠 Home
+              Home .ᐟ
             </button>
           </div>
         </div>
@@ -508,7 +508,7 @@ const AutumnTicTacToe = () => {
                 <div style={styles.chatPfp}>
                   <img 
                     src="./assets/silly.jpg" 
-                    alt="Kaoru"
+                    alt="Zhongli"
                     style={{
                       width: '100%',
                       height: '100%',
@@ -520,7 +520,7 @@ const AutumnTicTacToe = () => {
                     }}
                   />
                 </div>
-                <div style={styles.chatName}>Kaoru</div>
+                <div style={styles.chatName}>Zhongli</div>
               </div>
               <div style={styles.chatBody}>
                 <div style={styles.chatDialogue}>
@@ -541,13 +541,13 @@ const AutumnTicTacToe = () => {
                     style={styles.chatBtn} 
                     onClick={playAgain}
                     onMouseEnter={(e) => {
-                      e.target.style.background = 'linear-gradient(145deg, #f0e68c, #daa520)';
-                      e.target.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'linear-gradient(145deg, #d4a574, #cd853f)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
+  e.target.style.background = 'linear-gradient(145deg, #A3B1A2, #C6C1B5)';
+  e.target.style.transform = 'translateY(-1px)';
+}}
+onMouseLeave={(e) => {
+  e.target.style.background = 'linear-gradient(145deg, #7C8B6A, #A3B1A2)';
+  e.target.style.transform = 'translateY(0)';
+}}
                   >
                     Play Again
                   </button>
@@ -555,15 +555,17 @@ const AutumnTicTacToe = () => {
                     style={styles.chatBtn} 
                     onClick={goHome}
                     onMouseEnter={(e) => {
-                      e.target.style.background = 'linear-gradient(145deg, #f0e68c, #daa520)';
-                      e.target.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'linear-gradient(145deg, #d4a574, #cd853f)';
-                      e.target.style.transform = 'translateY(0)';
-                    }}
+  e.target.style.transform = 'translateY(-2px)';
+  e.target.style.boxShadow = '0 6px 20px rgba(62, 43, 39, 0.4)';
+  e.target.style.background = 'linear-gradient(145deg, #A3B1A2, #7C8B6A)';
+}}
+onMouseLeave={(e) => {
+  e.target.style.transform = 'translateY(0)';
+  e.target.style.boxShadow = '0 4px 15px rgba(62, 43, 39, 0.3)';
+  e.target.style.background = 'linear-gradient(145deg, #C6C1B5, #A3B1A2)';
+}}
                   >
-                    🏠 Home
+                    Home .ᐟ
                   </button>
                 </div>
               </div>
@@ -573,15 +575,15 @@ const AutumnTicTacToe = () => {
           {/* winners */}
           {showStatsPopup && (
             <div style={styles.popup}>
-              <h2 style={styles.popupTitle}>🏆 Match Statistics</h2>
+              <h2 style={styles.popupTitle}>ᯓ Match Statistics</h2>
               <div style={styles.stats}>
                 <div style={styles.statRow}>
                   <span>Player (You):</span>
                   <span>{playerWins} {playerWins === 1 ? 'win' : 'wins'}</span>
                 </div>
                 <div style={styles.statRow}>
-                  <span>Kaoru:</span>
-                  <span>{kaoruWins} {kaoruWins === 1 ? 'win' : 'wins'}</span>
+                  <span>Zhongli:</span>
+                  <span>{zhongliWins} {zhongliWins === 1 ? 'win' : 'wins'}</span>
                 </div>
                 <div style={styles.winnerText}>{getOverallMessage()}</div>
               </div>

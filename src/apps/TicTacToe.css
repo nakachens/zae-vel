@@ -14,7 +14,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #8b4513;
+  color: #1E1A19;
   position: relative;
   overflow: hidden;
 }
@@ -23,8 +23,8 @@
   background: transparent; 
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 15px 35px rgba(139, 69, 19, 0.15);
-  border: 3px solid #d4a574;
+  box-shadow: 0 15px 35px rgba(30, 26, 25, 0.3);
+  border: 3px solid #3E2B27;
   width: 100%;
   height: 100%;
   max-width: 360px;
@@ -38,31 +38,31 @@
 .tictactoe-container h1 {
   font-family: 'Fredoka One', cursive;
   font-size: 1.8em;
-  color: #a0522d;
+  color: #3E2B27;
   margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
+  text-shadow: 2px 2px 4px rgba(30, 26, 25, 0.2);
   flex-shrink: 0;
 }
 
 .tictactoe-container .btn {
-  background: linear-gradient(145deg, #deb887, #cd853f);
+  background: linear-gradient(145deg, #C6C1B5, #A3B1A2);
   border: none;
   padding: 10px 20px;
   border-radius: 25px;
   font-family: 'Nunito', sans-serif;
   font-weight: 600;
   font-size: 0.9em;
-  color: #8b4513;
+  color: #1E1A19;
   cursor: pointer;
   margin: 6px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(205, 133, 63, 0.3);
+  box-shadow: 0 4px 15px rgba(62, 43, 39, 0.3);
 }
 
 .tictactoe-container .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(205, 133, 63, 0.4);
-  background: linear-gradient(145deg, #f0e68c, #daa520);
+  box-shadow: 0 6px 20px rgba(62, 43, 39, 0.4);
+  background: linear-gradient(145deg, #A3B1A2, #7C8B6A);
 }
 
 .tictactoe-container .btn:active {
@@ -98,7 +98,6 @@
   box-sizing: content-box;
 }
 
-
 .tictactoe-container .cell {
   min-width: 60px;
   min-height: 60px;
@@ -110,7 +109,7 @@
 }
 
 .tictactoe-container .cell:hover:not(:disabled) {
-  background: #f5f2e8;
+  background: #C6C1B5;
   transform: scale(1.05);
 }
 
@@ -132,7 +131,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(139, 69, 19, 0.4);
+  background: rgba(30, 26, 25, 0.5);
   z-index: 10000;
   backdrop-filter: blur(3px);
 }
@@ -146,12 +145,12 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #faf7f0;
+  background: #E5DCC8;
   padding: 25px;
   border-radius: 20px;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(139, 69, 19, 0.3);
-  border: 3px solid #d4a574;
+  box-shadow: 0 20px 40px rgba(30, 26, 25, 0.4);
+  border: 3px solid #3E2B27;
   min-width: 260px;
   max-width: 90%;
 }
@@ -159,20 +158,20 @@
 .tictactoe-container .popup h2 {
   font-family: 'Fredoka One', cursive;
   font-size: 1.5em;
-  color: #a0522d;
+  color: #3E2B27;
   margin-bottom: 15px;
 }
 
 .tictactoe-container .popup p {
   margin-bottom: 15px;
   font-weight: 600;
-  color: #8b4513;
+  color: #1E1A19;
   font-size: 1em;
 }
 
 .tictactoe-container .chat-popup {
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-  border: 3px solid #444;
+  background: linear-gradient(135deg, #3E2B27 0%, #2A1F1D 100%);
+  border: 3px solid #1E1A19;
   color: white;
   padding: 0;
   border-radius: 15px;
@@ -182,44 +181,44 @@
 }
 
 .tictactoe-container .chat-header {
-  background: linear-gradient(135deg, #d4a574 0%, #cd853f 100%);
+  background: linear-gradient(135deg, #7C8B6A 0%, #A3B1A2 100%);
   padding: 10px 15px;
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 2px solid #444;
+  border-bottom: 2px solid #1E1A19;
 }
 
 .tictactoe-container .chat-pfp {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b4513, #a0522d);
-  border: 2px solid #faf7f0;
+  background: linear-gradient(135deg, #8B2A2A, #6B1F1F);
+  border: 2px solid #E5DCC8;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2em;
-  color: #faf7f0;
+  color: #E5DCC8;
   flex-shrink: 0;
 }
 
 .tictactoe-container .chat-name {
   font-family: 'Fredoka One', cursive;
   font-size: 1em;
-  color: #2a2a2a;
-  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+  color: #1E1A19;
+  text-shadow: 1px 1px 2px rgba(229, 220, 200, 0.3);
 }
 
 .tictactoe-container .chat-body {
   padding: 15px;
-  background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+  background: linear-gradient(135deg, #3E2B27 0%, #2A1F1D 100%);
   position: relative;
 }
 
 .tictactoe-container .chat-dialogue {
-  background: rgba(212, 165, 116, 0.15);
-  border: 2px solid #d4a574;
+  background: rgba(124, 139, 106, 0.15);
+  border: 2px solid #7C8B6A;
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 15px;
@@ -235,13 +234,13 @@
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 8px solid #d4a574;
+  border-bottom: 8px solid #7C8B6A;
 }
 
 .tictactoe-container .chat-text {
   font-family: 'Nunito', sans-serif;
   font-size: 0.95em;
-  color: #f0e68c;
+  color: #E5DCC8;
   margin: 0;
   text-align: left;
   line-height: 1.4;
@@ -255,29 +254,29 @@
 }
 
 .tictactoe-container .chat-btn {
-  background: linear-gradient(145deg, #d4a574, #cd853f);
-  border: 2px solid #8b4513;
+  background: linear-gradient(145deg, #7C8B6A, #A3B1A2);
+  border: 2px solid #1E1A19;
   padding: 8px 15px;
   border-radius: 20px;
   font-family: 'Nunito', sans-serif;
   font-weight: 600;
   font-size: 0.8em;
-  color: #2a2a2a;
+  color: #1E1A19;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .tictactoe-container .chat-btn:hover {
-  background: linear-gradient(145deg, #f0e68c, #daa520);
+  background: linear-gradient(145deg, #A3B1A2, #C6C1B5);
   transform: translateY(-1px);
 }
 
 .tictactoe-container .stats {
-  background: #f5f2e8;
+  background: #C6C1B5;
   padding: 12px;
   border-radius: 10px;
   margin: 12px 0;
-  border: 2px solid #e8dcc6;
+  border: 2px solid #A3B1A2;
 }
 
 .tictactoe-container .stat-row {
@@ -290,7 +289,7 @@
 
 .tictactoe-container .winner-text {
   font-style: italic;
-  color: #a0522d;
+  color: #3E2B27;
   font-weight: 700;
   margin-top: 8px;
   font-size: 0.9em;
@@ -323,32 +322,33 @@
 }
 
 .tictactoe-container .game-board {
-  background: #d4a574 !important;
+  background: #7C8B6A !important;
 }
 
 .tictactoe-container .cell {
-  background: #faf7f0 !important;
+  background: #E5DCC8 !important;
 }
 
 .tictactoe-container .stats {
-  background: #f5f2e8 !important;
+  background: #C6C1B5 !important;
 }
 
 .tictactoe-container .popup {
-  background: #faf7f0 !important;
+  background: #E5DCC8 !important;
 }
 
 .tictactoe-container .chat-header {
-  background: linear-gradient(135deg, #d4a574 0%, #cd853f 100%) !important;
+  background: linear-gradient(135deg, #7C8B6A 0%, #A3B1A2 100%) !important;
 }
 
 .tictactoe-container .chat-body {
-  background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%) !important;
+  background: linear-gradient(135deg, #3E2B27 0%, #2A1F1D 100%) !important;
 }
 
 .tictactoe-container .chat-popup {
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%) !important;
+  background: linear-gradient(135deg, #3E2B27 0%, #2A1F1D 100%) !important;
 }
+
 .tictactoe-container .game-screen {
   gap: 5px !important;
 }

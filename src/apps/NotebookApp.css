@@ -2,18 +2,19 @@
 
 .notebook-app-wrapper {
     /* day colors */
-    --bg-primary: #f4f1e8;
-    --bg-secondary: #faf8f3;
-    --text-primary: #271800;
-    --text-secondary: #5c3301;
-    --text-tertiary: #e6d1b5;
-    --accent: #8b4513;
-    --paper-bg: #fefcf7;
-    --paper-shadow: rgba(139, 69, 19, 0.1);
-    --border-color: rgba(139, 69, 19, 0.2);
-    --button-bg: rgba(139, 69, 19, 0.1);
-    --button-hover: rgba(139, 69, 19, 0.2);
-    --chat-bg: rgba(255, 255, 255, 0.9);
+    --bg-primary: #E5DCC8;
+    --bg-secondary: #C6C1B5;
+    --text-primary: #1E1A19;
+    --text-secondary: #3E2B27;
+    --text-tertiary: #8B2A2A;
+    --accent: #8B2A2A;
+    --paper-bg: #F5F2EB;
+    --paper-shadow: rgba(139, 42, 42, 0.15);
+    --border-color: rgba(139, 42, 42, 0.25);
+    --button-bg: rgba(139, 42, 42, 0.08);
+    --button-hover: rgba(139, 42, 42, 0.15);
+    --chat-bg: rgba(245, 242, 235, 0.95);
+    --text-lalala: #E5DCC8;
     
     width: 100%;
     height: 100%;
@@ -25,17 +26,17 @@
 
 .notebook-app-wrapper.dark-theme {
     /* night mode */
-    --bg-primary: #1a1b2e;
-    --bg-secondary: #16213e;
-    --text-primary: #e8d5b7;
-    --text-secondary: #b8a082;
-    --accent: #f4c2a1;
-    --paper-bg: #0f1419;
-    --paper-shadow: rgba(244, 194, 161, 0.2);
-    --border-color: rgba(244, 194, 161, 0.3);
-    --button-bg: rgba(244, 194, 161, 0.1);
-    --button-hover: rgba(244, 194, 161, 0.2);
-    --chat-bg: rgba(15, 20, 25, 0.9);
+    --bg-primary: #1E1A19;
+    --bg-secondary: #3E2B27;
+    --text-primary: #E5DCC8;
+    --text-secondary: #C6C1B5;
+    --accent: #e0d5d4;
+    --paper-bg: #2A2320;
+    --paper-shadow: rgba(139, 42, 42, 0.3);
+    --border-color: rgba(139, 42, 42, 0.4);
+    --button-bg: rgba(139, 42, 42, 0.15);
+    --button-hover: rgba(139, 42, 42, 0.25);
+    --chat-bg: rgba(42, 35, 32, 0.95);
 }
 
 .notebook-app-wrapper * {
@@ -69,7 +70,7 @@
     justify-content: center;
     align-items: center;
     height: 100%;
-    background: radial-gradient(ellipse at center, var(--paper-bg) 0%, var(--bg-secondary) 100%);
+    background: radial-gradient(ellipse at center, #E5DCC8 0%, #C6C1B5 100%);
     text-align: center;
     padding: 20px;
 }
@@ -77,16 +78,16 @@
 .fantasy-title {
     font-family: 'Cinzel', serif;
     font-size: 1.8rem;
-    color: var(--text-tertiary);
+    color: #885555;
     margin-bottom: 12px;
-    text-shadow: 3px 3px 6px var(--paper-shadow);
+    text-shadow: 2px 2px 4px rgba(139, 42, 42, 0.2);
     letter-spacing: 1.5px;
 }
 
 .emotional-subtitle {
     font-family: 'Dancing Script', cursive;
     font-size: 1rem;
-    color: var(--text-tertiary);
+    color: #d3c8c6;
     margin-bottom: 20px;
     max-width: 280px;
     line-height: 1.4;
@@ -96,7 +97,8 @@
 .mystical-elements {
     font-size: 1.2rem;
     margin: 12px 0;
-    opacity: 0.7;
+    opacity: 0.6;
+    color: #7C8B6A;
 }
 
 .open-notebook-btn {
@@ -139,7 +141,7 @@
 .sidebar-title {
     font-family: 'Dancing Script', cursive;
     font-size: 1.3rem;
-    color: var(--text-tertiary);
+    color: var(--text-lalala);
     text-align: center;
     margin-bottom: 15px;
     border-bottom: 1px solid var(--border-color);
@@ -149,7 +151,7 @@
 .sidebar-btn {
     padding: 10px 12px;
     background: var(--button-bg);
-    color: var(--text-tertiary);
+    color: var(--text-lalala);
     border: 2px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
@@ -323,10 +325,10 @@
         repeating-linear-gradient(
             transparent,
             transparent 24px,
-            var(--border-color) 25px
+            rgba(139, 42, 42, 0.1) 25px
         );
     pointer-events: none;
-    opacity: 0.3;
+    opacity: 0.4;
 }
 
 .editor {
@@ -481,41 +483,40 @@
 }
 
 .delete-confirmation-popup {
-    background: linear-gradient(135deg, #f9f7f7, #f0ecec);
+    background: linear-gradient(135deg, #F5F2EB, #E5DCC8);
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px rgba(139, 42, 42, 0.2);
     text-align: center;
     max-width: 350px;
     width: 85%;
-    border: 1px solid #e0d8d8;
+    border: 2px solid #8B2A2A;
 }
 
 .notebook-app-wrapper.dark-theme .delete-confirmation-popup {
-    background: linear-gradient(135deg, #3a3a3a, #2c2c2c);
-    border: 1px solid #555;
+    background: linear-gradient(135deg, #3E2B27, #2A2320);
+    border: 2px solid #A3554D;
 }
 
 .popup-header {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 12px;
-    color: #8b4513;
+    color: #8B2A2A;
 }
-
 .notebook-app-wrapper.dark-theme .popup-header {
-    color: #d4af37;
+    color: #A3554D;
 }
 
 .popup-message {
     margin-bottom: 20px;
     line-height: 1.5;
-    color: #5a5a5a;
+    color: #3E2B27;
     font-size: 14px;
 }
 
 .notebook-app-wrapper.dark-theme .popup-message {
-    color: #e0e0e0;
+    color: #C6C1B5;
 }
 
 .popup-buttons {
@@ -535,18 +536,23 @@
 }
 
 .cancel-btn {
-    background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
-    color: #555;
+    background: linear-gradient(135deg, #C6C1B5, #A3B1A2);
+    color: #1E1A19;
 }
 
 .notebook-app-wrapper.dark-theme .cancel-btn {
-    background: linear-gradient(135deg, #555, #444);
-    color: #e0e0e0;
+    background: linear-gradient(135deg, #3E2B27, #2A2320);
+    color: #E5DCC8;
 }
 
 .confirm-btn {
-    background: linear-gradient(135deg, #ff6b6b, #ff8e53);
-    color: white;
+    background: linear-gradient(135deg, #8B2A2A, #A3554D);
+    color: #E5DCC8;
+}
+.auto-save-indicator {
+    color: #7C8B6A;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .popup-btn:hover {

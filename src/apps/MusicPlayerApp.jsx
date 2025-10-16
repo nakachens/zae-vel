@@ -16,7 +16,7 @@ class AudioManager {
     this.listeners = new Set();
     this.isRepeating = false;
     this.initialized = false;
-    this.playlist = []; 
+    this.playlist = []; // Add playlist reference to audio manager
   }
 
   // audio state changer
@@ -34,7 +34,7 @@ class AudioManager {
     if (this.initialized) return;
     
     this.initialized = true;
-    this.playlist = [...playlist]; 
+    this.playlist = [...playlist]; // Store playlist in audio manager
     const elements = [];
     
     for (let i = 0; i < playlist.length; i++) {
@@ -95,15 +95,18 @@ class AudioManager {
     }
   }
 
+  // Add method to update playlist when new songs are added
   updatePlaylist(newPlaylist) {
     this.playlist = [...newPlaylist];
     this.notify('playlistUpdated', { playlist: this.playlist });
   }
+
   // Add method to add new audio element
   addAudioElement(audio, songData) {
     this.audioElements.push(audio);
     this.playlist.push(songData);
     
+    // If this is the first song and no song is currently loaded, select it
     if (!this.currentAudioRef) {
       const newIndex = this.audioElements.length - 1;
       this.currentAudioRef = audio;
@@ -116,6 +119,7 @@ class AudioManager {
     this.notify('playlistUpdated', { playlist: this.playlist });
   }
 
+  // Get current song data
   getCurrentSong() {
     return this.playlist[this.currentSongIndex] || {};
   }
@@ -245,7 +249,7 @@ class AudioManager {
       volume: this.volume,
       isRepeating: this.isRepeating,
       hasCurrentSong: !!this.currentAudioRef,
-      currentSong: this.getCurrentSong() // add current song to state
+      currentSong: this.getCurrentSong() // Add current song to state
     };
   }
 
@@ -273,63 +277,72 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   // playlist 
   const initialPlaylist = [
     {
-      title: "Something Super Sweet",
-      subtitle: "song if it was me wait what",
+      title: "Been You",
+      subtitle: "be it the friend from high school, gaming friend, sharing friend, its always been u man.",
       audioId: "song-1",
-      artist: "Rory Webley",
+      artist: "Justin Beiber",
       coverImage: "./albums/2.jpg",
       coverColor: "linear-gradient(135deg, #FF6B6B, #FF8E53)"
     },
     {
-      title: "No More What Ifs",
-      subtitle: "such a beautiful song.. never gonna get tired of it..",
+      title: "love for you",
+      subtitle: "this song because you(r feet) prolly tastes like strawberry choco",
       audioId: "song-2",
-      artist: "Persona 5 OST",
+      artist: "loveli lori & ovg!",
       coverImage: "./albums/1.jpg",
       coverColor: "linear-gradient(135deg, #4ECDC4, #44A08D)"
     },
     {
-      title: "Dear Candy",
-      subtitle: "i listen this song 2 cry at night 100% works",
+      title: "BBBlue",
+      subtitle: "not you my baby blue~",
       audioId: "song-3",
-      artist: "The Cheers Cheers - Topic",
-      coverImage: "./albums/3.jfif",
+      artist: "Olivver the Kid",
+      coverImage: "./albums/3.jpg",
       coverColor: "linear-gradient(135deg, #845EC2, #B39BC8)"
     },
     {
-      title: "告白秘密 ",
-      subtitle: "makes me cry everytime..",
+      title: "Sapna",
+      subtitle: "if we ever go out for a picnic lets make a mini movie on this song..",
       audioId: "song-4",
-      artist: "Persona 5 OST",
-      coverImage: "./albums/1.jpg",
+      artist: "Bayaan",
+      coverImage: "./albums/4.jfif",
       coverColor: "linear-gradient(135deg, #FFC75F, #F9CA24)"
     },
     {
-      title: "Silent Oath",
-      subtitle: "this song's theme reminds me of my childhood days I DONT KNOW WHY",
+      title: "Tek It (Sped Up)",
+      subtitle: "me when i look at the moon and its not zai",
       audioId: "song-5",
-      artist: "Knights",
+      artist: "Cafuné",
       coverImage: "./albums/4.jpg",
       coverColor: "linear-gradient(135deg, #6C5CE7, #A29BFE)"
     },
     {
-      title: "Sustain Memories",
-      subtitle: "oh this bring back.. memories..",
+      title: "How Long",
+      subtitle: "how long has it been since we called each other~",
       audioId: "song-6",
-      artist: "UNDEAD",
+      artist: "Charlie Puth",
       coverImage: "./albums/5.jpg",
+      coverColor: "linear-gradient(135deg, #FD79A8, #FDCB6E)"
+    },
+    {
+      title: "Passionfruit",
+      subtitle: "looking at your passion makes me wanna be passionate about my life too~",
+      audioId: "song-7",
+      artist: "Drake",
+      coverImage: "./albums/7.png",
       coverColor: "linear-gradient(135deg, #FD79A8, #FDCB6E)"
     }
   ];
 
   // audio file paths 
   const audioFiles = {
-    "song-1": "./soundzz/Something Super Sweet (Official Audio).mp3",
-    "song-2": "./soundzz/No More What Ifs.mp3",
-    "song-3": "./soundzz/Dear Candy.mp3",
-    "song-4": "./soundzz/告白秘密 -piano version-.mp3",
-    "song-5": "./soundzz/Silent Oath - Knights.mp3",
-    "song-6": "./soundzz/Sustain Memories - UNDEAD.mp3"
+    "song-1": "./soundzz/Been You.mp3",
+    "song-2": "./soundzz/loveli lori & ovg! - love for you (Official Audio).mp3",
+    "song-3": "./soundzz/BBBlue.mp3",
+    "song-4": "./soundzz/Sapna.mp3",
+    "song-5": "./soundzz/Cafuné - Tek It (Sped Up) [Official Audio].mp3",
+    "song-6": "./soundzz/Charlie Puth - How Long (Lyrics).mp3",
+    "song-7": "./soundzz/Drake - Passionfruit (Lyrics).mp3"
   };
 
   // state vars
@@ -701,11 +714,13 @@ const handleVolumeMouseDown = (event) => {
         duration: globalAudioManager.duration
       });
     });
-   
+    
+    // Use the new addAudioElement method instead of directly pushing
     globalAudioManager.addAudioElement(audio, song);
   }
   
   if (newSongs.length > 0) {
+    // Update playlist state and sync with audio manager
     const newPlaylist = [...playlist, ...newSongs];
     setPlaylist(newPlaylist);
     globalAudioManager.updatePlaylist(newPlaylist);
@@ -740,7 +755,7 @@ const handleVolumeMouseDown = (event) => {
           {/* homescreen */}
           {showHome && (
             <div className="home-screen">
-              <div className="app-title">MUSICPLAYER<br />Zoza's</div>
+              <div className="app-title">MUSICPLAYER<br />Zai's</div>
               
               <div className="character-placeholder">
             <img 

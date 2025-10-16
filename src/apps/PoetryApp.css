@@ -9,17 +9,17 @@
 :root {
   --bg-day: transparent; 
   --container-day: transparent; 
-  --text-day: #2c1810;
-  --card-day: #f9f6ef;
-  --accent-day: #8b4513;
-  --border-day: #d4c4a8;
+  --text-day: #1E1A19;
+  --card-day: #E5DCC8;
+  --accent-day: #8B2A2A;
+  --border-day: #3E2B27;
   
   --bg-night: transparent; 
   --container-night: transparent; 
-  --text-night: #eee6d3;
-  --card-night: #0f3460;
-  --accent-night: #e94560;
-  --border-night: #533483;
+  --text-night: #E5DCC8;
+  --card-night: #2A1F1D;
+  --accent-night: #8B2A2A;
+  --border-night: #7C8B6A;
 }
 
 .poetry-app {

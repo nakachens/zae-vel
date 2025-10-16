@@ -1,211 +1,178 @@
-import React, { useState, useEffect } from 'react';
-import { globalAssetPreloader, CRITICAL_ASSETS } from './AssetPreloader';
+import React, { useState, useEffect, useRef } from 'react';
+import { globalAssetPreloader, CRITICAL_ASSETS, SECONDARY_ASSETS } from './AssetPreloader';
 
 function LoadingScreen({ onLoadingComplete }) {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState('AUTUMN OS LOADING...');
+  const [loadingText, setLoadingText] = useState('zae\'vel LOADING...');
   const [currentAsset, setCurrentAsset] = useState('');
+  const [phase, setPhase] = useState('initial'); // initial, fonts, assets, finalizing
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
 
     const loadAssets = async () => {
-      const loadingTexts = [
-        'AUTUMN OS LOADING...',
-        'Loading desktop assets...',
-        'Preparing applications...',
-        'Loading fonts...',
-        'oh im crying as im making this',
-        'Loading zozafont...',
-        'Almost ready...',
-        'please bare with me..',
-        'pure pain..'
-      ];
+      const totalAssets = CRITICAL_ASSETS.length + SECONDARY_ASSETS.length;
+      let loadedCount = 0;
+
+      const updateProgress = (loaded, total, message, asset = '') => {
+        if (!isMountedRef.current) return;
+        const percent = (loaded / total) * 100;
+        setProgress(percent);
+        setLoadingText(message);
+        if (asset) setCurrentAsset(asset);
+      };
 
       try {
-        // asset loading
-        let loadedCount = 0;
-        const totalAssets = CRITICAL_ASSETS.length + 3; // +3 for additional font loading phases
+        // === PHASE 1: CRITICAL FONTS (0-15%) ===
+        setPhase('fonts');
+        updateProgress(0, totalAssets, 'Loading system fonts...', 'zozafont');
 
-        // loading text while loading
-        const textInterval = setInterval(() => {
-          if (isMounted) {
-            const textIndex = Math.floor((loadedCount / totalAssets) * loadingTexts.length);
-            setLoadingText(loadingTexts[Math.min(textIndex, loadingTexts.length - 1)]);
-          }
-        }, 800);
+        // Load zozafont first (most critical)
+        const zozafont = CRITICAL_ASSETS.find(a => a.fontFamily === 'zozafont');
+        if (zozafont) {
+          await globalAssetPreloader.preloadFont(
+            zozafont.fontFamily,
+            zozafont.src,
+            zozafont.descriptors
+          );
+          loadedCount++;
+          updateProgress(loadedCount, totalAssets, 'zozafont loaded', '');
+        }
 
+        // Load Google Fonts in parallel
+        const googleFonts = CRITICAL_ASSETS.filter(a => a.type === 'google-font');
+        await Promise.all(
+          googleFonts.map(async (font) => {
+            await globalAssetPreloader.preloadGoogleFont(
+              font.fontFamily,
+              font.weights,
+              font.styles
+            );
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, `Loading ${font.fontFamily}...`, '');
+          })
+        );
+
+        // === PHASE 2: CRITICAL ASSETS (15-70%) ===
+        setPhase('assets');
+        const criticalNonFonts = CRITICAL_ASSETS.filter(
+          a => a.type !== 'font' && a.type !== 'google-font'
+        );
+
+        // Group assets by type for optimized loading
+        const imageAssets = criticalNonFonts.filter(a => a.type === 'image');
+        const audioAssets = criticalNonFonts.filter(a => a.type === 'audio');
+
+        // Load wallpaper first (high priority for first impression)
+        const wallpaper = imageAssets.find(a => a.src.includes('1.jpg'));
+        if (wallpaper) {
+          updateProgress(loadedCount, totalAssets, 'Loading desktop...', 'wallpaper');
+          await globalAssetPreloader.preloadImage(wallpaper.src);
+          loadedCount++;
+        }
+
+        // Load pet animations (critical for interaction)
+        const petAnimations = imageAssets.filter(a => a.src.includes('animations/'));
+        updateProgress(loadedCount, totalAssets, 'Loading pet animations...', 'hakuchin');
+        await Promise.all(
+          petAnimations.map(async (asset) => {
+            await globalAssetPreloader.preloadImage(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading pet animations...', asset.src.split('/').pop());
+          })
+        );
+
+        // Load core sounds
+        updateProgress(loadedCount, totalAssets, 'Loading sounds...', 'click.mp3');
+        await Promise.all(
+          audioAssets.map(async (asset) => {
+            await globalAssetPreloader.preloadAudio(asset.src);
+            loadedCount++;
+          })
+        );
+
+        // Load login image
+        const loginImage = imageAssets.find(a => a.src.includes('zhong.jpg'));
+        if (loginImage) {
+          updateProgress(loadedCount, totalAssets, 'Loading profile...', 'profile picture');
+          await globalAssetPreloader.preloadImage(loginImage.src);
+          loadedCount++;
+        }
+
+        // Load app icons in parallel (batch of 5 at a time for performance)
+        const appIcons = imageAssets.filter(a => 
+          a.src.includes('assets/') && 
+          !a.src.includes('1.jpg') &&
+          !a.src.includes('zhong.jpg')
+        );
         
-        for (let i = 0; i < CRITICAL_ASSETS.length; i++) {
-          if (!isMounted) break;
+        updateProgress(loadedCount, totalAssets, 'Loading app icons...', 'icons');
+        const iconBatches = [];
+        for (let i = 0; i < appIcons.length; i += 5) {
+          iconBatches.push(appIcons.slice(i, i + 5));
+        }
 
-          const asset = CRITICAL_ASSETS[i];
-          setCurrentAsset(asset.src ? asset.src.split('/').pop() : asset.fontFamily);
-
-          try {
-            if (asset.type === 'image') {
+        for (const batch of iconBatches) {
+          await Promise.all(
+            batch.map(async (asset) => {
               await globalAssetPreloader.preloadImage(asset.src);
-            } else if (asset.type === 'audio') {
-              await globalAssetPreloader.preloadAudio(asset.src);
-            } else if (asset.type === 'google-font') {
-              await globalAssetPreloader.preloadGoogleFont(asset.fontFamily, asset.weights, asset.styles);
-            } else if (asset.type === 'font') {
-              await globalAssetPreloader.preloadFont(asset.fontFamily, asset.src, asset.descriptors);
-            }
-          } catch (error) {
-            console.warn(`Failed to load ${asset.src || asset.fontFamily}:`, error);
-          }
-
-          loadedCount++;
-          if (isMounted) {
-            setProgress((loadedCount / totalAssets) * 100);
-          }
+              loadedCount++;
+              updateProgress(loadedCount, totalAssets, 'Loading app icons...', asset.src.split('/').pop());
+            })
+          );
         }
 
-        // my font loading
-        if (isMounted) {
-          setCurrentAsset('zozafont');
-          setLoadingText('Loading zozafont...');
-          
-          // testing
-          const zozoTestEl = document.createElement('div');
-          zozoTestEl.style.position = 'fixed';
-          zozoTestEl.style.left = '-9999px';
-          zozoTestEl.style.top = '-9999px';
-          zozoTestEl.style.visibility = 'hidden';
-          zozoTestEl.style.fontFamily = 'zozafont, monospace';
-          zozoTestEl.style.fontSize = '64px';
-          zozoTestEl.style.fontWeight = 'bold';
-          zozoTestEl.textContent = 'zozOS';
-          
-          document.body.appendChild(zozoTestEl);
-          
-          // forcing
-          zozoTestEl.offsetHeight;
-          zozoTestEl.getBoundingClientRect();
-      
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          ctx.font = '64px monospace';
-          const fallbackWidth = ctx.measureText('zozOS').width;
-          
-          ctx.font = '64px zozafont, monospace';
-          const zozoWidth = ctx.measureText('zozOS').width;
-          
-          if (Math.abs(zozoWidth - fallbackWidth) < 5) {
-            await new Promise(resolve => setTimeout(resolve, 400));
-          }
-          
-          // remove testing
-          setTimeout(() => {
-            if (zozoTestEl.parentNode) {
-              zozoTestEl.parentNode.removeChild(zozoTestEl);
-            }
-          }, 200);
-          
-          // load properly MAN
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          loadedCount++;
-          setProgress((loadedCount / totalAssets) * 100);
+        // === PHASE 3: SECONDARY ASSETS (70-95%) ===
+        setPhase('secondary');
+        updateProgress(loadedCount, totalAssets, 'Loading additional assets...', '');
+
+        const secondaryImages = SECONDARY_ASSETS.filter(a => a.type === 'image');
+        const secondaryAudio = SECONDARY_ASSETS.filter(a => a.type === 'audio');
+
+        await Promise.all([
+          ...secondaryImages.map(async (asset) => {
+            await globalAssetPreloader.preloadImage(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading characters...', asset.src.split('/').pop());
+          }),
+          ...secondaryAudio.map(async (asset) => {
+            await globalAssetPreloader.preloadAudio(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
+          })
+        ]);
+
+        // === PHASE 4: FINALIZATION (95-100%) ===
+        setPhase('finalizing');
+        updateProgress(loadedCount, totalAssets, 'Finalizing...', '');
+
+        // Wait for all fonts to be fully ready
+        await globalAssetPreloader.waitForFonts();
+
+        // Final verification for critical fonts
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
         }
 
-        if (isMounted) {
-          setCurrentAsset('Dancing Script font');
-          setLoadingText('Loading Dancing Script font...');
-          
-          const testTexts = [
-            'Whispers of the Quill',
-            'Mysterious dude', 
-            'Dear diary magical entry',
-            'My Collected Thoughts'
-          ];
-          
-          testTexts.forEach((text, index) => {
-            const testEl = document.createElement('div');
-            testEl.style.position = 'fixed';
-            testEl.style.left = '-9999px';
-            testEl.style.top = '-9999px';
-            testEl.style.visibility = 'hidden';
-            testEl.style.fontFamily = '"Dancing Script", cursive';
-            testEl.style.fontSize = '16px';
-            testEl.textContent = text;
-            
-            document.body.appendChild(testEl);
-            
-            testEl.offsetHeight;
-            testEl.getBoundingClientRect();
-            
-            setTimeout(() => {
-              if (testEl.parentNode) {
-                testEl.parentNode.removeChild(testEl);
-              }
-            }, 100 + (index * 50));
-          });
-          
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          loadedCount++;
-          setProgress((loadedCount / totalAssets) * 100);
-        }
+        // Small delay to ensure everything is settled
+        await new Promise(resolve => setTimeout(resolve, 200));
 
-        if (isMounted) {
-          setCurrentAsset('system fonts');
-          setLoadingText('Finalizing font loading...');
-          
-          try {
-            if (document.fonts && document.fonts.ready) {
-              await document.fonts.ready;
-            }
-            
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            ctx.font = '64px monospace';
-            const monoWidth = ctx.measureText('zozOS').width;
-            
-            ctx.font = '64px zozafont, monospace';
-            const zozoWidth = ctx.measureText('zozOS').width;
-            
-            ctx.font = '20px cursive';
-            const cursiveWidth = ctx.measureText('Mysterious dude').width;
-            
-            ctx.font = '20px "Dancing Script", cursive';
-            const dancingWidth = ctx.measureText('Mysterious dude').width;
-            
-            if (Math.abs(zozoWidth - monoWidth) < 2 || Math.abs(dancingWidth - cursiveWidth) < 1) {
-              console.warn('Key fonts may not be fully loaded, waiting...');
-              await new Promise(resolve => setTimeout(resolve, 800));
-            }
-          
-            await new Promise(resolve => setTimeout(resolve, 400));
-            
-          } catch (error) {
-            console.warn('Font loading check failed:', error);
-          }
-          
-          loadedCount++;
-          setProgress((loadedCount / totalAssets) * 100);
-        }
+        updateProgress(totalAssets, totalAssets, 'Welcome to zae\'vel!', '');
 
-        clearInterval(textInterval);
+        // Show welcome message briefly before transitioning
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        if (isMounted) {
-          setLoadingText('Welcome to zozOS!');
-          setCurrentAsset('');
-          
-          setTimeout(() => {
-            if (isMounted && onLoadingComplete) {
-              onLoadingComplete();
-            }
-          }, 1000);
+        // Trigger completion
+        if (isMountedRef.current && onLoadingComplete) {
+          onLoadingComplete();
         }
 
       } catch (error) {
-        console.error('Loading failed:', error);
-        if (isMounted && onLoadingComplete) {
-          onLoadingComplete(); 
+        console.error('Loading error:', error);
+        // Even on error, allow the app to load
+        if (isMountedRef.current && onLoadingComplete) {
+          onLoadingComplete();
         }
       }
     };
@@ -213,37 +180,137 @@ function LoadingScreen({ onLoadingComplete }) {
     loadAssets();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
   }, [onLoadingComplete]);
 
+  // Dynamic loading messages based on phase
+  const getPhaseMessage = () => {
+    switch (phase) {
+      case 'fonts':
+        return 'Preparing typography...';
+      case 'assets':
+        return 'Loading interface...';
+      case 'secondary':
+        return 'Polishing details...';
+      case 'finalizing':
+        return 'Almost ready...';
+      default:
+        return 'Starting up...';
+    }
+  };
+
   return (
     <div 
-      className="h-screen w-screen flex items-center justify-center"
+      className="h-screen w-screen flex items-center justify-center relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #8b4513 0%, #a0522d 100%)',
+        background: 'linear-gradient(135deg, #3E2B27 0%, #2A1F1D 25%, #1E1A19 50%, #252120 75%, #1E1A19 100%)',
       }}
     >
-      <div className="text-center">
-        {/* status */}
-        <div className="text-amber-100 text-xl mb-8 font-mono">
+      {/* Ambient particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+              background: ['#8B2A2A', '#7C8B6A', '#A3B1A2', '#C6C1B5'][Math.floor(Math.random() * 4)],
+              opacity: 0.3 + Math.random() * 0.4
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="text-center relative z-10">
+        {/* Logo */}
+        <div className="text-6xl mb-6 animate-pulse" style={{ color: '#E5DCC8' }}>
+          🌧️
+        </div>
+
+        {/* Title */}
+        <div 
+          className="text-4xl mb-2 font-bold"
+          style={{
+            fontFamily: 'zozafont, monospace',
+            color: '#E5DCC8',
+            textShadow: '2px 2px 0px #1E1A19, 4px 4px 8px rgba(0,0,0,0.5)',
+            letterSpacing: '0.1em'
+          }}
+        >
+          zae'vel
+        </div>
+
+        {/* Subtitle */}
+        <div 
+          className="text-sm mb-8 opacity-70"
+          style={{
+            fontFamily: 'Crimson Text, serif',
+            color: '#A3B1A2',
+            letterSpacing: '0.2em'
+          }}
+        >
+          Specialised Computing Experience
+        </div>
+
+        {/* Status message */}
+        <div 
+          className="text-base mb-4"
+          style={{
+            fontFamily: 'Courier New, monospace',
+            color: '#C6C1B5',
+            minHeight: '24px'
+          }}
+        >
           {loadingText}
         </div>
 
-        {/* progress bar */}
-        <div className="w-96 h-6 bg-amber-900 border-2" style={{ 
-          borderColor: '#d7ccc8 #3e2723 #3e2723 #d7ccc8',
-          borderStyle: 'solid'
-        }}>
+        {/* Progress bar */}
+        <div 
+          className="w-96 h-4 border-2 mx-auto mb-3"
+          style={{ 
+            background: '#2A1F1D',
+            borderColor: '#C6C1B5 #1E1A19 #1E1A19 #C6C1B5',
+            borderStyle: 'solid',
+            maxWidth: '90vw'
+          }}
+        >
           <div 
-            className="h-full bg-gradient-to-r from-orange-400 to-amber-300 animate-pulse" 
-            style={{ width: `${Math.max(progress, 2)}%` }}
+            className="h-full transition-all duration-300 ease-out"
+            style={{ 
+              width: `${Math.max(progress, 2)}%`,
+              background: 'linear-gradient(to right, #8B2A2A, #7C8B6A)',
+              boxShadow: progress > 5 ? '0 0 10px rgba(139, 42, 42, 0.5)' : 'none'
+            }}
           />
         </div>
 
-        {/*  text */}
-        <div className="text-amber-200 text-sm mt-6 font-mono">
-          {Math.round(progress)}%{currentAsset && ` • ${currentAsset}`}
+        {/* Progress details */}
+        <div 
+          className="text-xs opacity-60"
+          style={{
+            fontFamily: 'Courier New, monospace',
+            color: '#A3B1A2',
+            minHeight: '18px'
+          }}
+        >
+          {Math.round(progress)}%
+          {currentAsset && ` • ${currentAsset}`}
+        </div>
+
+        {/* Phase indicator */}
+        <div 
+          className="text-xs mt-4 opacity-50"
+          style={{
+            fontFamily: 'Courier New, monospace',
+            color: '#7C8B6A',
+            fontStyle: 'italic'
+          }}
+        >
+          {getPhaseMessage()}
         </div>
       </div>
     </div>

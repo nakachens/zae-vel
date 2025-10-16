@@ -1,3 +1,4 @@
+// src/appsConfig.js
 import CalculatorApp from "./apps/CalculatorApp";
 import MusicPlayerApp from "./apps/MusicPlayerApp";
 import WeatherApp from "./apps/WeatherApp";

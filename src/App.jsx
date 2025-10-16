@@ -1,9 +1,8 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable no-undef */
 /* eslint-disable no-case-declarations */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
-import LoadingScreen from './LoadingScreen';
-import { globalAssetPreloader, MUSIC_ASSETS, GAME_ASSETS } from './AssetPreloader';
 
 // all apps
 import CalculatorApp from './apps/CalculatorApp';
@@ -17,6 +16,11 @@ import PoetryApp from './apps/PoetryApp';
 import MemoryGame from './apps/MemoryGame';
 import SnakeGame from './apps/SnakeGame';
 import PaintApp from './apps/PaintApp';
+import SettingsApp from './apps/SettingsApp';
+import AchievementsApp from './apps/AchievementsApp';
+import AnswerWindow from './apps/AnswerWindow';
+import VideoPlayerWindow from './apps/VideoPlayerWindow';
+import CorkboardApp from './apps/CorkboardApp';
 // cute guy
 import VirtualPet from './apps/VirtualPet';
 //components
@@ -24,16 +28,33 @@ import WiFiSidebar from './extras/WiFiSidebar';
 import TxtFileApp from './extras/TxtFileApp';
 import { FolderApp, fileContents } from './extras/FolderApp';
 import ImageViewerApp from './extras/ImageViewerApp';
+
+import { lazyLoadAssets, CORKBOARD_ASSETS, MUSIC_ASSETS, GAME_ASSETS } from './AssetPreloader';
+
+// When opening corkboard:
+const openApp = async (app) => {
+  if (app.id === 'yara') {
+    // Lazy load corkboard assets
+    await lazyLoadAssets(CORKBOARD_ASSETS);
+  } else if (app.id === 'music') {
+    // Lazy load music assets
+    await lazyLoadAssets(MUSIC_ASSETS);
+  } else if (app.id === 'leaves' || app.id === 'memory') {
+    // Lazy load game assets
+    await lazyLoadAssets(GAME_ASSETS);
+  }
 //asset finder
 const getAssetPath = (path) => {
+  // Check if we're in Electron environment
   if (window.require) {
     try {
       const { remote, ipcRenderer } = window.require('electron');
       const isDev = process.env.NODE_ENV === 'development';
       
       if (isDev) {
-        return path; 
+        return path; // Use original path in development
       } else {
+        // In production, assets are in the resources folder
         const pathModule = window.require('path');
         const appPath = remote ? remote.app.getAppPath() : process.resourcesPath;
         return pathModule.join(appPath, path.replace('./', ''));
@@ -43,7 +64,8 @@ const getAssetPath = (path) => {
     }
   }
   
-  return path; // ps: this was for electron setup
+  // Fallback for web or if Electron modules unavailable
+  return path;
 };
 
 // sound effects
@@ -192,37 +214,40 @@ function ClockWidget() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-amber-100 to-orange-100 border-4 p-3 rounded-lg shadow-lg cursor-move" 
+    <div className="bg-gradient-to-b border-4 p-3 rounded-lg shadow-lg cursor-move" 
          style={{ 
            fontFamily: 'Courier New, monospace',
-           borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
+           background: 'linear-gradient(to bottom, #C6C1B5, #A3B1A2)',
+           borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
            borderStyle: 'solid',
            width: '200px'
          }}>
-      <div className="flex justify-between items-center mb-2 pb-1 border-b-2 border-amber-300">
-        <span className="text-amber-900 font-bold text-xs">CLOCK</span>
+      <div className="flex justify-between items-center mb-2 pb-1 border-b-2" style={{ borderColor: '#3E2B27' }}>
+        <span className="font-bold text-xs" style={{ color: '#1E1A19' }}>‎ CLOCK ⏱⋆˚࿔</span>
         <button
-          className="widget-button px-2 py-1 text-xs border-2 bg-amber-200 hover:bg-amber-300"
+          className="widget-button px-2 py-1 text-xs border-2"
           onClick={handleFormatToggle}
           style={{
-            borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
-            color: '#8b4513'
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+            background: '#E5DCC8',
+            color: '#1E1A19'
           }}
         >
-          {is24Hour ? '12H' : '24H'}
+          {is24Hour ? '‎ 12H ‎ ' : '‎ 24H ‎ '}
         </button>
       </div>
 
       <div className="text-center">
-        <div className={`text-lg font-bold text-amber-900 ${flipClass}`} 
+        <div className={`text-lg font-bold ${flipClass}`} 
              style={{ 
                fontFamily: 'monospace',
-               textShadow: '1px 1px 2px rgba(139,69,19,0.3)',
-               letterSpacing: '1px'
+               textShadow: '1px 1px 2px rgba(30,26,25,0.3)',
+               letterSpacing: '1px',
+               color: '#1E1A19'
              }}>
           {formatTime()}
         </div>
-        <div className="text-xs text-amber-700 mt-1">
+        <div className="text-xs mt-1" style={{ color: '#3E2B27' }}>
           {formatDate()}
         </div>
       </div>
@@ -278,11 +303,11 @@ function CalendarWidget() {
           key={day}
           onClick={() => handleDateSelect(day)}
           className={`w-5 h-5 text-xs flex items-center justify-center border ${
-            isToday ? 'bg-orange-300 border-orange-500 font-bold' :
-            'hover:bg-amber-100 border-transparent'
+            isToday ? 'font-bold' : 'border-transparent'
           }`}
           style={{ 
-            color: isToday ? '#8b4513' : '#92400e',
+            color: isToday ? '#E5DCC8' : '#1E1A19',
+            background: isToday ? '#8B2A2A' : 'transparent',
             fontFamily: 'monospace'
           }}
         >
@@ -295,28 +320,37 @@ function CalendarWidget() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-amber-100 to-orange-100 border-4 p-3 rounded-lg shadow-lg"
+    <div className="border-4 p-3 rounded-lg shadow-lg"
          style={{ 
            fontFamily: 'Courier New, monospace',
-           borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
+           background: 'linear-gradient(to bottom, #C6C1B5, #A3B1A2)',
+           borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
            borderStyle: 'solid',
            width: '180px'
          }}>
-      <div className="flex justify-between items-center mb-2 pb-1 border-b-2 border-amber-300">
+      <div className="flex justify-between items-center mb-2 pb-1 border-b-2" style={{ borderColor: '#3E2B27' }}>
         <button 
           onClick={() => navigateMonth(-1)}
-          className="px-1 py-1 text-xs border-2 bg-amber-200 hover:bg-amber-300"
-          style={{ borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3', color: '#8b4513' }}
+          className="px-1 py-1 text-xs border-2"
+          style={{ 
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8', 
+            color: '#1E1A19',
+            background: '#E5DCC8'
+          }}
         >
           ◀
         </button>
-        <span className="text-amber-900 font-bold text-xs">
+        <span className="font-bold text-xs" style={{ color: '#1E1A19' }}>
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </span>
         <button 
           onClick={() => navigateMonth(1)}
-          className="px-1 py-1 text-xs border-2 bg-amber-200 hover:bg-amber-300"
-          style={{ borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3', color: '#8b4513' }}
+          className="px-1 py-1 text-xs border-2"
+          style={{ 
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8', 
+            color: '#1E1A19',
+            background: '#E5DCC8'
+          }}
         >
           ▶
         </button>
@@ -324,7 +358,7 @@ function CalendarWidget() {
 
       <div className="grid grid-cols-7 gap-1 mb-1">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-          <div key={day} className="w-5 h-5 text-xs font-bold text-amber-800 flex items-center justify-center">
+          <div key={day} className="w-5 h-5 text-xs font-bold flex items-center justify-center" style={{ color: '#3E2B27' }}>
             {day}
           </div>
         ))}
@@ -340,9 +374,9 @@ function CalendarWidget() {
 // task list widget
 function TaskListWidget() {
   const [tasks, setTasks] = useState([
-    { id: 1, text: 'Check emails', completed: true },
-    { id: 2, text: 'Finish project', completed: false },
-    { id: 3, text: 'Call mom', completed: false }
+    { id: 1, text: 'go 2 uni', completed: true },
+    { id: 2, text: 'eat good', completed: false },
+    { id: 3, text: 'text zoe', completed: false }
   ]);
   const [newTask, setNewTask] = useState('');
   const { playClickSound, playKeyboardSound } = useSound();
@@ -382,15 +416,15 @@ function TaskListWidget() {
     <div className="border-4 p-3 rounded-lg shadow-lg cursor-move"
          style={{ 
            fontFamily: 'Courier New, monospace',
-           borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
+           borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
            borderStyle: 'solid',
            width: '200px',
            height: '150px',
-           background: '#A9C49C'
+           background: '#7C8B6A'
          }}>
       <div className="flex items-center mb-2 pb-1 border-b-2"
-           style={{ borderColor: 'rgba(139, 69, 19, 0.3)' }}>
-        <span className="text-amber-900 font-bold text-xs">TASKS</span>
+           style={{ borderColor: 'rgba(30, 26, 25, 0.3)' }}>
+        <span className="font-bold text-xs" style={{ color: '#E5DCC8' }}>‎ TASKS ⭑.ᐟ</span>
       </div>
 
       <div className="space-y-1 mb-3 max-h-15 overflow-y-auto">
@@ -400,9 +434,9 @@ function TaskListWidget() {
               className="widget-button w-3 h-3 border text-xs flex items-center justify-center"
               onClick={() => toggleTask(task.id)}
               style={{ 
-                borderColor: 'rgba(139, 69, 19, 0.4)',
-                backgroundColor: task.completed ? '#22c55e' : 'rgba(255, 255, 255, 0.7)',
-                color: task.completed ? 'white' : '#8b4513'
+                borderColor: 'rgba(30, 26, 25, 0.4)',
+                backgroundColor: task.completed ? '#8B2A2A' : 'rgba(229, 220, 200, 0.7)',
+                color: task.completed ? '#E5DCC8' : '#1E1A19'
               }}
             >
               {task.completed ? '✓' : ''}
@@ -411,10 +445,10 @@ function TaskListWidget() {
               className={`text-xs ${task.completed ? 'line-through' : ''}`}
               style={{ 
                 fontSize: '10px',
-                color: task.completed ? 'rgba(139, 69, 19, 0.6)' : '#8b4513'
+                color: task.completed ? 'rgba(229, 220, 200, 0.6)' : '#E5DCC8'
               }}
             >
-              {task.text}
+              ‎ {task.text}
             </span>
           </div>
         ))}
@@ -427,22 +461,23 @@ function TaskListWidget() {
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           onKeyDown={handleKeyDown}
-          placeholder="New task..."
+          placeholder="‎ New task..."
           className="widget-button w-full text-xs p-1 border"
           style={{ 
             fontFamily: 'monospace', 
             fontSize: '10px',
-            borderColor: 'rgba(139, 69, 19, 0.4)',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)'
+            borderColor: 'rgba(30, 26, 25, 0.4)',
+            backgroundColor: 'rgba(229, 220, 200, 0.8)',
+            color: '#1E1A19'
           }}
         />
         <button
           className="widget-button w-full px-2 py-1 text-xs border-2 hover:opacity-90"
           onClick={addTask}
           style={{ 
-            borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3', 
-            color: '#8b4513',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)'
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8', 
+            color: '#1E1A19',
+            backgroundColor: 'rgba(229, 220, 200, 0.8)'
           }}
         >
           ADD
@@ -455,9 +490,9 @@ function TaskListWidget() {
 // focus goals/ progress widget
 function FocusGoalsWidget() {
   const [goals, setGoals] = useState([
-    { id: 1, text: 'Finish React project', progress: 75, priority: 'high' },
-    { id: 2, text: 'Learn new skill', progress: 40, priority: 'medium' },
-    { id: 3, text: 'Exercise routine', progress: 60, priority: 'high' }
+    { id: 1, text: 'make good friends', progress: 75, priority: 'high' },
+    { id: 2, text: 'staying strong', progress: 40, priority: 'medium' },
+    { id: 3, text: 'sleeping well', progress: 60, priority: 'high' }
   ]);
 
   const [newGoal, setNewGoal] = useState('');
@@ -488,10 +523,10 @@ function FocusGoalsWidget() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return 'text-blue-900';
-      case 'medium': return 'text-black-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-amber-600';
+      case 'high': return '#8B2A2A';
+      case 'medium': return '#3E2B27';
+      case 'low': return '#7C8B6A';
+      default: return '#A3B1A2';
     }
   };
 
@@ -515,44 +550,45 @@ function FocusGoalsWidget() {
     <div className="border-4 p-3 rounded-lg shadow-lg cursor-move"
          style={{ 
            fontFamily: 'Courier New, monospace',
-           borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
+           borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
            borderStyle: 'solid',
            width: '240px',
            height: '180px',
-           background: '#D0B0CF'
+           background: '#A3B1A2'
          }}>
       <div className="flex items-center mb-2 pb-1 border-b-2"
-           style={{ borderColor: 'rgba(139, 69, 19, 0.3)' }}>
-        <span className="text-amber-900 font-bold text-xs">PROGRESS</span>
+           style={{ borderColor: 'rgba(30, 26, 25, 0.3)' }}>
+        <span className="font-bold text-xs" style={{ color: '#1E1A19' }}>‎ PROGRESS (੭˃ᴗ˂)੭</span>
       </div>
 
       <div className="space-y-2 max-h-25 overflow-y-auto mb-3">
         {goals.map(goal => (
           <div key={goal.id} className="space-y-1">
             <div className="flex justify-between items-center">
-              <span className={`text-xs ${getPriorityColor(goal.priority)}`} style={{ fontSize: '10px' }}>
-                {goal.text}
+              <span className="text-xs" style={{ fontSize: '10px', color: getPriorityColor(goal.priority) }}>
+                ‎ {goal.text}
               </span>
-              <span className="text-xs text-amber-700">{goal.progress}%</span>
+              <span className="text-xs" style={{ color: '#3E2B27' }}>{goal.progress}%</span>
             </div>
             <div className="flex items-center space-x-1">
               <button
                 className="widget-button w-4 h-4 text-xs border hover:opacity-90"
                 onClick={() => updateProgress(goal.id, -10)}
                 style={{ 
-                  borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3', 
+                  borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8', 
                   fontSize: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                  backgroundColor: 'rgba(229, 220, 200, 0.8)',
+                  color: '#1E1A19'
                 }}
               >
                 -
               </button>
-              <div className="flex-1 h-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
+              <div className="flex-1 h-2" style={{ backgroundColor: 'rgba(229, 220, 200, 0.5)' }}>
                 <div 
                   className="h-full transition-all duration-300"
                   style={{ 
-                    width: `${goal.progress}%`,
-                    backgroundColor: '#8b4513'
+                    width: `${goal.progress}% `,
+                    backgroundColor: '#8B2A2A'
                   }}
                 />
               </div>
@@ -560,9 +596,10 @@ function FocusGoalsWidget() {
                 className="widget-button w-4 h-4 text-xs border hover:opacity-90"
                 onClick={() => updateProgress(goal.id, 10)}
                 style={{ 
-                  borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3', 
+                  borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8', 
                   fontSize: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                  backgroundColor: 'rgba(229, 220, 200, 0.8)',
+                  color: '#1E1A19'
                 }}
               >
                 +
@@ -573,20 +610,21 @@ function FocusGoalsWidget() {
       </div>
 
       <div className="border-t-2 pt-2 space-y-1"
-           style={{ borderColor: 'rgba(139, 69, 19, 0.3)' }}>
+           style={{ borderColor: 'rgba(30, 26, 25, 0.3)' }}>
         <input
           type="text"
           value={newGoal}
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           onKeyDown={handleKeyDown}
-          placeholder="New goal..."
+          placeholder="‎ New goal..."
           className="widget-button w-full text-xs p-1 border"
           style={{ 
             fontFamily: 'monospace', 
             fontSize: '10px',
-            borderColor: 'rgba(139, 69, 19, 0.4)',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)'
+            borderColor: 'rgba(30, 26, 25, 0.4)',
+            backgroundColor: 'rgba(229, 220, 200, 0.8)',
+            color: '#1E1A19'
           }}
         />
       </div>
@@ -605,6 +643,42 @@ function AppWrapper({ children, appId }) {
     flexDirection: 'column',
     background: 'transparent'
   };
+
+  // Answer windows
+ if (appId.startsWith('answer-')) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'block',
+        margin: 0,
+        padding: 0,
+        boxSizing: 'border-box'
+      }}>
+        {children}
+      </div>
+    );
+  }
+
+  // Video windows
+  if (appId.startsWith('video-')) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'block',
+        margin: 0,
+        padding: 0,
+        boxSizing: 'border-box'
+      }}>
+        {children}
+      </div>
+    );
+  }
 
   // special handling for leaves game 
   if (appId === 'leaves') {
@@ -721,6 +795,22 @@ function AppWrapper({ children, appId }) {
       </div>
     );
   }
+  
+  // ACHIEVEMENTS APP
+  if (appId === 'achievements') {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {children}
+      </div>
+    );
+  }
 
   // MEMORY GAME 
   if (appId === 'memory') {
@@ -769,8 +859,9 @@ function AppWrapper({ children, appId }) {
       </div>
     );
   }
-// GOBBLER
-if (appId === 'snake') {
+
+  // GOBBLER
+  if (appId === 'snake') {
     return (
       <div style={{
         ...wrapperStyle,
@@ -795,8 +886,22 @@ if (appId === 'snake') {
       </div>
     );
   }
+
+  if (appId === 'yara') {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {children}
+      </div>
+    );
+  }
+
   //PAINT
-if (appId === 'paint') {
+  if (appId === 'paint') {
     return (
       <div style={wrapperStyle}>
         <div style={{
@@ -810,7 +915,17 @@ if (appId === 'paint') {
       </div>
     );
   }
- // IMAGE VIEWER
+
+  // SETTINGS APP
+if (appId === 'settings') {
+  return (
+    <div style={wrapperStyle}>
+      {children}
+    </div>
+  );
+}
+
+  // IMAGE VIEWER
   if (appId.startsWith('img-')) {
     return (
       <div style={{
@@ -840,21 +955,21 @@ if (appId === 'paint') {
     );
   }
 
-// FOLDER 
-if (appId === 'folder' || appId === 'images') {
-  return (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      position: 'relative',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {children}
-    </div>
-  );
-}
+  // FOLDER 
+  if (appId === 'folder' || appId === 'images') {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {children}
+      </div>
+    );
+  }
 
   // default wrapper 
   return (
@@ -875,7 +990,7 @@ const appsList = [
   { 
     id: "calc", 
     name: "Calculator", 
-    icon: getAssetPath("./assets/calculator.png"), 
+    icon: getAssetPath("./assets/calc.png"), 
     component: CalculatorApp, 
     size: { width: 280, height: 430 } 
   },
@@ -929,6 +1044,13 @@ const appsList = [
     size: { width: 400, height: 480 } 
   },
   { 
+    id: "achievements", 
+    name: "Achievements", 
+    icon: getAssetPath("./assets/folder.png"), 
+    component: AchievementsApp, 
+    size: { width: 500, height: 400 } 
+  },
+  { 
     id: "memory", 
     name: "Memory Game", 
     icon: getAssetPath("./assets/memory.png"), 
@@ -942,12 +1064,26 @@ const appsList = [
   component: SnakeGame, 
   size: { width: 450, height: 500 } 
 },
+{ 
+  id: "yara", 
+  name: "Corkboard", 
+  icon: getAssetPath("./assets/heart.png"), 
+  component: CorkboardApp, 
+  size: { width: 500, height: 500 } 
+},
   { 
     id: "paint", 
     name: "Paint", 
     icon: getAssetPath("./assets/paint.png"), 
     component: PaintApp, 
     size: { width: 900, height: 700 } 
+  },
+  { 
+    id: "settings", 
+    name: "Settings", 
+    icon: getAssetPath("./assets/settings.png"), 
+    component: SettingsApp, 
+    size: { width: 480, height: 400 } 
   },
   { 
     id: "folder", 
@@ -979,11 +1115,11 @@ function WelcomeScreen({ onContinue }) {
       className="h-screen w-screen flex items-center justify-center cursor-pointer relative overflow-hidden"
       onClick={handleClick}
       style={{
-        background: 'linear-gradient(135deg, #492000ff 0%, #4b2310ff 100%)',
+        background: 'linear-gradient(135deg, #3E2B27 0%, #1E1A19 100%)',
         fontFamily: 'monospace'
       }}
     >
-      {/* bg */}
+      {/* background particles */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(15)].map((_, i) => (
           <div
@@ -994,8 +1130,8 @@ function WelcomeScreen({ onContinue }) {
               top: `${Math.random() * 100}%`,
               animationDelay: `${Math.random() * 3}s`,
               animationDuration: `${2 + Math.random() * 2}s`,
-              background: ['#ff8c42', '#ff6b35', '#ffa500', '#daa520'][Math.floor(Math.random() * 4)],
-              opacity: 0.4 + Math.random() * 0.6
+              background: ['#8B2A2A', '#7C8B6A', '#A3B1A2', '#C6C1B5'][Math.floor(Math.random() * 4)],
+              opacity: 0.3 + Math.random() * 0.4
             }}
           />
         ))}
@@ -1006,18 +1142,18 @@ function WelcomeScreen({ onContinue }) {
         <div className="text-8xl font-bold mb-4 relative inline-block"
         style={{
           fontFamily: 'zozafont, monospace', 
-          color: "wheat",
+          color: "#E5DCC8",
           textShadow: `
-          2px 2px 0px #783e00ff,
-          4px 4px 0px #783e00ff,
-          6px 6px 0px #783e00ff,
-          8px 8px 0px #783e00ff,
-          10px 10px 20px #783e00ff
+          2px 2px 0px #1E1A19,
+          4px 4px 0px #1E1A19,
+          6px 6px 0px #1E1A19,
+          8px 8px 0px #1E1A19,
+          10px 10px 20px #1E1A19
           `,
           letterSpacing: '0.1em'
         }}
       >
-      zozOS
+      zae'vel
       </div>
           
           {/* subtitle */}
@@ -1025,20 +1161,20 @@ function WelcomeScreen({ onContinue }) {
             className="text-xl font-bold tracking-widest"
             style={{
               fontFamily: 'monospace',
-              color: '#d2bfb0ff',
-              textShadow: '2px 2px 0px #a0522d, 4px 4px 8px rgba(0,0,0,0.2)',
+              color: '#A3B1A2',
+              textShadow: '2px 2px 0px #1E1A19, 4px 4px 8px rgba(0,0,0,0.5)',
               letterSpacing: '0.3em'
             }}
           >
             TIME TO LOG IN?
           </div>
-        {/* menu options (fake)*/}
+        {/* menu options */}
         <div className="space-y-6 text-2xl font-bold" style={{ fontFamily: 'monospace' }}>
           <div 
             className="hover:opacity-80 transition-opacity cursor-pointer"
             style={{
-              color: '#d2c4baff',
-              textShadow: '2px 2px 0px #654321, 4px 4px 8px rgba(0,0,0,0.2)',
+              color: '#C6C1B5',
+              textShadow: '2px 2px 0px #1E1A19, 4px 4px 8px rgba(0,0,0,0.4)',
               letterSpacing: '0.2em'
             }}
           >
@@ -1049,7 +1185,7 @@ function WelcomeScreen({ onContinue }) {
         {/* bottom instruction */}
         <div className="mt-16 text-sm opacity-70 animate-pulse" style={{ 
           fontFamily: 'monospace',
-          color: '#9c9c9cff',
+          color: '#7C8B6A',
           letterSpacing: '0.1em'
         }}>
           CLICK ANYWHERE TO PROCEED
@@ -1058,7 +1194,7 @@ function WelcomeScreen({ onContinue }) {
         {/* copyright */}
         <div className="mt-8 text-xs opacity-50" style={{ 
           fontFamily: 'monospace',
-          color: '#9c9c9cff',
+          color: '#7C8B6A',
           letterSpacing: '0.1em'
         }}>
           © 2025 ZOZA SYSTEMS
@@ -1085,25 +1221,35 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
       top: Math.random() * 100,
       animationDelay: Math.random() * 3,
       animationDuration: 2 + Math.random() * 2,
-      color: ['#d7ccc8', '#bcaaa4', '#a1887f', '#8d6e63'][Math.floor(Math.random() * 4)],
-      opacity: 0.4 + Math.random() * 0.6
+      color: ['#8B2A2A', '#7C8B6A', '#A3B1A2', '#C6C1B5'][Math.floor(Math.random() * 4)],
+      opacity: 0.3 + Math.random() * 0.4
     }))
   );
   const { playClickSound, playKeyboardSound } = useSound();
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    playClickSound();
-    if (password === 'zozo123') {
-      setIsLoading(true);
-      setTimeout(() => {
-        onLogin();
-      }, 1500);
-    } else {
-      setError('Incorrect password. Try again.');
-      setTimeout(() => setError(''), 2000);
-    }
-  };
+  e.preventDefault();
+  playClickSound();
+  if (password === 'zozo123') {
+    setIsLoading(true);
+    
+    // Play boot music after 500ms delay so it plays mid-loading screen
+    setTimeout(() => {
+      const bootMusic = new Audio('./soundzz/booting.mp3');
+      bootMusic.volume = 0.6;
+      bootMusic.play().catch(error => {
+        console.log("Boot music play failed:", error);
+      });
+    }, 800);
+    
+    setTimeout(() => {
+      onLogin();
+    }, 1500);
+  } else {
+    setError('Incorrect password. Try again.');
+    setTimeout(() => setError(''), 2000);
+  }
+};
 
   const handleBackClick = () => {
     playClickSound();
@@ -1141,7 +1287,6 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
     });
   };
 
-  // drag handling
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (isDragging) {
@@ -1184,35 +1329,39 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
   };
 
   if (isLoading) {
-    return (
-      <div 
-        className="h-screen w-screen flex items-center justify-center"
-        style={{
-          background: 'linear-gradient(135deg, #8b4513 0%, #a0522d 100%)',
-        }}
-      >
-        <div className="text-center">
-          <div className="text-amber-100 text-xl mb-8 font-mono">AUTUMN OS LOADING...</div>
-          <div className="w-96 h-6 bg-amber-900 border-2" style={{ 
-            borderColor: '#d7ccc8 #3e2723 #3e2723 #d7ccc8',
-            borderStyle: 'solid'
-          }}>
-            <div className="h-full bg-gradient-to-r from-orange-400 to-amber-300 animate-pulse" style={{ width: '100%' }}></div>
-          </div>
-          <div className="text-amber-200 text-sm mt-6 font-mono">Please wait...</div>
+  return (
+    <div 
+      className="h-screen w-screen flex items-center justify-center"
+      style={{
+        background: 'linear-gradient(135deg, #3E2B27 0%, #1E1A19 100%)',
+      }}
+    >
+      <div className="text-center">
+        <div className="text-xl mb-8 font-mono" style={{ color: '#E5DCC8' }}>zae'vel LOADING...</div>
+        <div className="w-96 h-6 border-2" style={{ 
+          background: '#2A1F1D',
+          borderColor: '#C6C1B5 #1E1A19 #1E1A19 #C6C1B5',
+          borderStyle: 'solid'
+        }}>
+          <div className="h-full bg-gradient-to-r animate-pulse" style={{ 
+            width: '100%',
+            background: 'linear-gradient(to right, #8B2A2A, #7C8B6A)'
+          }}></div>
         </div>
+        <div className="text-sm mt-6 font-mono" style={{ color: '#A3B1A2' }}>Please wait...</div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div 
       className="h-screen w-screen flex items-center justify-center"
       style={{
-       background: 'linear-gradient(135deg, #8b4513 0%, #a0522d 100%)',
+        background: 'linear-gradient(135deg, #3E2B27 0%, #1E1A19 100%)',
       }}
     >
-      {/* bg */}
+      {/* background particles */}
       <div className="absolute inset-0 pointer-events-none">
         {particles.map((particle) => (
           <div
@@ -1234,8 +1383,8 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
       <div 
         className="w-96 border-4 shadow-2xl relative"
         style={{
-          background: 'linear-gradient(145deg, #d7ccc8, #bcaaa4)',
-          borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
+          background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+          borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
           borderStyle: 'solid',
           fontFamily: 'Courier New, monospace'
         }}
@@ -1244,18 +1393,18 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
         <div 
           className="px-4 py-3 text-sm flex items-center justify-between font-bold"
           style={{
-            background: 'linear-gradient(90deg, #8d6e63 0%, #6d4c41 50%, #5d4037 100%)',
-            color: '#efebe9'
+            background: 'linear-gradient(90deg, #8B2A2A 0%, #6B1F1F 50%, #5A1A1A 100%)',
+            color: '#E5DCC8'
           }}
         >
-          <span>AUTUMN OS - USER LOGIN</span>
+          <span>‎ ZAE'VEL - USER LOGIN</span>
           <button 
           className="w-5 h-5 border-2 text-xs flex items-center justify-center font-bold"
           onClick={handleBackClick}
           style={{ 
-            borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
-            background: '#d7ccc8',
-            color: '#3e2723'
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+            background: '#C6C1B5',
+            color: '#1E1A19'
             }}
           >
             X
@@ -1266,21 +1415,21 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
         <div className="p-10 space-y-8">
           {/* header text */}
           <div className="text-center">
-            <div className="font-bold text-lg font-mono mb-3" style={{ color: '#3e2723' }}>SECURE ACCESS</div>
-            <div className="text-sm font-mono" style={{ color: '#5d4037' }}>Enter credentials to continue</div>
+            <div className="font-bold text-lg font-mono mb-3" style={{ color: '#1E1A19' }}>SECURE ACCESS</div>
+            <div className="text-sm font-mono" style={{ color: '#3E2B27' }}>Enter credentials to continue</div>
           </div>
 
           {/* profile section */}
           <div className="flex items-center space-x-6 p-6 border-2" style={{
-            background: 'linear-gradient(145deg, #efebe9, #d7ccc8)',
-            borderColor: '#3e2723 #efebe9 #efebe9 #3e2723'
+            background: 'linear-gradient(145deg, #E5DCC8, #C6C1B5)',
+            borderColor: '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
           }}>
             <img 
-              src="./caelus.jpg"
+              src="./zhong.jpg"
               alt="Profile"
               className="w-16 h-16 rounded-full border-3 object-cover"
               style={{ 
-                borderColor: '#3e2723'
+                borderColor: '#1E1A19'
               }}
               onError={(e) => {
                 e.target.style.display = 'none';
@@ -1291,21 +1440,21 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
             <div 
               className="w-16 h-16 rounded-full border-3 items-center justify-center text-white font-bold text-xl hidden"
               style={{ 
-                background: 'linear-gradient(135deg, #6d4c41, #4e342e)',
-                borderColor: '#3e2723'
+                background: 'linear-gradient(135deg, #8B2A2A, #6B1F1F)',
+                borderColor: '#1E1A19'
               }}
             >
               U
             </div>
             <div className="space-y-1">
-              <div className="font-bold text-base font-mono" style={{ color: '#3e2723' }}>ZOZO</div>
-              <div className="text-sm font-mono" style={{ color: '#5d4037' }}>Administrator</div>
+              <div className="font-bold text-base font-mono" style={{ color: '#1E1A19' }}>‎ ZAZA</div>
+              <div className="text-sm font-mono" style={{ color: '#3E2B27' }}>‎ Administrator Access</div>
             </div>
           </div>
 
           {/* password section */}
           <div className="space-y-4">
-            <div className="text-sm font-mono font-bold mb-3" style={{ color: '#3e2723' }}>PASSWORD:</div>
+            <div className="text-sm font-mono font-bold mb-3" style={{ color: '#1E1A19' }}>PASSWORD:</div>
             <input
               type="password"
               value={password}
@@ -1314,16 +1463,16 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
               onKeyDown={handleKeyDown}
               className="w-full p-4 border-2 text-base font-mono"
               style={{
-                borderColor: '#3e2723 #efebe9 #efebe9 #3e2723',
+                borderColor: '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19',
                 borderStyle: 'solid',
-                background: '#efebe9',
-                color: '#3e2723'
+                background: '#E5DCC8',
+                color: '#1E1A19'
               }}
               placeholder="Enter password..."
               autoFocus
             />
             
-            {/* pptions */}
+            {/* options */}
             <div className="flex items-center space-x-3 mt-5">
               <input 
                 type="checkbox" 
@@ -1332,37 +1481,37 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
                 onChange={handleHintToggle}
                 className="w-4 h-4"
               />
-              <label htmlFor="hint" className="text-sm cursor-pointer font-mono" style={{ color: '#3e2723' }}>
-                Show password hint
+              <label htmlFor="hint" className="text-sm cursor-pointer font-mono" style={{ color: '#1E1A19' }}>
+                ‎ Show password hint
               </label>
             </div>
           </div>
 
-          {/* error message  */}
+          {/* error message */}
           {error && (
             <div 
               className="p-4 border-2 text-sm font-mono"
               style={{ 
-                borderColor: '#3e2723 #efebe9 #efebe9 #3e2723',
+                borderColor: '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19',
                 background: '#ffcdd2',
-                color: '#c62828'
+                color: '#8B2A2A'
               }}
             >
               ERROR: {error}
             </div>
           )}
 
-          {/* hint display  */}
+          {/* hint display */}
           {showHint && (
             <div 
               className="p-4 border-2 text-sm font-mono"
               style={{ 
-                borderColor: '#3e2723 #efebe9 #efebe9 #3e2723',
+                borderColor: '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19',
                 background: '#fff3e0',
-                color: '#e65100'
+                color: '#8B2A2A'
               }}
             >
-              <div className="font-bold mb-3" style={{ color: '#3e2723' }}>PASSWORD HINT:</div>
+              <div className="font-bold mb-3" style={{ color: '#1E1A19' }}>PASSWORD HINT:</div>
               <div>Owner's nickname + 123</div>
             </div>
           )}
@@ -1373,18 +1522,18 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
               onClick={handleSubmit}
               className="px-8 py-3 border-2 text-sm font-bold font-mono"
               style={{
-                background: 'linear-gradient(145deg, #8d6e63, #6d4c41)',
-                borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
-                color: '#efebe9'
+                background: 'linear-gradient(145deg, #8B2A2A, #6B1F1F)',
+                borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+                color: '#E5DCC8'
               }}
               onMouseDown={(e) => {
-                e.target.style.borderColor = '#3e2723 #efebe9 #efebe9 #3e2723';
+                e.target.style.borderColor = '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19';
               }}
               onMouseUp={(e) => {
-                e.target.style.borderColor = '#efebe9 #3e2723 #3e2723 #efebe9';
+                e.target.style.borderColor = '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
               }}
               onMouseLeave={(e) => {
-                e.target.style.borderColor = '#efebe9 #3e2723 #3e2723 #efebe9';
+                e.target.style.borderColor = '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
               }}
             >
               LOGIN
@@ -1393,56 +1542,56 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
             onClick={handleBackClick}
             className="px-8 py-3 border-2 text-sm font-bold font-mono"
             style={{
-              background: 'linear-gradient(145deg, #bcaaa4, #a1887f)',
-              borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
-              color: '#3e2723'
+              background: 'linear-gradient(145deg, #A3B1A2, #7C8B6A)',
+              borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+              color: '#1E1A19'
               }}
             >
               CANCEL
             </button>
           </div>
 
-          {/* bottom section*/}
-          <div className="border-t-2 pt-6 mt-8" style={{ borderColor: '#3e2723' }}>
+          {/* bottom section */}
+          <div className="border-t-2 pt-6 mt-8" style={{ borderColor: '#1E1A19' }}>
             <div className="flex justify-between text-xs font-mono">
               <button 
                 className="underline" 
-                style={{ color: '#5d4037' }}
+                style={{ color: '#3E2B27' }}
                 onClick={handleForgotPasswordClick}
               >
                 FORGOT PASSWORD?
               </button>
-              <button className="underline" style={{ color: '#5d4037' }}>SHUTDOWN SYSTEM</button>
+              <button className="underline" style={{ color: '#3E2B27' }}>SHUTDOWN SYSTEM</button>
             </div>
           </div>
 
           {/* system info */}
-          <div className="text-center text-xs font-mono mt-6" style={{ color: '#6d4c41' }}>
-            AUTUMN OS v2.1 - SEPTEMBER EDITION
+          <div className="text-center text-xs font-mono mt-6" style={{ color: '#7C8B6A' }}>
+            ZOZA v2.1 - SPECIAL EDITION
           </div>
         </div>
       </div>
 
-      {/* forgot password popup  */}
+      {/* forgot password popup */}
       {showForgotPassword && (
         <div 
           className="fixed w-64 border-4 shadow-2xl z-50 select-none"
           style={{
             left: popupPosition.x,
             top: popupPosition.y,
-            background: 'linear-gradient(145deg, #d7ccc8, #bcaaa4)',
-            borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
+            background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
             borderStyle: 'solid',
             fontFamily: 'Courier New, monospace',
             cursor: isDragging ? 'move' : 'default'
           }}
         >
-          {/* popup title bar  */}
+          {/* popup title bar */}
           <div 
             className="px-3 py-2 text-xs flex items-center justify-between font-bold cursor-move"
             style={{
-              background: 'linear-gradient(90deg, #8d6e63 0%, #6d4c41 50%, #5d4037 100%)',
-              color: '#efebe9'
+              background: 'linear-gradient(90deg, #8B2A2A 0%, #6B1F1F 50%, #5A1A1A 100%)',
+              color: '#E5DCC8'
             }}
             onMouseDown={handlePopupMouseDown}
           >
@@ -1451,9 +1600,9 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
               className="popup-close-button w-4 h-4 border-2 text-xs flex items-center justify-center font-bold cursor-pointer"
               onClick={handleCloseForgotPassword}
               style={{ 
-                borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
-                background: '#d7ccc8',
-                color: '#3e2723',
+                borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+                background: '#C6C1B5',
+                color: '#1E1A19',
                 fontSize: '10px'
               }}
             >
@@ -1466,15 +1615,16 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
             <div className="text-center">
               <div 
                 className="text-sm font-mono mb-3"
-                style={{ color: '#3e2723' }}
+                style={{ color: '#1E1A19' }}
               >
                 gah fine fine, heres the password:
               </div>
               <div 
-                className="text-base font-bold font-mono p-2 border-2 bg-amber-100"
+                className="text-base font-bold font-mono p-2 border-2"
                 style={{ 
-                  borderColor: '#3e2723 #efebe9 #efebe9 #3e2723',
-                  color: '#3e2723'
+                  borderColor: '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19',
+                  color: '#1E1A19',
+                  background: '#E5DCC8'
                 }}
               >
                 zozo123
@@ -1486,21 +1636,21 @@ function LoginScreen({ onLogin, onBackToWelcome }) {
                 onClick={handleCloseForgotPassword}
                 className="px-4 py-2 border-2 text-xs font-bold font-mono"
                 style={{
-                  background: 'linear-gradient(145deg, #8d6e63, #6d4c41)',
-                  borderColor: '#efebe9 #3e2723 #3e2723 #efebe9',
-                  color: '#efebe9'
+                  background: 'linear-gradient(145deg, #8B2A2A, #6B1F1F)',
+                  borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+                  color: '#E5DCC8'
                 }}
                 onMouseDown={(e) => {
-                  e.target.style.borderColor = '#3e2723 #efebe9 #efebe9 #3e2723';
+                  e.target.style.borderColor = '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19';
                 }}
                 onMouseUp={(e) => {
-                  e.target.style.borderColor = '#efebe9 #3e2723 #3e2723 #efebe9';
+                  e.target.style.borderColor = '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.borderColor = '#efebe9 #3e2723 #3e2723 #efebe9';
+                  e.target.style.borderColor = '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
                 }}
               >
-                tysm zochan!
+                tysm nakachan!
               </button>
             </div>
           </div>
@@ -1532,8 +1682,21 @@ const getAppBackground = (appId) => {
     `, 
     'memory': 'linear-gradient(135deg, #7c2d12 0%, #92400e 50%, #dc2626 100%)',
     'snake': 'linear-gradient(135deg, #f4f1e8 0%, #e8dcc6 100%)',
-    'paint': 'linear-gradient(135deg, #f4f1e8 0%, #e8dcc6 100%)' // ADD THIS LINE
+    'paint': 'linear-gradient(135deg, #f4f1e8 0%, #e8dcc6 100%)',
+    'settings': 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+    'achievements': 'transparent',
+    'yara': '#C19A6B'
   };
+  
+  // Handle answer windows
+  if (appId.startsWith('answer-')) {
+    return 'transparent';
+  }
+  
+  // Handle video windows
+  if (appId.startsWith('video-')) {
+    return 'transparent';
+  }
   
   return backgrounds[appId] || '#f5f5dc';
 };
@@ -1581,7 +1744,7 @@ function Window({
   const originalSize = appsList.find(app => app.id === id)?.size || { width: 600, height: 450 };
 
   // apps that should fill the window completely vs maintain aspect ratio
-  const responsiveApps = ['folder', 'images']; 
+  const responsiveApps = ['folder', 'images', 'achievements', 'yara',];
   const fixedLayoutApps = ['search', 'notes'];
   const shouldStretch = isFullscreen && responsiveApps.includes(id);
   
@@ -1646,7 +1809,7 @@ function Window({
     const handleMouseMove = (e) => {
       if (isDragging && !isFullscreen) {
         const newX = Math.max(0, Math.min(window.innerWidth - size.width, e.clientX - dragOffset.x));
-        const newY = Math.max(0, Math.min(window.innerHeight - size.height - 48, e.clientY - dragOffset.y));
+        const newY = Math.max(0, Math.min(window.innerHeight - size.height, e.clientY - dragOffset.y));
         onPositionChange({
           x: newX,
           y: newY
@@ -2093,145 +2256,173 @@ function Window({
       }`}
       style={{
         ...windowStyle,
-        background: 'linear-gradient(145deg, #f5deb3, #deb887)',
+        background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
         borderColor: isActive 
-          ? '#f5deb3 #8b4513 #8b4513 #f5deb3'
-          : '#deb887 #654321 #654321 #deb887',
+          ? '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8'
+          : '#A3B1A2 #3E2B27 #3E2B27 #A3B1A2',
         borderStyle: 'solid',
         boxShadow: isActive 
-          ? '4px 4px 8px rgba(0, 0, 0, 0.3)'
-          : '2px 2px 4px rgba(0, 0, 0, 0.2)',
-        fontFamily: 'Courier New, monospace'
+          ? '4px 4px 8px rgba(0, 0, 0, 0.5)'
+          : '2px 2px 4px rgba(0, 0, 0, 0.3)',
+        fontFamily: 'Courier New, monospace',
+        zIndex: isActive ? 1000 : 10 // Explicit z-index values
       }}
       onClick={handleFocus}
     >
       {/* title bar*/}
-      <div
-        className={`flex items-center justify-between px-3 py-2 cursor-move text-amber-900 font-bold`}
-        onMouseDown={handleMouseDown}
-        style={{ 
-          background: isActive 
-            ? 'linear-gradient(90deg, #daa520 0%, #b8860b 50%, #cd853f 100%)'
-            : 'linear-gradient(90deg, #cd853f 0%, #a0522d 50%, #8b4513 100%)',
-          height: `${titleBarHeight}px`,
-          minHeight: `${titleBarHeight}px`,
-          borderBottom: '2px solid',
-          borderColor: isActive ? '#8b4513' : '#654321',
-          fontSize: `${fontSize}px`
-        }}
-      >
-        <div className="flex items-center space-x-2">
-          <span style={{ fontSize: `${Math.max(12, fontSize + 2)}px` }}>🍂</span>
-          <span>{title}</span>
-        </div>
-        <div className="window-controls flex space-x-1">
-          <button
-            onClick={handleMinimize}
-            className="border-2 hover:bg-amber-300 flex items-center justify-center font-bold"
-            style={{
-              width: `${buttonSize}px`,
-              height: `${buttonSize}px`,
-              background: 'linear-gradient(145deg, #f5deb3, #deb887)',
-              borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
-              color: '#8b4513',
-              fontSize: `${Math.max(8, fontSize - 2)}px`
-            }}
-          >
-            _
-          </button>
-          <button
-            onClick={handleFullscreen}
-            className="border-2 hover:bg-amber-300 flex items-center justify-center font-bold"
-            style={{
-              width: `${buttonSize}px`,
-              height: `${buttonSize}px`,
-              background: 'linear-gradient(145deg, #f5deb3, #deb887)',
-              borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
-              color: '#8b4513',
-              fontSize: `${Math.max(8, fontSize - 2)}px`
-            }}
-          >
-            ▢
-          </button>
-          <button
-            onClick={handleClose}
-            className="border-2 hover:bg-red-300 flex items-center justify-center font-bold"
-            style={{
-              width: `${buttonSize}px`,
-              height: `${buttonSize}px`,
-              background: 'linear-gradient(145deg, #f5deb3, #deb887)',
-              borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
-              color: '#8b4513',
-              fontSize: `${Math.max(8, fontSize - 2)}px`
-            }}
-          >
-            X
-          </button>
-        </div>
-      </div>
+<div
+  className={`flex items-center justify-between px-3 py-2 cursor-move font-bold`}
+  onMouseDown={handleMouseDown}
+  style={{ 
+    background: isActive 
+      ? 'linear-gradient(90deg, #8B2A2A 0%, #6B1F1F 50%, #5A1A1A 100%)'
+      : 'linear-gradient(90deg, #5A1A1A 0%, #3E1212 50%, #2A0F0F 100%)',
+    height: `${titleBarHeight}px`,
+    minHeight: `${titleBarHeight}px`,
+    borderBottom: '2px solid',
+    borderColor: isActive ? '#1E1A19' : '#3E2B27',
+    fontSize: `${fontSize}px`,
+    color: '#E5DCC8'
+  }}
+>
+  <div className="flex items-center space-x-2">
+    <span style={{ fontSize: `${Math.max(12, fontSize + 2)}px` }}> ‎ ⋆˚꩜｡ ‎ </span>
+    <span>{title}</span>
+  </div>
+  <div className="window-controls flex space-x-1">
+    <button
+      onClick={handleMinimize}
+      className="border-2 hover:bg-amber-300 flex items-center justify-center font-bold"
+      style={{
+        width: `${buttonSize}px`,
+        height: `${buttonSize}px`,
+        background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+        borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+        color: '#1E1A19',
+        fontSize: `${Math.max(8, fontSize - 2)}px`
+      }}
+    >
+      _
+    </button>
+    <button
+  onClick={handleFullscreen}
+  className="border-2 hover:bg-amber-300 flex items-center justify-center font-bold"
+  disabled={id === 'settings'}
+  style={{
+    width: `${buttonSize}px`,
+    height: `${buttonSize}px`,
+    background: id === 'settings' ? 'linear-gradient(145deg, #808080, #606060)' : 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+    borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+    color: '#1E1A19',
+    fontSize: `${Math.max(8, fontSize - 2)}px`,
+    cursor: id === 'settings' ? 'not-allowed' : 'pointer',
+    opacity: id === 'settings' ? 0.5 : 1
+  }}
+>
+  □
+</button>
+    <button
+      onClick={handleClose}
+      className="border-2 hover:bg-red-300 flex items-center justify-center font-bold"
+      style={{
+        width: `${buttonSize}px`,
+        height: `${buttonSize}px`,
+        background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+        borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+        color: '#1E1A19',
+        fontSize: `${Math.max(8, fontSize - 2)}px`
+      }}
+    >
+      X
+    </button>
+  </div>
+</div>
       
       {/*window content container */}
-      <div 
-        className={`relative overflow-hidden app-content-smooth`}
-        style={{ 
-          height: `calc(100% - ${titleBarHeight}px)`,
+<div 
+  className={`relative overflow-hidden app-content-smooth`}
+  style={{ 
+    height: `calc(100% - ${titleBarHeight}px)`,
+    width: '100%',
+    background: getAppBackground(id),
+    margin: 0,
+    padding: 0,
+    boxSizing: 'border-box',
+    ...(id.startsWith('txt-') || id.startsWith('zozo-txt-') || id.startsWith('img-') ? 
+      {
+        display: 'block',
+        position: 'relative'
+      } : 
+      {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    )
+  }}
+>
+  <div
+    style={{
+      ...(id.startsWith('txt-') || id.startsWith('zozo-txt-') || id.startsWith('img-') ? 
+        {
           width: '100%',
-          background: getAppBackground(id),
-          ...(id.startsWith('txt-') || id.startsWith('zozo-txt-') || id.startsWith('img-') ? 
-            {
-              display: 'block',
-              position: 'relative'
-            } : 
-            {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }
-          )
-        }}
-      >
-        <div
-          style={{
-            ...(id.startsWith('txt-') || id.startsWith('zozo-txt-') || id.startsWith('img-') ? 
-              {
-                width: '100%',
-                height: '100%',
-                position: 'static',
-                transform: 'none',
-                overflow: 'hidden'
-              } : 
-              responsiveApps.includes(id) ? 
-              {
-                width: '100%',
-                height: '100%',
-                transform: 'none',
-                transformOrigin: 'center center',
-                overflow: 'hidden',
-                flexShrink: 0
-              } :
-              fixedLayoutApps.includes(id) ?
-              {
-                width: '100%',
-                height: '100%',
-                transform: 'none',
-                transformOrigin: 'center center',
-                overflow: 'auto',
-                flexShrink: 0
-              } : 
-              {
-                width: originalSize.width,
-                height: originalSize.height,
-                transform: `scale(${scale})`,
-                transformOrigin: 'center center',
-                overflow: 'visible',
-                flexShrink: 0
-              }
-            )
-          }}
-        >
-          {children}
-        </div>
-      </div>
+          height: '100%',
+          position: 'static',
+          transform: 'none',
+          overflow: 'hidden',
+          margin: 0,
+          padding: 0
+        } : 
+        id.startsWith('answer-') || id.startsWith('video-') ?
+        {
+          width: '100%',
+          height: '100%',
+          transform: 'none',
+          transformOrigin: 'center center',
+          overflow: 'hidden',
+          flexShrink: 0,
+          margin: 0,
+          padding: 0,
+          boxSizing: 'border-box'
+        } :
+        responsiveApps.includes(id) ? 
+        {
+          width: '100%',
+          height: '100%',
+          transform: 'none',
+          transformOrigin: 'center center',
+          overflow: 'hidden',
+          flexShrink: 0,
+          margin: 0,
+          padding: 0
+        } :
+        fixedLayoutApps.includes(id) ?
+        {
+          width: '100%',
+          height: '100%',
+          transform: 'none',
+          transformOrigin: 'center center',
+          overflow: 'auto',
+          flexShrink: 0,
+          margin: 0,
+          padding: 0
+        } : 
+        {
+          width: originalSize.width,
+          height: originalSize.height,
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          overflow: 'visible',
+          flexShrink: 0,
+          margin: 0,
+          padding: 0
+        }
+      )
+    }}
+  >
+    {children}
+  </div>
+</div>
 
       {/* resize handlers */}
       {!isFullscreen && (
@@ -2297,18 +2488,18 @@ function Desktop({ apps, onOpenApp }) {
     <div 
       className="h-full w-full relative overflow-hidden"
       style={{
-        backgroundImage: `url('./assets/kohaku.jpg')`,
+        backgroundImage: `url('./assets/desktop12.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         background: `
-          url('./assets/desktop12.jpg') center/cover no-repeat,
+          url('./assets/1.jpg') center/cover no-repeat,
           linear-gradient(135deg, 
-            #FEF7ED 0%, 
-            #FED7AA 25%, 
-            #FDBA74 50%, 
-            #FB923C 75%, 
-            #F97316 100%
+            #3E2B27 0%, 
+            #2A1F1D 25%, 
+            #1E1A19 50%, 
+            #252120 75%, 
+            #1E1A19 100%
           )
         `
       }}
@@ -2351,7 +2542,7 @@ function Desktop({ apps, onOpenApp }) {
         <TaskListWidget />
       </DraggableWidget>
 
-      <DraggableWidget widgetId="goals" initialPosition={{ x: 620, y: 50 }}>
+      <DraggableWidget widgetId="goals" initialPosition={{ x: 700, y: 200 }}>
         <FocusGoalsWidget />
       </DraggableWidget>
 
@@ -2365,8 +2556,17 @@ function Desktop({ apps, onOpenApp }) {
 function DesktopIcon({ app, onDoubleClick }) {
   return (
     <div
-      className="flex flex-col items-center p-3 m-2 w-20 cursor-pointer hover:bg-amber-200 hover:bg-opacity-40 rounded-lg transition-all duration-200"
+      className="flex flex-col items-center p-3 m-2 w-20 cursor-pointer rounded-lg transition-all duration-200"
       onDoubleClick={() => onDoubleClick(app)}
+      style={{
+        background: 'transparent'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(163, 177, 162, 0.3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent';
+      }}
     >
       <img 
         src={app.icon} 
@@ -2374,7 +2574,7 @@ function DesktopIcon({ app, onDoubleClick }) {
         className="w-9 h-9 mb-2 filter drop-shadow-sm object-contain"
         style={{ imageRendering: 'pixelated' }}
       />
-      <span className="text-amber-900 text-xs text-center font-medium" style={{ fontFamily: 'serif' }}>
+      <span className="text-xs text-center font-medium" style={{ fontFamily: 'serif', color: '#E5DCC8' }}>
         {app.name}
       </span>
     </div>
@@ -2401,25 +2601,26 @@ function StartMenu({ apps, isOpen, onOpenApp, onClose }) {
   return (
     <div className="absolute bottom-12 left-3 w-80 border-4 shadow-2xl z-50 overflow-hidden"
          style={{
-           background: 'linear-gradient(145deg, #f5deb3, #deb887)',
-           borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
+           background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+           borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
            borderStyle: 'solid',
            fontFamily: 'monospace'
          }}>
-      <div className="text-amber-900 p-4 text-sm font-bold flex items-center border-b-2"
+      <div className="p-4 text-sm font-bold flex items-center border-b-2"
            style={{ 
-             background: 'linear-gradient(90deg, #daa520 0%, #b8860b 50%, #cd853f 100%)',
-             borderColor: '#8b4513'
+             background: 'linear-gradient(90deg, #8B2A2A 0%, #6B1F1F 50%, #5A1A1A 100%)',
+             borderColor: '#1E1A19',
+             color: '#E5DCC8'
            }}>
-        <span className="text-lg mr-3">🍂</span>
+        <span className="text-lg mr-3">☂️</span>
         <span>Applications</span>
         <button 
           className="ml-auto w-5 h-5 border-2 text-xs flex items-center justify-center font-bold"
           onClick={handleClose}
           style={{ 
-            borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
-            background: '#f5deb3',
-            color: '#8b4513'
+            borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+            background: '#C6C1B5',
+            color: '#1E1A19'
           }}
         >
           X
@@ -2431,12 +2632,12 @@ function StartMenu({ apps, isOpen, onOpenApp, onClose }) {
             key={app.id}
             className="flex items-center p-3 cursor-pointer border-b transition-colors duration-150"
             style={{
-              borderColor: '#cd853f',
-              paddingLeft: '12px' 
+              borderColor: '#3E2B27',
+              paddingLeft: '12px'
             }}
             onClick={() => handleAppClick(app)}
             onMouseEnter={(e) => {
-              e.target.style.background = 'linear-gradient(90deg, #deb887, #cd853f)';
+              e.target.style.background = 'linear-gradient(90deg, #A3B1A2, #7C8B6A)';
               e.target.style.borderRadius = '4px';
             }}
             onMouseLeave={(e) => {
@@ -2453,7 +2654,7 @@ function StartMenu({ apps, isOpen, onOpenApp, onClose }) {
               }}
             />
             <div className="flex-1">
-              <span className="text-sm font-medium text-amber-900">
+              <span className="text-sm font-medium" style={{ color: '#1E1A19' }}>
                 {app.name}
               </span>
             </div>
@@ -2461,18 +2662,19 @@ function StartMenu({ apps, isOpen, onOpenApp, onClose }) {
         ))}
         
         {/* separator */}
-        <div className="border-t-2 my-2 mx-3" style={{ borderColor: '#8b4513' }}></div>
+        <div className="border-t-2 my-2 mx-3" style={{ borderColor: '#1E1A19' }}></div>
         
         {/* system options */}
-        <div className="p-3 text-xs text-amber-700 mx-3"
+        <div className="p-3 text-xs mx-3"
              style={{ 
-               background: 'linear-gradient(90deg, #f5deb3, #deb887)',
+               background: 'linear-gradient(90deg, #C6C1B5, #A3B1A2)',
                borderRadius: '4px',
-               marginBottom: '8px'
+               marginBottom: '8px',
+               color: '#1E1A19'
              }}>
           <div className="flex items-center space-x-3 pl-1">
-            <span>🌡️</span>
-            <span style={{ fontFamily: 'monospace' }}>Autumn Mode Active</span>
+            <span>🌧️</span>
+            <span style={{ fontFamily: 'monospace' }}>Quiet Mode Active</span>
           </div>
         </div>
       </div>
@@ -2493,7 +2695,6 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
     return () => clearInterval(timer);
   }, []);
 
-  //  right-click context menu
   const handleRightClick = (e, windowId) => {
     e.preventDefault();
     playClickSound();
@@ -2505,7 +2706,6 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
     });
   };
 
-  // close context menu when clicking elsewhere
   useEffect(() => {
     const handleClickOutside = () => {
       setContextMenu({ show: false, x: 0, y: 0, windowId: null });
@@ -2517,37 +2717,35 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
     }
   }, [contextMenu.show]);
 
-  //  get app icon by window ID
   const getAppIcon = (windowId) => {
-  const app = appsList.find(app => app.id === windowId);
-  return app ? (
-    typeof app.icon === 'string' && (
-      app.icon.includes('.png') || 
-      app.icon.includes('.jpg') || 
-      app.icon.includes('.jpeg') || 
-      app.icon.includes('.gif') || 
-      app.icon.includes('.svg')
-    ) ? (
-      <img 
-        src={app.icon} 
-        alt={app.name}
-        className="w-4 h-4 object-contain"
-        style={{ imageRendering: 'pixelated' }}
-        onError={(e) => {
-          // Fallback if image fails to load
-          console.log(`Failed to load icon for ${app.name}: ${app.icon}`);
-          e.target.style.display = 'none';
-          e.target.nextSibling.style.display = 'block';
-        }}
-      />
+    const app = appsList.find(app => app.id === windowId);
+    return app ? (
+      typeof app.icon === 'string' && (
+        app.icon.includes('.png') || 
+        app.icon.includes('.jpg') || 
+        app.icon.includes('.jpeg') || 
+        app.icon.includes('.gif') || 
+        app.icon.includes('.svg')
+      ) ? (
+        <img 
+          src={app.icon} 
+          alt={app.name}
+          className="w-4 h-4 object-contain"
+          style={{ imageRendering: 'pixelated' }}
+          onError={(e) => {
+            console.log(`Failed to load icon for ${app.name}: ${app.icon}`);
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'block';
+          }}
+        />
+      ) : (
+        <span className="text-sm">{app.icon}</span>
+      )
     ) : (
-      // For emoji icons or fallback
-      <span className="text-sm">{app.icon}</span>
-    )
-  ) : (
-    <span className="text-sm">📱</span>
-  );
-};
+      <span className="text-sm">📱</span>
+    );
+  };
+
   const handleStartMenuClick = () => {
     playClickSound();
     onOpenStartMenu(!isStartMenuOpen);
@@ -2574,8 +2772,8 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
     <>
       <div className="absolute bottom-0 left-0 right-0 h-12 border-t-4 flex items-center justify-between px-3 z-40 shadow-lg"
       style={{
-       background: 'linear-gradient(180deg, #deb887 0%, #cd853f 50%, #a0522d 100%)',
-       borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
+       background: 'linear-gradient(180deg, #3E2B27 0%, #3E2B27 50%, #3E2B27 100%)',
+       borderColor: '#C6C1B5',
        borderStyle: 'solid',
        fontFamily: 'monospace',
        paddingLeft: '12px'
@@ -2591,28 +2789,28 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
         style={{ 
           fontFamily: 'monospace',
           background: isStartMenuOpen 
-          ? 'linear-gradient(145deg, #a0522d, #8b4513)'
-          : 'linear-gradient(145deg, #f5deb3, #deb887)',
+          ? 'linear-gradient(145deg, #5A1A1A, #3E1212)'
+          : 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
           borderColor: isStartMenuOpen
-          ? '#8b4513 #f5deb3 #f5deb3 #8b4513'
-          : '#f5deb3 #8b4513 #8b4513 #f5deb3',
-          color: isStartMenuOpen ? '#f5deb3' : '#8b4513'
+          ? '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
+          : '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+          color: isStartMenuOpen ? '#E5DCC8' : '#1E1A19'
         }}
         onMouseDown={(e) => {
-          e.target.style.borderColor = '#8b4513 #f5deb3 #f5deb3 #8b4513';
+          e.target.style.borderColor = '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19';
         }}
         onMouseUp={(e) => {
           e.target.style.borderColor = isStartMenuOpen 
-          ? '#8b4513 #f5deb3 #f5deb3 #8b4513'
-          : '#f5deb3 #8b4513 #8b4513 #f5deb3';
+          ? '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
+          : '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
         }}
         onMouseLeave={(e) => {
           e.target.style.borderColor = isStartMenuOpen 
-          ? '#8b4513 #f5deb3 #f5deb3 #8b4513'
-          : '#f5deb3 #8b4513 #8b4513 #f5deb3';
+          ? '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
+          : '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
           }}
           >
-        <span className="text-base">🍂</span>
+        <span className="text-base">☂️</span>
         <span>Menu</span>
         </button>
 
@@ -2631,29 +2829,29 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
                 minWidth: '40px', 
                 height: '32px',
                 background: window.isActive
-                ? 'linear-gradient(145deg, #a0522d, #8b4513)'
+                ? 'linear-gradient(145deg, #5A1A1A, #3E1212)'
                 : window.minimized
-                ? 'linear-gradient(145deg, #cd853f, #a0522d)'
-                : 'linear-gradient(145deg, #f5deb3, #deb887)',
+                ? 'linear-gradient(145deg, #7C8B6A, #3E2B27)'
+                : 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
                 borderColor: window.isActive || window.minimized
-                ? '#8b4513 #f5deb3 #f5deb3 #8b4513'
-                : '#f5deb3 #8b4513 #8b4513 #f5deb3',
-                color: window.isActive ? '#f5deb3' : '#8b4513',
-                boxShadow: window.isActive ? 'inset 1px 1px 2px rgba(0,0,0,0.2)' : '1px 1px 2px rgba(0,0,0,0.1)'
+                ? '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
+                : '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+                color: window.isActive ? '#E5DCC8' : '#1E1A19',
+                boxShadow: window.isActive ? 'inset 1px 1px 2px rgba(0,0,0,0.4)' : '1px 1px 2px rgba(0,0,0,0.2)'
               }}
               title={window.title}
               onMouseDown={(e) => {
-                e.target.style.borderColor = '#8b4513 #f5deb3 #f5deb3 #8b4513';
+                e.target.style.borderColor = '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19';
               }}
               onMouseUp={(e) => {
                 e.target.style.borderColor = window.isActive || window.minimized
-                ? '#8b4513 #f5deb3 #f5deb3 #8b4513'
-                : '#f5deb3 #8b4513 #8b4513 #f5deb3';
+                ? '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
+                : '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
               }}
               onMouseLeave={(e) => {
                 e.target.style.borderColor = window.isActive || window.minimized
-                ? '#8b4513 #f5deb3 #f5deb3 #8b4513'
-                : '#f5deb3 #8b4513 #8b4513 #f5deb3';
+                ? '#1E1A19 #E5DCC8 #E5DCC8 #1E1A19'
+                : '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8';
                 }}
                 >
                   {appIcon}
@@ -2665,14 +2863,20 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
         {/* system tray */}
         <div className="flex items-center space-x-3">
           {/* weather indicator */}
-          <div className="text-lg">🌤️</div>
+          <div className="text-lg">🌧️</div>
           
           {/* WiFi settings button */}
           <button
-            className="p-1 hover:bg-amber-600 hover:bg-opacity-30 rounded transition-all duration-200"
+            className="p-1 rounded transition-all duration-200"
             onClick={() => {
               playClickSound();
               onOpenWiFi();
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(124, 139, 106, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
             }}
             title="Quick Settings"
           >
@@ -2680,47 +2884,62 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
           </button>
           
           {/* clock */}
-          <div className="bg-gradient-to-b from-amber-100 to-orange-100 px-3 py-1 border-2 shadow-sm"
+          <div className="px-3 py-1 border-2 shadow-sm"
           style={{
-             borderColor: '#f5deb3 #8b4513 #8b4513 #f5deb3',
-             fontFamily: 'monospace'
+             borderColor: '#E5DCC8 #1E1A19 #1E1A19 #E5DCC8',
+             fontFamily: 'monospace',
+             background: 'linear-gradient(to bottom, #C6C1B5, #A3B1A2)'
              }}
           >
-            <span className="text-xs font-medium text-amber-900">
+            <span className="text-xs font-medium" style={{ color: '#1E1A19' }}>
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
           
           {/* season indicator */}
-          <div className="text-lg">🍃</div>
+          <div className="text-lg">🍁</div>
         </div>
       </div>
 
       {/* context menu */}
       {contextMenu.show && (
         <div
-          className="fixed bg-white border-2 border-amber-300 rounded-lg shadow-lg py-2 z-50"
+          className="fixed border-2 rounded-lg shadow-lg py-2 z-50"
           style={{
             left: Math.min(contextMenu.x, window.innerWidth - 120),
             top: Math.max(contextMenu.y - 80, 10),
-            minWidth: '120px'
+            minWidth: '120px',
+            background: '#C6C1B5',
+            borderColor: '#1E1A19'
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="w-full px-4 py-2 text-left text-sm text-amber-900 hover:bg-amber-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left text-sm flex items-center space-x-2"
             onClick={() => handleContextMenuClose(contextMenu.windowId)}
-            style={{ fontFamily: 'serif' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#A3B1A2';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+            style={{ fontFamily: 'serif', color: '#1E1A19' }}
           >
             <span>✖</span>
             <span>Close App</span>
           </button>
           <button
-            className="w-full px-4 py-2 text-left text-sm text-amber-900 hover:bg-amber-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left text-sm flex items-center space-x-2"
             onClick={() => handleContextMenuToggle(contextMenu.windowId)}
-            style={{ fontFamily: 'serif' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#A3B1A2';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+            style={{ fontFamily: 'serif', color: '#1E1A19' }}
           >
-            <span>🗽</span>
+            <span>🗗</span>
             <span>Minimize</span>
           </button>
         </div>
@@ -2731,7 +2950,7 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
 
 // main App comp
 export default function RetroOS() {
-  const [stage, setStage] = useState('loading'); 
+  const [stage, setStage] = useState('welcome');
   const [openWindows, setOpenWindows] = useState([]);
   const [activeWindow, setActiveWindow] = useState(null);
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
@@ -2741,35 +2960,75 @@ export default function RetroOS() {
   //  state to track which windows are being closed
   const [closingWindows, setClosingWindows] = useState(new Set());
 
-  const handleLoadingComplete = () => {
-    setStage('welcome');
-  };
+  // Add this new function to handle external windows from achievements
+  // Add this function to handle external windows from achievements
+const handleOpenExternalWindow = (windowData) => {
+  let newWindow;
+  
+  if (windowData.type === 'answer') {
+    const windowId = `answer-${windowData.questionId}-${Date.now()}`;
+    
+    newWindow = {
+      id: windowId,
+      title: `📖 ${windowData.questionText} - Answer ${windowData.currentAnswerIndex + 1}/12`,
+      component: AnswerWindow,
+      componentProps: {
+        questionId: windowData.questionId,
+        questionText: windowData.questionText,
+        kaomoji: windowData.kaomoji,
+        initialAnswerIndex: windowData.currentAnswerIndex,
+        generateAnswers: windowData.generateAnswers,
+        completedAnswers: windowData.completedAnswers,
+        likedAnswers: windowData.likedAnswers,
+        markAnswerAsRead: windowData.markAnswerAsRead,
+        toggleLike: windowData.toggleLike,
+        isLiked: windowData.isLiked,
+        isMuted: windowData.isMuted,
+        volume: windowData.volume,
+        onTitleChange: (newTitle) => updateWindowTitle(windowId, newTitle)
+      },
+      minimized: false,
+      fullscreen: false,
+      isActive: true,
+      position: { 
+        x: Math.max(50, (window.innerWidth - 500) / 2) + (openWindows.length * 30), 
+        y: Math.max(50, (window.innerHeight - 450 - 48) / 2) + (openWindows.length * 30)
+      },
+      size: { width: 500, height: 450 }
+    };
+  } else if (windowData.type === 'video') {
+    newWindow = {
+      id: `video-${Date.now()}`,
+      title: '🎬 Secret Videos',
+      component: VideoPlayerWindow,
+      componentProps: {
+        isMuted: windowData.isMuted,
+        volume: windowData.volume
+      },
+      minimized: false,
+      fullscreen: false,
+      isActive: true,
+      position: { 
+        x: Math.max(50, (window.innerWidth - 700) / 2) + (openWindows.length * 30), 
+        y: Math.max(50, (window.innerHeight - 500 - 48) / 2) + (openWindows.length * 30)
+      },
+      size: { width: 700, height: 500 }
+    };
+  }
 
-  // preloading additional assets 
-  const preloadMusicAssets = async () => {
-    try {
-      await globalAssetPreloader.preloadAssets(MUSIC_ASSETS);
-    } catch (error) {
-      console.warn('Failed to preload music assets:', error);
-    }
-  };
-
-  const preloadGameAssets = async () => {
-    try {
-      await globalAssetPreloader.preloadAssets(GAME_ASSETS);
-    } catch (error) {
-      console.warn('Failed to preload game assets:', error);
-    }
-  };
-
+  if (newWindow) {
+    setOpenWindows(prev => [...prev, newWindow]);
+    setActiveWindow(newWindow.id);
+    setNextZIndex(prev => prev + 1);
+    
+    // Force focus on the new window to bring it to front
+    setTimeout(() => {
+      focusWindow(newWindow.id);
+    }, 0);
+  }
+};
   // window management
-  const openApp = async (app) => {
-    // Preload assets for specific apps
-    if (app.id === 'music') {
-      preloadMusicAssets(); 
-    } else if (app.id === 'leaves') {
-      preloadGameAssets(); 
-    }
+  const openApp = (app) => {
     const existingWindow = openWindows.find(w => w.id === app.id);
     if (existingWindow) {
       if (existingWindow.minimized) {
@@ -2788,6 +3047,7 @@ export default function RetroOS() {
       id: app.id,
       title: app.name,
       component: app.component,
+      componentProps: app.id === 'achievements' ? { onOpenExternalWindow: handleOpenExternalWindow } : undefined,
       minimized: false,
       fullscreen: false,
       isActive: true,
@@ -2872,10 +3132,10 @@ export default function RetroOS() {
   };
 
   const updateWindowTitle = (id, title) => {
-  setOpenWindows(prev =>
-    prev.map(w => w.id === id ? { ...w, title } : w)
-  );
-};
+    setOpenWindows(prev =>
+      prev.map(w => w.id === id ? { ...w, title } : w)
+    );
+  };
 
   const toggleStartMenu = () => {
     setIsStartMenuOpen(!isStartMenuOpen);
@@ -2904,30 +3164,27 @@ export default function RetroOS() {
   };
 
   const handleImageOpen = (imageName) => {
-  const imageApp = {
-    id: `img-${imageName.name}-${Date.now()}`,
-    name: imageName.name, 
-    icon: "🖼️",
-    component: ImageViewerApp,
-    size: { width: 700, height: 500 }
+    const imageApp = {
+      id: `img-${imageName.name}-${Date.now()}`,
+      name: imageName.name, 
+      icon: "🖼️",
+      component: ImageViewerApp,
+      size: { width: 700, height: 500 }
+    };
+    openApp(imageApp);
   };
-  openApp(imageApp);
-};
 
   // stage/screen transitions
-  if (stage === 'loading') {
-    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
-  }
   if (stage === 'welcome') {
     return <WelcomeScreen onContinue={() => setStage('login')} />;
   }
 
   if (stage === 'login') {
-  return <LoginScreen 
-    onLogin={() => setStage('desktop')} 
-    onBackToWelcome={() => setStage('welcome')} 
-  />;
-}
+    return <LoginScreen 
+      onLogin={() => setStage('desktop')} 
+      onBackToWelcome={() => setStage('welcome')} 
+    />;
+  }
 
   //  desktop interface
   return (
@@ -2939,75 +3196,89 @@ export default function RetroOS() {
       />
 
       {/* windows */}
-      {openWindows.map(window => {
-        const AppComponent = window.component;
-        return (
-          <Window
-            key={window.id}
-            id={window.id}
-            title={window.title}
-            onClose={() => closeWindow(window.id)}
-            onMinimize={() => minimizeWindow(window.id)}
-            onFullscreen={() => fullscreenWindow(window.id)}
-            onFocus={() => focusWindow(window.id)}
-            position={window.position}
-            size={window.size}
-            isActive={window.isActive}
-            isMinimized={window.minimized}
-            isFullscreen={window.fullscreen}
-            onPositionChange={(position) => updateWindowPosition(window.id, position)}
-            onSizeChange={(size) => updateWindowSize(window.id, size)}
-          >
-            <AppWrapper appId={window.id}>
-              {/* handle different app types */}
+{openWindows.map(window => {
+  const AppComponent = window.component;
+  return (
+    <Window
+      key={window.id}
+      id={window.id}
+      title={window.title}
+      onClose={() => closeWindow(window.id)}
+      onMinimize={() => minimizeWindow(window.id)}
+      onFullscreen={() => fullscreenWindow(window.id)}
+      onFocus={() => focusWindow(window.id)}
+      position={window.position}
+      size={window.size}
+      isActive={window.isActive}
+      isMinimized={window.minimized}
+      isFullscreen={window.fullscreen}
+      onPositionChange={(position) => updateWindowPosition(window.id, position)}
+      onSizeChange={(size) => updateWindowSize(window.id, size)}
+    >
+      <AppWrapper appId={window.id}>
+        {/* Handle special window types */}
+        {window.id.startsWith('answer-') && window.componentProps && (
+          <AppComponent {...window.componentProps} />
+        )}
+              {window.id.startsWith('video-') && window.componentProps && (
+                <AppComponent {...window.componentProps} />
+              )}
               {window.id.startsWith('zozo-txt-') && (
                 <TxtFileApp 
-                fileName="zozo-message.txt"
-                content={fileContents["zozo-message.txt"]}
-                onClose={() => closeWindow(window.id)}
+                  fileName="zozo-message.txt"
+                  content={fileContents["zozo-message.txt"]}
+                  onClose={() => closeWindow(window.id)}
                 />
-             )}
-             {window.id.startsWith('txt-') && !window.id.startsWith('zozo-txt-') && (
-              <TxtFileApp 
-              fileName={window.title}
-              content={fileContents[window.title] || "File content not found."}
-              onClose={() => closeWindow(window.id)}
-              />
-            )}
-            {window.id.startsWith('img-') && (
-              <ImageViewerApp 
-              imageName={window.title}
-              onClose={() => closeWindow(window.id)}
-              onTitleChange={(newTitle) => updateWindowTitle(window.id, newTitle)}
-              />
-            )}
-            {window.id === 'folder' && (
-              <FolderApp 
-              folderType="files" 
-              onOpenFile={handleFileOpen}
-              />
-            )}
-            {window.id === 'images' && (
-              <FolderApp 
-              folderType="images" 
-              onOpenFile={handleImageOpen}
-              />
-            )}
-            {/* og apps */}
-            {!window.id.startsWith('zozo-txt-') && 
-            !window.id.startsWith('txt-') && 
-            !window.id.startsWith('img-') && 
-            !['folder', 'images'].includes(window.id) && (
-              window.id === 'music' ? (
-              <AppComponent 
-              onAppClose={window.isClosing} 
-              isClosing={closingWindows.has(window.id)}
-              />
-            ) : (
-            <AppComponent />
-          )
-          )}
-          </AppWrapper>
+              )}
+              {window.id.startsWith('txt-') && !window.id.startsWith('zozo-txt-') && (
+                <TxtFileApp 
+                  fileName={window.title}
+                  content={fileContents[window.title] || "File content not found."}
+                  onClose={() => closeWindow(window.id)}
+                />
+              )}
+              {window.id.startsWith('img-') && (
+                <ImageViewerApp 
+                  imageName={window.title}
+                  onClose={() => closeWindow(window.id)}
+                  onTitleChange={(newTitle) => updateWindowTitle(window.id, newTitle)}
+                />
+              )}
+              {window.id === 'folder' && (
+                <FolderApp 
+                  folderType="files" 
+                  onOpenFile={handleFileOpen}
+                />
+              )}
+              {window.id === 'images' && (
+                <FolderApp 
+                  folderType="images" 
+                  onOpenFile={handleImageOpen}
+                />
+              )}
+              {window.id === 'yara' && (
+  <CorkboardApp isFullscreen={window.fullscreen} />
+)}
+              {/* og apps */}
+              {!window.id.startsWith('zozo-txt-') && 
+               !window.id.startsWith('txt-') && 
+               !window.id.startsWith('img-') &&
+               !window.id.startsWith('answer-') &&
+               !window.id.startsWith('video-') &&
+               !['folder', 'images'].includes(window.id) && (
+                window.id === 'music' ? (
+                  <AppComponent 
+                    onAppClose={window.isClosing} 
+                    isClosing={closingWindows.has(window.id)}
+                    {...(window.componentProps || {})}
+                  />
+                ) : window.id === 'achievements' ? (
+                  <AppComponent {...(window.componentProps || {})} />
+                ) : (
+                  <AppComponent />
+                )
+              )}
+            </AppWrapper>
           </Window>
         );
       })}
@@ -3020,23 +3291,22 @@ export default function RetroOS() {
         onClose={() => setIsStartMenuOpen(false)}
       />
 
-      {/* taskbar  */}
       {/* WiFi sidebar */}
       <WiFiSidebar 
-      isOpen={isWiFiOpen}
-      onClose={() => setIsWiFiOpen(false)}
-      onZozoClick={handleZozoClick}
+        isOpen={isWiFiOpen}
+        onClose={() => setIsWiFiOpen(false)}
+        onZozoClick={handleZozoClick}
       />
       
       {/* ENHANCED taskbar */}
       <Taskbar
-      openWindows={openWindows}
-      onToggleWindow={toggleWindow}
-      onOpenStartMenu={toggleStartMenu}
-      isStartMenuOpen={isStartMenuOpen}
-      onCloseWindow={closeWindow}
-      appsList={appsList}
-      onOpenWiFi={() => setIsWiFiOpen(true)}
+        openWindows={openWindows}
+        onToggleWindow={toggleWindow}
+        onOpenStartMenu={toggleStartMenu}
+        isStartMenuOpen={isStartMenuOpen}
+        onCloseWindow={closeWindow}
+        appsList={appsList}
+        onOpenWiFi={() => setIsWiFiOpen(true)}
       />
 
       {/* outside click to close start menu */}
