@@ -2577,7 +2577,7 @@ function Desktop({ apps, onOpenApp }) {
         <ClockWidget />
       </DraggableWidget>
 
-      <DraggableWidget widgetId="calendar" initialPosition={{ x: window.innerWidth - 220, y: 140 }}>
+      <DraggableWidget widgetId="calendar" initialPosition={{ x: window.innerWidth - 420, y: 340 }}>
         <CalendarWidget />
       </DraggableWidget>
 
@@ -2585,7 +2585,7 @@ function Desktop({ apps, onOpenApp }) {
         <TaskListWidget />
       </DraggableWidget>
 
-      <DraggableWidget widgetId="goals" initialPosition={{ x: 700, y: 200 }}>
+      <DraggableWidget widgetId="goals" initialPosition={{ x: 900, y: 200 }}>
         <FocusGoalsWidget />
       </DraggableWidget>
 
