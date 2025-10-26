@@ -943,7 +943,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
                 <button className="control-btn library-btn" onClick={openLibrary}>
-                  ★ LIBRARY
+                  ★
                 </button>
               </div>
 
