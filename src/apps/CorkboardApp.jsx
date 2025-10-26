@@ -1812,6 +1812,42 @@ function CorkboardApp({ isFullscreen = false }) {
 
   const shouldShowToolbar = isFullscreen;
   const shouldShowHamburger = !isFullscreen;
+  
+  // Ensure all corkboard assets are in browser cache
+  useEffect(() => {
+    const ensureAssetsLoaded = () => {
+      // Preload polaroids
+      const polaroidUrls = Array.from({ length: 9 }, (_, i) => `/corkboard/polaroids/${i + 1}.png`);
+      polaroidUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+      });
+
+      // Preload stickers
+      const stickerUrls = [
+        '/corkboard/sticker1.png', '/corkboard/sticker2.png', '/corkboard/sticker3.png',
+        '/corkboard/sticker4.png', '/corkboard/sticker5.png', '/corkboard/sticker6.png',
+        '/corkboard/sticker8.png', '/corkboard/sticker9.png', '/corkboard/sticker10.png',
+        '/corkboard/sticker11.png', '/corkboard/sticker12.png', '/corkboard/sticker13.png',
+        '/corkboard/sticker14.png', '/corkboard/sticker15.png', '/corkboard/sticker16.png',
+        '/corkboard/sticker17.png'
+      ];
+      stickerUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+      });
+
+      // Preload background and pin
+      const bgImg = new Image();
+      bgImg.src = '/corkboard/corkboard.jpg';
+      const pinImg = new Image();
+      pinImg.src = '/corkboard/boardpin.png';
+    };
+
+    ensureAssetsLoaded();
+  }, []);
+
+  // Listen for storage events to update saved projects
 
   // Listen for storage events to update saved projects
   useEffect(() => {

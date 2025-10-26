@@ -75,7 +75,77 @@ function LoadingScreen({ onLoadingComplete }) {
           loadedCount++;
         }
 
-        // Load LEAVES GAME assets (critical!)
+        // === CORKBOARD ASSETS (HIGHEST PRIORITY!) ===
+        updateProgress(loadedCount, totalAssets, 'Loading corkboard...', 'background');
+        
+        // Load corkboard background and pin first
+        const corkboardBg = imageAssets.find(a => a.src.includes('corkboard/corkboard.jpg'));
+        if (corkboardBg) {
+          await globalAssetPreloader.preloadImage(corkboardBg.src);
+          loadedCount++;
+        }
+        
+        const boardPin = imageAssets.find(a => a.src.includes('boardpin.png'));
+        if (boardPin) {
+          await globalAssetPreloader.preloadImage(boardPin.src);
+          loadedCount++;
+        }
+
+        // Load ALL polaroids with progress feedback
+        updateProgress(loadedCount, totalAssets, 'Loading polaroids...', 'photos');
+        const polaroids = imageAssets.filter(a => a.src.includes('polaroids/'));
+        
+        // Load polaroids in parallel batches of 3 for speed
+        const polaroidBatches = [];
+        for (let i = 0; i < polaroids.length; i += 3) {
+          polaroidBatches.push(polaroids.slice(i, i + 3));
+        }
+
+        for (const batch of polaroidBatches) {
+          await Promise.all(
+            batch.map(async (asset) => {
+              await globalAssetPreloader.preloadImage(asset.src);
+              loadedCount++;
+              const polaroidNum = asset.src.split('/').pop();
+              updateProgress(loadedCount, totalAssets, 'Loading polaroids...', polaroidNum);
+            })
+          );
+        }
+
+        // Load ALL stickers with progress feedback
+        updateProgress(loadedCount, totalAssets, 'Loading stickers...', 'decorations');
+        const corkboardStickers = imageAssets.filter(a => 
+          a.src.includes('corkboard/sticker') && !a.src.includes('polaroids')
+        );
+        
+        // Load stickers in parallel batches of 4 for speed
+        const stickerBatches = [];
+        for (let i = 0; i < corkboardStickers.length; i += 4) {
+          stickerBatches.push(corkboardStickers.slice(i, i + 4));
+        }
+
+        for (const batch of stickerBatches) {
+          await Promise.all(
+            batch.map(async (asset) => {
+              await globalAssetPreloader.preloadImage(asset.src);
+              loadedCount++;
+              const stickerNum = asset.src.split('/').pop();
+              updateProgress(loadedCount, totalAssets, 'Loading stickers...', stickerNum);
+            })
+          );
+        }
+
+        // Load corkboard audio
+        const corkboardAudio = audioAssets.filter(a => a.src.includes('corkboard/audio'));
+        await Promise.all(
+          corkboardAudio.map(async (asset) => {
+            await globalAssetPreloader.preloadAudio(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
+          })
+        );
+
+        // Load LEAVES GAME assets
         updateProgress(loadedCount, totalAssets, 'Loading leaves game...', 'game assets');
         const leavesAssets = imageAssets.filter(a => a.src.includes('hehe/'));
         await Promise.all(
@@ -94,7 +164,7 @@ function LoadingScreen({ onLoadingComplete }) {
           loadedCount++;
         }
 
-        // Load MUSIC PLAYER assets (critical!)
+        // Load MUSIC PLAYER assets
         updateProgress(loadedCount, totalAssets, 'Loading music player...', 'albums');
         const musicAssets = imageAssets.filter(a => 
           a.src.includes('kaoru2.gif') || a.src.includes('albums/')
@@ -106,26 +176,6 @@ function LoadingScreen({ onLoadingComplete }) {
             updateProgress(loadedCount, totalAssets, 'Loading music player...', asset.src.split('/').pop());
           })
         );
-
-        // Load CORKBOARD assets (critical!)
-        updateProgress(loadedCount, totalAssets, 'Loading corkboard...', 'stickers & polaroids');
-        const corkboardAssets = imageAssets.filter(a => a.src.includes('corkboard/'));
-        
-        // Batch load corkboard assets (5 at a time for performance)
-        const corkboardBatches = [];
-        for (let i = 0; i < corkboardAssets.length; i += 5) {
-          corkboardBatches.push(corkboardAssets.slice(i, i + 5));
-        }
-
-        for (const batch of corkboardBatches) {
-          await Promise.all(
-            batch.map(async (asset) => {
-              await globalAssetPreloader.preloadImage(asset.src);
-              loadedCount++;
-              updateProgress(loadedCount, totalAssets, 'Loading corkboard...', asset.src.split('/').pop());
-            })
-          );
-        }
 
         // Load pet animations
         updateProgress(loadedCount, totalAssets, 'Loading pet animations...', 'hakuchin');
@@ -171,10 +221,10 @@ function LoadingScreen({ onLoadingComplete }) {
           );
         }
 
-        // Load ALL AUDIO (including game sounds)
-        updateProgress(loadedCount, totalAssets, 'Loading sounds...', 'audio');
+        // Load remaining audio
+        const remainingAudio = audioAssets.filter(a => !a.src.includes('corkboard/audio'));
         await Promise.all(
-          audioAssets.map(async (asset) => {
+          remainingAudio.map(async (asset) => {
             await globalAssetPreloader.preloadAudio(asset.src);
             loadedCount++;
             updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());

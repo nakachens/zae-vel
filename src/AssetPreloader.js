@@ -333,41 +333,44 @@ export const CRITICAL_ASSETS = [
   { type: 'image', src: './albums/5.jpg' },
   { type: 'image', src: './albums/7.png' },
   
-  // === CORKBOARD ASSETS (CRITICAL!) ===
-  { type: 'image', src: '/corkboard/corkboard.jpg' },
-  { type: 'image', src: '/corkboard/boardpin.png' },
+  // === CORKBOARD ASSETS (HIGHEST PRIORITY AFTER FONTS!) ===
+  // Background and pin first
+  { type: 'image', src: '/corkboard/corkboard.jpg', priority: 'critical' },
+  { type: 'image', src: '/corkboard/boardpin.png', priority: 'critical' },
+  
+  // ALL Polaroids - CRITICAL (load before stickers)
+  { type: 'image', src: '/corkboard/polaroids/1.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/2.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/3.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/4.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/5.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/6.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/7.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/8.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/polaroids/9.png', priority: 'critical' },
+  
+  // ALL Stickers - CRITICAL
+  { type: 'image', src: '/corkboard/sticker1.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker2.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker3.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker4.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker5.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker6.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker8.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker9.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker10.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker11.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker12.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker13.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker14.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker15.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker16.png', priority: 'critical' },
+  { type: 'image', src: '/corkboard/sticker17.png', priority: 'critical' },
+  
+  // Corkboard audio
   { type: 'audio', src: '/corkboard/audio/click.mp3' },
   { type: 'audio', src: '/corkboard/audio/paper.mp3' },
   { type: 'audio', src: '/corkboard/audio/music.mp3' },
-  
-  // ALL Stickers - preload all
-  { type: 'image', src: '/corkboard/sticker1.png' },
-  { type: 'image', src: '/corkboard/sticker2.png' },
-  { type: 'image', src: '/corkboard/sticker3.png' },
-  { type: 'image', src: '/corkboard/sticker4.png' },
-  { type: 'image', src: '/corkboard/sticker5.png' },
-  { type: 'image', src: '/corkboard/sticker6.png' },
-  { type: 'image', src: '/corkboard/sticker8.png' },
-  { type: 'image', src: '/corkboard/sticker9.png' },
-  { type: 'image', src: '/corkboard/sticker10.png' },
-  { type: 'image', src: '/corkboard/sticker11.png' },
-  { type: 'image', src: '/corkboard/sticker12.png' },
-  { type: 'image', src: '/corkboard/sticker13.png' },
-  { type: 'image', src: '/corkboard/sticker14.png' },
-  { type: 'image', src: '/corkboard/sticker15.png' },
-  { type: 'image', src: '/corkboard/sticker16.png' },
-  { type: 'image', src: '/corkboard/sticker17.png' },
-  
-  // ALL Polaroids - preload all
-  { type: 'image', src: '/corkboard/polaroids/1.png' },
-  { type: 'image', src: '/corkboard/polaroids/2.png' },
-  { type: 'image', src: '/corkboard/polaroids/3.png' },
-  { type: 'image', src: '/corkboard/polaroids/4.png' },
-  { type: 'image', src: '/corkboard/polaroids/5.png' },
-  { type: 'image', src: '/corkboard/polaroids/6.png' },
-  { type: 'image', src: '/corkboard/polaroids/7.png' },
-  { type: 'image', src: '/corkboard/polaroids/8.png' },
-  { type: 'image', src: '/corkboard/polaroids/9.png' },
 ];
 
 // SECONDARY ASSETS - Load during login screen
