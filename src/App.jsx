@@ -975,7 +975,7 @@ const appsList = [
   { 
     id: "calc", 
     name: "Calculator", 
-    icon: getAssetPath("./assets/calc.png"), 
+    icon: getAssetPath("./assets/calculator.png"), 
     component: CalculatorApp, 
     size: { width: 280, height: 430 } 
   },
