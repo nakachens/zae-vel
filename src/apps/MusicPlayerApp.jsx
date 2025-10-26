@@ -3,7 +3,64 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './MusicPlayer.css'
 
-// audio manager (global)
+// IndexedDB helper for storing audio files
+const DB_NAME = 'MusicPlayerDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'audioFiles';
+
+const initDB = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+  });
+};
+
+const saveAudioFile = async (id, file) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put({ id, file });
+    
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const getAudioFile = async (id) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.get(id);
+    
+    request.onsuccess = () => resolve(request.result?.file);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const deleteAudioFile = async (id) => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.delete(id);
+    
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+};
+
+// Audio manager
 class AudioManager {
   constructor() {
     this.audioElements = [];
@@ -29,16 +86,25 @@ class AudioManager {
   }
 
   async initialize(playlist, audioFiles) {
-    if (this.initialized) return;
-    
-    this.initialized = true;
+    this.initialized = false;
     this.playlist = [...playlist];
     const elements = [];
     
     for (let i = 0; i < playlist.length; i++) {
       const song = playlist[i];
       const audio = new Audio();
-      const audioPath = audioFiles[song.audioId];
+      let audioPath = audioFiles[song.audioId];
+      
+      if (song.audioId.startsWith('uploaded-')) {
+        try {
+          const file = await getAudioFile(song.audioId);
+          if (file) {
+            audioPath = URL.createObjectURL(file);
+          }
+        } catch (error) {
+          console.error('Failed to load uploaded file:', error);
+        }
+      }
       
       if (audioPath) {
         audio.src = audioPath;
@@ -52,7 +118,6 @@ class AudioManager {
         
         audio.addEventListener('error', (e) => {
           console.log(`Failed to load: ${song.title}`, e);
-          elements[i] = null;
         });
         
         audio.addEventListener('ended', () => {
@@ -80,63 +145,30 @@ class AudioManager {
     }
     
     this.audioElements = elements;
+    
+    if (this.currentSongIndex >= elements.length) {
+      this.currentSongIndex = 0;
+    }
+    
     const firstAvailable = elements.find(el => el !== null);
     if (firstAvailable) {
       const firstIndex = elements.indexOf(firstAvailable);
-      this.currentAudioRef = firstAvailable;
-      this.currentSongIndex = firstIndex;
+      this.currentAudioRef = elements[this.currentSongIndex] || firstAvailable;
+      if (!elements[this.currentSongIndex]) {
+        this.currentSongIndex = firstIndex;
+      }
+    } else {
+      this.currentAudioRef = null;
+      this.currentSongIndex = 0;
     }
+    
+    this.initialized = true;
+    this.notify('initialized', {});
   }
 
   updatePlaylist(newPlaylist) {
     this.playlist = [...newPlaylist];
     this.notify('playlistUpdated', { playlist: this.playlist });
-  }
-
-  addAudioElement(audio, songData) {
-    this.audioElements.push(audio);
-    this.playlist.push(songData);
-    
-    if (!this.currentAudioRef) {
-      const newIndex = this.audioElements.length - 1;
-      this.currentAudioRef = audio;
-      this.currentSongIndex = newIndex;
-      this.notify('songChanged', { 
-        currentSongIndex: this.currentSongIndex 
-      });
-    }
-    
-    this.notify('playlistUpdated', { playlist: this.playlist });
-  }
-
-  removeAudioElement(index) {
-    if (index === this.currentSongIndex && this.isPlaying) {
-      this.pause();
-    }
-    
-    const removedAudio = this.audioElements[index];
-    if (removedAudio) {
-      removedAudio.pause();
-      removedAudio.src = '';
-    }
-    
-    this.audioElements.splice(index, 1);
-    this.playlist.splice(index, 1);
-    
-    if (index < this.currentSongIndex) {
-      this.currentSongIndex--;
-    } else if (index === this.currentSongIndex) {
-      if (this.audioElements.length > 0) {
-        this.currentSongIndex = Math.min(this.currentSongIndex, this.audioElements.length - 1);
-        this.currentAudioRef = this.audioElements[this.currentSongIndex];
-      } else {
-        this.currentAudioRef = null;
-        this.currentSongIndex = 0;
-      }
-    }
-    
-    this.notify('playlistUpdated', { playlist: this.playlist });
-    this.notify('songChanged', { currentSongIndex: this.currentSongIndex });
   }
 
   getCurrentSong() {
@@ -199,10 +231,14 @@ class AudioManager {
   }
 
   nextSong() {
+    if (this.audioElements.length === 0) return;
+    
     let nextIndex = this.currentSongIndex;
+    let attempts = 0;
     do {
       nextIndex = (nextIndex + 1) % this.audioElements.length;
-    } while (!this.audioElements[nextIndex] && nextIndex !== this.currentSongIndex);
+      attempts++;
+    } while (!this.audioElements[nextIndex] && attempts < this.audioElements.length);
     
     if (this.audioElements[nextIndex]) {
       const wasPlaying = this.isPlaying;
@@ -214,10 +250,14 @@ class AudioManager {
   }
 
   previousSong() {
+    if (this.audioElements.length === 0) return;
+    
     let prevIndex = this.currentSongIndex;
+    let attempts = 0;
     do {
       prevIndex = prevIndex > 0 ? prevIndex - 1 : this.audioElements.length - 1;
-    } while (!this.audioElements[prevIndex] && prevIndex !== this.currentSongIndex);
+      attempts++;
+    } while (!this.audioElements[prevIndex] && attempts < this.audioElements.length);
     
     if (this.audioElements[prevIndex]) {
       const wasPlaying = this.isPlaying;
@@ -372,6 +412,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const [showLoading, setShowLoading] = useState(false);
   const [hoveredSong, setHoveredSong] = useState(null);
   const [removePopup, setRemovePopup] = useState(null);
+  const [addBackPopup, setAddBackPopup] = useState(null);
+  const [uploadPopup, setUploadPopup] = useState(null);
 
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
@@ -379,43 +421,51 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const fileInputRef = useRef(null);
   const clickSoundRef = useRef(null);
   const unsubscribeRef = useRef(null);
+  const isInitializing = useRef(false);
 
-  // Load from localStorage on mount
   useEffect(() => {
-    try {
-      const savedUploadedSongs = localStorage.getItem('musicPlayerUploadedSongs');
-      const savedLibrary = localStorage.getItem('musicPlayerLibrary');
-      
-      let uploadedSongs = [];
-      let libraryData = [];
-      
-      if (savedUploadedSongs) {
-        uploadedSongs = JSON.parse(savedUploadedSongs);
+    const loadData = async () => {
+      try {
+        const savedPlaylistMeta = localStorage.getItem('musicPlayerPlaylistMeta');
+        const savedLibrary = localStorage.getItem('musicPlayerLibrary');
+        
+        let playlistMeta = [];
+        let libraryData = [];
+        
+        if (savedPlaylistMeta) {
+          playlistMeta = JSON.parse(savedPlaylistMeta);
+        }
+        
+        if (savedLibrary) {
+          libraryData = JSON.parse(savedLibrary);
+        }
+        
+        const inAppSongsInPlaylist = initialPlaylist.filter(song => 
+          !libraryData.some(libSong => libSong.audioId === song.audioId)
+        );
+        
+        const uploadedSongsMeta = playlistMeta.filter(song => !song.isInApp);
+        
+        setPlaylist([...inAppSongsInPlaylist, ...uploadedSongsMeta]);
+        setLibrary(libraryData);
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        setPlaylist(initialPlaylist);
+        setLibrary([]);
       }
-      
-      if (savedLibrary) {
-        libraryData = JSON.parse(savedLibrary);
-      }
-      
-      // Combine in-app songs not in library with uploaded songs
-      const inAppSongsInPlaylist = initialPlaylist.filter(song => 
-        !libraryData.some(libSong => libSong.audioId === song.audioId)
-      );
-      
-      setPlaylist([...inAppSongsInPlaylist, ...uploadedSongs]);
-      setLibrary(libraryData);
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-      setPlaylist(initialPlaylist);
-      setLibrary([]);
-    }
+    };
+    
+    loadData();
   }, []);
 
-  // Save uploaded songs to localStorage whenever playlist changes
   useEffect(() => {
     try {
-      const uploadedSongs = playlist.filter(song => !song.isInApp);
-      localStorage.setItem('musicPlayerUploadedSongs', JSON.stringify(uploadedSongs));
+      const playlistMeta = playlist.map(song => ({
+        ...song,
+        file: undefined
+      }));
+      
+      localStorage.setItem('musicPlayerPlaylistMeta', JSON.stringify(playlistMeta));
       localStorage.setItem('musicPlayerLibrary', JSON.stringify(library));
     } catch (error) {
       console.error('Error saving to localStorage:', error);
@@ -429,24 +479,18 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
 
   useEffect(() => {
     const initializeAudio = async () => {
+      if (isInitializing.current || playlist.length === 0) return;
+      
+      isInitializing.current = true;
       setShowLoading(true);
       
-      // Recreate audio files object for uploaded songs
-      const combinedAudioFiles = { ...audioFiles };
-      playlist.forEach(song => {
-        if (song.objectUrl) {
-          combinedAudioFiles[song.audioId] = song.objectUrl;
-        }
-      });
-      
-      await globalAudioManager.initialize(playlist, combinedAudioFiles);
+      await globalAudioManager.initialize(playlist, audioFiles);
       setAudioState(globalAudioManager.getState());
       setShowLoading(false);
+      isInitializing.current = false;
     };
 
-    if (playlist.length > 0) {
-      initializeAudio();
-    }
+    initializeAudio();
 
     const unsubscribe = globalAudioManager.subscribe((eventType, data) => {
       switch (eventType) {
@@ -456,6 +500,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
         case 'volumeChanged':
         case 'repeatChanged':
         case 'playlistUpdated':
+        case 'initialized':
           setAudioState(globalAudioManager.getState());
           break;
       }
@@ -624,7 +669,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     playClickSound();
     const availableSongs = playlist.filter((song, index) => globalAudioManager.audioElements[index] !== null);
     if (availableSongs.length === 0) {
-      alert('No audio files available to play. Please check your file paths.');
       return;
     }
     
@@ -646,7 +690,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const selectSong = (index) => {
     playClickSound();
     if (!globalAudioManager.selectSong(index)) {
-      alert('Audio file not found. Please check the file path.');
       return;
     }
     
@@ -659,20 +702,25 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     setRemovePopup({ index, song });
   };
 
-  const confirmRemoveSong = () => {
+  const confirmRemoveSong = async () => {
     if (!removePopup) return;
     
     const { index, song } = removePopup;
     
     if (song.isInApp) {
-      // Move to library
       setLibrary(prev => [...prev, song]);
+    } else {
+      try {
+        await deleteAudioFile(song.audioId);
+      } catch (error) {
+        console.error('Failed to delete audio file:', error);
+      }
     }
     
-    // Remove from playlist
     const newPlaylist = playlist.filter((_, i) => i !== index);
     setPlaylist(newPlaylist);
-    globalAudioManager.removeAudioElement(index);
+    
+    isInitializing.current = false;
     
     setRemovePopup(null);
     playClickSound();
@@ -683,46 +731,30 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     setRemovePopup(null);
   };
 
-  const addBackToPlaylist = (song) => {
+  const handleAddBackToPlaylist = (song) => {
     playClickSound();
+    setAddBackPopup(song);
+  };
+
+  const confirmAddBack = async () => {
+    if (!addBackPopup) return;
     
-    // Remove from library
+    const song = addBackPopup;
+    
     setLibrary(prev => prev.filter(s => s.audioId !== song.audioId));
     
-    // Add back to playlist
     const newPlaylist = [...playlist, song];
     setPlaylist(newPlaylist);
     
-    // Create audio element for the song
-    const audio = new Audio();
-    const audioPath = audioFiles[song.audioId];
+    isInitializing.current = false;
     
-    if (audioPath) {
-      audio.src = audioPath;
-      audio.preload = 'metadata';
-      audio.volume = globalAudioManager.volume;
-      audio.loop = globalAudioManager.isRepeating;
-      
-      audio.addEventListener('ended', () => {
-        if (globalAudioManager.isRepeating) {
-          audio.currentTime = 0;
-          audio.play();
-        } else {
-          globalAudioManager.nextSong();
-        }
-      });
-      
-      audio.addEventListener('timeupdate', () => {
-        globalAudioManager.currentTime = audio.currentTime;
-        globalAudioManager.duration = audio.duration || 0;
-        globalAudioManager.notify('timeUpdate', {
-          currentTime: globalAudioManager.currentTime,
-          duration: globalAudioManager.duration
-        });
-      });
-      
-      globalAudioManager.addAudioElement(audio, song);
-    }
+    setAddBackPopup(null);
+    playClickSound();
+  };
+
+  const cancelAddBack = () => {
+    playClickSound();
+    setAddBackPopup(null);
   };
 
   const handleProgressInteraction = (event, isDragging = false) => {
@@ -794,72 +826,62 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     event.target.value = '';
   };
 
-  const addAudioFiles = (files) => {
-    playClickSound();
-    const newSongs = [];
+  const addAudioFiles = async (files) => {
+    const validFiles = [];
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file.type.startsWith('audio/')) continue;
+      if (file.type.startsWith('audio/')) {
+        validFiles.push(file);
+      }
+    }
+    
+    if (validFiles.length === 0) {
+      setUploadPopup({ count: 0, success: false });
+      return;
+    }
+    
+    const newSongs = [];
+    
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      const audioId = `uploaded-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`;
       
-      const objectUrl = URL.createObjectURL(file);
+      try {
+        await saveAudioFile(audioId, file);
+      } catch (error) {
+        console.error('Failed to save audio file:', error);
+        continue;
+      }
+      
       const song = {
         title: file.name.replace(/\.[^/.]+$/, ""),
         subtitle: 'Uploaded song',
-        audioId: `uploaded-${Date.now()}-${i}`,
+        audioId: audioId,
         artist: 'Unknown',
         coverImage: null,
         coverColor: 'linear-gradient(135deg, #8B4513, #CD853F)',
-        file: file,
-        objectUrl: objectUrl,
         isInApp: false
       };
+      
       newSongs.push(song);
-      
-      const audio = new Audio();
-      audio.src = objectUrl;
-      audio.preload = 'metadata';
-      audio.volume = globalAudioManager.volume;
-      audio.loop = globalAudioManager.isRepeating;
-      
-      audio.addEventListener('loadedmetadata', () => {
-        console.log(`Loaded uploaded: ${song.title}`);
-      });
-      
-      audio.addEventListener('error', (e) => {
-        console.log(`Failed to load uploaded: ${song.title}`, e);
-      });
-      
-      audio.addEventListener('ended', () => {
-        if (globalAudioManager.isRepeating) {
-          audio.currentTime = 0;
-          audio.play();
-        } else {
-          globalAudioManager.nextSong();
-        }
-      });
-      
-      audio.addEventListener('timeupdate', () => {
-        globalAudioManager.currentTime = audio.currentTime;
-        globalAudioManager.duration = audio.duration || 0;
-        globalAudioManager.notify('timeUpdate', {
-          currentTime: globalAudioManager.currentTime,
-          duration: globalAudioManager.duration
-        });
-      });
-      
-      globalAudioManager.addAudioElement(audio, song);
     }
     
     if (newSongs.length > 0) {
       const newPlaylist = [...playlist, ...newSongs];
       setPlaylist(newPlaylist);
-      globalAudioManager.updatePlaylist(newPlaylist);
       
-      alert(`Added ${newSongs.length} song(s) to playlist!`);
+      isInitializing.current = false;
+      
+      setUploadPopup({ count: newSongs.length, success: true });
     } else {
-      alert('No valid audio files were selected.');
+      setUploadPopup({ count: 0, success: false });
     }
+  };
+
+  const closeUploadPopup = () => {
+    playClickSound();
+    setUploadPopup(null);
   };
 
   const getCurrentSong = () => {
@@ -921,7 +943,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
                 <button className="control-btn" onClick={openLibrary} style={{ background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)' }}>
-                  ★ LIBRARY
+                  ★
                 </button>
               </div>
 
@@ -933,7 +955,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                   
                   return (
                     <div 
-                      key={index}
+                      key={`${song.audioId}-${index}`}
                       className={`song-item ${isCurrentlyPlaying ? 'playing' : ''}`}
                       onClick={() => isAvailable && selectSong(index)}
                       onMouseEnter={() => setHoveredSong(index)}
@@ -1029,15 +1051,15 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                     no archived songs ^0^
                     <br />
                     <span style={{ fontSize: '10px', opacity: 0.7 }}>
-                      Songs removed from playlist appear here
+                      Songs removed from playlist appear hereee~
                     </span>
                   </div>
                 ) : (
                   library.map((song, index) => (
                     <div 
-                      key={index}
+                      key={`${song.audioId}-lib-${index}`}
                       className="song-item"
-                      onClick={() => addBackToPlaylist(song)}
+                      onClick={() => handleAddBackToPlaylist(song)}
                       style={{ cursor: 'pointer' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1054,15 +1076,17 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                 )}
               </div>
 
-              <div style={{ 
-                padding: '12px',
-                textAlign: 'center',
-                fontSize: '10px',
-                color: '#3E2B27',
-                borderTop: '2px solid #3E2B27'
-              }}>
-                Click on any song to add it back to playlist
-              </div>
+              {library.length > 0 && (
+                <div style={{ 
+                  padding: '12px',
+                  textAlign: 'center',
+                  fontSize: '10px',
+                  color: '#3E2B27',
+                  borderTop: '2px solid #3E2B27'
+                }}>
+                  Click on any song to add it back to playlist
+                </div>
+              )}
             </div>
           )}
 
@@ -1122,6 +1146,116 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                   }}
                 >
                   NO
+                </button>
+              </div>
+            </div>
+          )}
+
+          {addBackPopup && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '260px',
+              background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+              border: '4px solid #3E2B27',
+              borderRadius: '12px',
+              padding: '15px',
+              zIndex: 200,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
+            }}>
+              <div style={{ 
+                fontSize: '14px', 
+                fontWeight: 'bold', 
+                marginBottom: '10px',
+                color: '#1E1A19',
+                textAlign: 'center'
+              }}>
+                Add back to playlist?
+              </div>
+              
+              <div style={{ 
+                fontSize: '10px', 
+                marginBottom: '15px',
+                color: '#3E2B27',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }}>
+                "{addBackPopup.title}" will be added back to your playlist!
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button
+                  onClick={confirmAddBack}
+                  className="control-btn"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)',
+                    padding: '8px 16px'
+                  }}
+                >
+                  YES
+                </button>
+                <button
+                  onClick={cancelAddBack}
+                  className="control-btn"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #8B2A2A, #6B1F1F)',
+                    padding: '8px 16px'
+                  }}
+                >
+                  NO
+                </button>
+              </div>
+            </div>
+          )}
+
+          {uploadPopup && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '260px',
+              background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+              border: '4px solid #3E2B27',
+              borderRadius: '12px',
+              padding: '15px',
+              zIndex: 200,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
+            }}>
+              <div style={{ 
+                fontSize: '14px', 
+                fontWeight: 'bold', 
+                marginBottom: '10px',
+                color: '#1E1A19',
+                textAlign: 'center'
+              }}>
+                {uploadPopup.success ? 'Songs Added! ♪' : 'Oops!'}
+              </div>
+              
+              <div style={{ 
+                fontSize: '10px', 
+                marginBottom: '15px',
+                color: '#3E2B27',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }}>
+                {uploadPopup.success 
+                  ? `Successfully added ${uploadPopup.count} song${uploadPopup.count > 1 ? 's' : ''} to your playlist! (◕‿◕)`
+                  : "No valid audio files were selected. Please choose MP3 or other audio files!"}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={closeUploadPopup}
+                  className="control-btn"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)',
+                    padding: '8px 16px'
+                  }}
+                >
+                  OK
                 </button>
               </div>
             </div>
