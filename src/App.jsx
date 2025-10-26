@@ -2848,7 +2848,7 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
         {/* system tray */}
         <div className="flex items-center space-x-3">
           {/* weather indicator */}
-          <div className="text-lg">⋆.˚ ☾⭒.˚</div>
+          <div className="text-lg">🌤️</div>
           
           {/* WiFi settings button */}
           <button
@@ -2882,7 +2882,7 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
           </div>
           
           {/* season indicator */}
-          <div className="text-lg">⋆˚꩜｡</div>
+          <div className="text-lg">🌩️</div>
         </div>
       </div>
 
