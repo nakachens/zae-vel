@@ -1,9 +1,8 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
-import './MusicPlayer.css'
+import './MusicPlayer.css';
 
-// audio manager (global)
+// Audio Manager with localStorage support
 class AudioManager {
   constructor() {
     this.audioElements = [];
@@ -16,10 +15,9 @@ class AudioManager {
     this.listeners = new Set();
     this.isRepeating = false;
     this.initialized = false;
-    this.playlist = []; // Add playlist reference to audio manager
+    this.playlist = [];
   }
 
-  // audio state changer
   subscribe(callback) {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
@@ -29,18 +27,19 @@ class AudioManager {
     this.listeners.forEach(callback => callback(eventType, data));
   }
 
-  // audio setup
   async initialize(playlist, audioFiles) {
     if (this.initialized) return;
     
     this.initialized = true;
-    this.playlist = [...playlist]; // Store playlist in audio manager
+    this.playlist = [...playlist];
     const elements = [];
     
     for (let i = 0; i < playlist.length; i++) {
       const song = playlist[i];
       const audio = new Audio();
-      const audioPath = audioFiles[song.audioId];
+      
+      // Handle both regular and uploaded songs
+      const audioPath = song.objectUrl || audioFiles[song.audioId];
       
       if (audioPath) {
         audio.src = audioPath;
@@ -48,18 +47,15 @@ class AudioManager {
         audio.volume = this.volume;
         audio.loop = this.isRepeating;
         
-        // handle  loading
         audio.addEventListener('loadedmetadata', () => {
           console.log(`Loaded: ${song.title}`);
         });
         
-        // handle loading errors
         audio.addEventListener('error', (e) => {
           console.log(`Failed to load: ${song.title}`, e);
           elements[i] = null;
         });
         
-        // handle song end
         audio.addEventListener('ended', () => {
           if (this.isRepeating) {
             audio.currentTime = 0;
@@ -69,7 +65,6 @@ class AudioManager {
           }
         });
         
-        // handle progress updates
         audio.addEventListener('timeupdate', () => {
           this.currentTime = audio.currentTime;
           this.duration = audio.duration || 0;
@@ -86,7 +81,6 @@ class AudioManager {
     }
     
     this.audioElements = elements;
-    // set current audio to first available song
     const firstAvailable = elements.find(el => el !== null);
     if (firstAvailable) {
       const firstIndex = elements.indexOf(firstAvailable);
@@ -95,18 +89,15 @@ class AudioManager {
     }
   }
 
-  // Add method to update playlist when new songs are added
   updatePlaylist(newPlaylist) {
     this.playlist = [...newPlaylist];
     this.notify('playlistUpdated', { playlist: this.playlist });
   }
 
-  // Add method to add new audio element
   addAudioElement(audio, songData) {
     this.audioElements.push(audio);
     this.playlist.push(songData);
     
-    // If this is the first song and no song is currently loaded, select it
     if (!this.currentAudioRef) {
       const newIndex = this.audioElements.length - 1;
       this.currentAudioRef = audio;
@@ -119,12 +110,44 @@ class AudioManager {
     this.notify('playlistUpdated', { playlist: this.playlist });
   }
 
-  // Get current song data
+  removeAudioElement(index) {
+    // Stop if currently playing
+    if (index === this.currentSongIndex && this.isPlaying) {
+      this.pause();
+    }
+    
+    // Clean up audio element
+    if (this.audioElements[index]) {
+      this.audioElements[index].pause();
+      this.audioElements[index].src = '';
+    }
+    
+    // Remove from arrays
+    this.audioElements.splice(index, 1);
+    this.playlist.splice(index, 1);
+    
+    // Update current song index if needed
+    if (index < this.currentSongIndex) {
+      this.currentSongIndex--;
+    } else if (index === this.currentSongIndex) {
+      // Current song was removed, select next available
+      if (this.audioElements.length > 0) {
+        this.currentSongIndex = Math.min(this.currentSongIndex, this.audioElements.length - 1);
+        this.currentAudioRef = this.audioElements[this.currentSongIndex];
+      } else {
+        this.currentAudioRef = null;
+        this.currentSongIndex = 0;
+      }
+    }
+    
+    this.notify('playlistUpdated', { playlist: this.playlist });
+    this.notify('songChanged', { currentSongIndex: this.currentSongIndex });
+  }
+
   getCurrentSong() {
     return this.playlist[this.currentSongIndex] || {};
   }
 
-  // play current song
   async play() {
     if (!this.currentAudioRef) return false;
     
@@ -142,7 +165,6 @@ class AudioManager {
     }
   }
 
-  // pause current song
   pause() {
     if (this.currentAudioRef) {
       this.currentAudioRef.pause();
@@ -151,7 +173,6 @@ class AudioManager {
     }
   }
 
-  // play/pause
   async togglePlayPause() {
     if (this.isPlaying) {
       this.pause();
@@ -160,11 +181,9 @@ class AudioManager {
     }
   }
 
-  // selecting and playing a specific song
   selectSong(index) {
     if (!this.audioElements[index]) return false;
     
-    // stop current audio
     if (this.currentAudioRef) {
       this.currentAudioRef.pause();
       this.currentAudioRef.currentTime = 0;
@@ -184,7 +203,6 @@ class AudioManager {
     return true;
   }
 
-  // switching 2 next song using arrow
   nextSong() {
     let nextIndex = this.currentSongIndex;
     do {
@@ -200,7 +218,6 @@ class AudioManager {
     }
   }
 
-  //  now previous song
   previousSong() {
     let prevIndex = this.currentSongIndex;
     do {
@@ -216,7 +233,6 @@ class AudioManager {
     }
   }
 
-  // seting up volume
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(1, volume));
     this.audioElements.forEach(audio => {
@@ -231,7 +247,6 @@ class AudioManager {
     }
   }
 
-  // repeat mode
   setRepeat(repeat) {
     this.isRepeating = repeat;
     this.audioElements.forEach(audio => {
@@ -249,11 +264,10 @@ class AudioManager {
       volume: this.volume,
       isRepeating: this.isRepeating,
       hasCurrentSong: !!this.currentAudioRef,
-      currentSong: this.getCurrentSong() // Add current song to state
+      currentSong: this.getCurrentSong()
     };
   }
 
-  // clean up when app is closed (stopping song)
   destroy() {
     this.pause();
     this.audioElements.forEach(audio => {
@@ -270,11 +284,9 @@ class AudioManager {
   }
 }
 
-// create global instance
 const globalAudioManager = new AudioManager();
 
 const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
-  // playlist 
   const initialPlaylist = [
     {
       title: "Been You",
@@ -282,7 +294,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-1",
       artist: "Justin Beiber",
       coverImage: "./albums/2.jpg",
-      coverColor: "linear-gradient(135deg, #FF6B6B, #FF8E53)"
+      coverColor: "linear-gradient(135deg, #FF6B6B, #FF8E53)",
+      isInApp: true
     },
     {
       title: "love for you",
@@ -290,7 +303,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-2",
       artist: "loveli lori & ovg!",
       coverImage: "./albums/1.jpg",
-      coverColor: "linear-gradient(135deg, #4ECDC4, #44A08D)"
+      coverColor: "linear-gradient(135deg, #4ECDC4, #44A08D)",
+      isInApp: true
     },
     {
       title: "BBBlue",
@@ -298,7 +312,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-3",
       artist: "Olivver the Kid",
       coverImage: "./albums/3.jpg",
-      coverColor: "linear-gradient(135deg, #845EC2, #B39BC8)"
+      coverColor: "linear-gradient(135deg, #845EC2, #B39BC8)",
+      isInApp: true
     },
     {
       title: "Sapna",
@@ -306,7 +321,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-4",
       artist: "Bayaan",
       coverImage: "./albums/4.jfif",
-      coverColor: "linear-gradient(135deg, #FFC75F, #F9CA24)"
+      coverColor: "linear-gradient(135deg, #FFC75F, #F9CA24)",
+      isInApp: true
     },
     {
       title: "Tek It (Sped Up)",
@@ -314,7 +330,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-5",
       artist: "Cafuné",
       coverImage: "./albums/4.jpg",
-      coverColor: "linear-gradient(135deg, #6C5CE7, #A29BFE)"
+      coverColor: "linear-gradient(135deg, #6C5CE7, #A29BFE)",
+      isInApp: true
     },
     {
       title: "How Long",
@@ -322,7 +339,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-6",
       artist: "Charlie Puth",
       coverImage: "./albums/5.jpg",
-      coverColor: "linear-gradient(135deg, #FD79A8, #FDCB6E)"
+      coverColor: "linear-gradient(135deg, #FD79A8, #FDCB6E)",
+      isInApp: true
     },
     {
       title: "Passionfruit",
@@ -330,11 +348,11 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audioId: "song-7",
       artist: "Drake",
       coverImage: "./albums/7.png",
-      coverColor: "linear-gradient(135deg, #FD79A8, #FDCB6E)"
+      coverColor: "linear-gradient(135deg, #FD79A8, #FDCB6E)",
+      isInApp: true
     }
   ];
 
-  // audio file paths 
   const audioFiles = {
     "song-1": "./soundzz/Been You.mp3",
     "song-2": "./soundzz/loveli lori & ovg! - love for you (Official Audio).mp3",
@@ -345,8 +363,35 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     "song-7": "./soundzz/Drake - Passionfruit (Lyrics).mp3"
   };
 
-  // state vars
-  const [playlist, setPlaylist] = useState(initialPlaylist);
+  const [playlist, setPlaylist] = useState(() => {
+    const savedPlaylist = localStorage.getItem('musicPlayerPlaylist');
+    const savedUploaded = localStorage.getItem('musicPlayerUploadedSongs');
+    
+    if (savedPlaylist) {
+      const parsed = JSON.parse(savedPlaylist);
+      // Restore uploaded songs with their blob URLs
+      if (savedUploaded) {
+        const uploadedData = JSON.parse(savedUploaded);
+        return parsed.map(song => {
+          if (song.audioId && song.audioId.startsWith('uploaded-')) {
+            const uploadedInfo = uploadedData[song.audioId];
+            if (uploadedInfo) {
+              return { ...song, objectUrl: uploadedInfo.objectUrl };
+            }
+          }
+          return song;
+        });
+      }
+      return parsed;
+    }
+    return initialPlaylist;
+  });
+
+  const [archivedSongs, setArchivedSongs] = useState(() => {
+    const saved = localStorage.getItem('musicPlayerArchived');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [audioState, setAudioState] = useState(globalAudioManager.getState());
   const [isShuffled, setIsShuffled] = useState(false);
   const [shuffledPlaylist, setShuffledPlaylist] = useState([]);
@@ -354,24 +399,53 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const [showHome, setShowHome] = useState(true);
   const [showPlayer, setShowPlayer] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-
+  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, songIndex: null });
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
 
-  // refs
   const fileInputRef = useRef(null);
   const clickSoundRef = useRef(null);
   const unsubscribeRef = useRef(null);
 
-  // click sound setup
+  // Save playlist to localStorage whenever it changes
+  useEffect(() => {
+    if (playlist.length > 0) {
+      // Save playlist structure (without blob URLs)
+      const playlistToSave = playlist.map(song => {
+        const { objectUrl, ...rest } = song;
+        return rest;
+      });
+      localStorage.setItem('musicPlayerPlaylist', JSON.stringify(playlistToSave));
+      
+      // Save uploaded songs metadata
+      const uploadedSongs = {};
+      playlist.forEach(song => {
+        if (song.audioId && song.audioId.startsWith('uploaded-') && song.objectUrl) {
+          uploadedSongs[song.audioId] = {
+            objectUrl: song.objectUrl,
+            fileName: song.title
+          };
+        }
+      });
+      if (Object.keys(uploadedSongs).length > 0) {
+        localStorage.setItem('musicPlayerUploadedSongs', JSON.stringify(uploadedSongs));
+      }
+    }
+  }, [playlist]);
+
+  // Save archived songs
+  useEffect(() => {
+    localStorage.setItem('musicPlayerArchived', JSON.stringify(archivedSongs));
+  }, [archivedSongs]);
+
   useEffect(() => {
     clickSoundRef.current = new Audio('/click.mp3');
     clickSoundRef.current.volume = 0.3;
   }, []);
 
-  // initialize audio manager and subscribe to changes
   useEffect(() => {
     const initializeAudio = async () => {
       setShowLoading(true);
@@ -402,9 +476,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
         unsubscribeRef.current();
       }
     };
-  }, []);
+  }, [playlist]);
 
-  // update mini player visibility based on play state
   useEffect(() => {
     if (audioState.isPlaying && showHome) {
       setShowMiniPlayer(true);
@@ -413,89 +486,89 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     }
   }, [audioState.isPlaying, showHome, showPlayer]);
 
-  // app close - clean up audio
   useEffect(() => {
-    // if isClosing prop is true, immediately destroy the audio manager
     if (isClosing) {
       globalAudioManager.destroy();
     }
     
-    // cleanup function only runs on unmount - don't destroy here
-    // as it could be just a minimize operation
-    return () => {
-      // component is unmounting - but don't destroy audio unless actually closing
-      // the isClosing prop will handle only true closes
-    };
+    return () => {};
   }, [isClosing]);
 
-  // keyboard shortcuts
-useEffect(() => {
-  const handleKeyDown = (event) => {
-    if (event.target.tagName === 'INPUT') return;
-    
-    switch(event.code) {
-      case 'Space':
-        event.preventDefault();
-        globalAudioManager.togglePlayPause();
-        break;
-      case 'ArrowLeft':
-        event.preventDefault();
-        globalAudioManager.previousSong();
-        break;
-      case 'ArrowRight':
-        event.preventDefault();
-        globalAudioManager.nextSong();
-        break;
-    }
-  };
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.target.tagName === 'INPUT') return;
+      
+      switch(event.code) {
+        case 'Space':
+          event.preventDefault();
+          globalAudioManager.togglePlayPause();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          globalAudioManager.previousSong();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          globalAudioManager.nextSong();
+          break;
+      }
+    };
 
-  document.addEventListener('keydown', handleKeyDown);
-  return () => document.removeEventListener('keydown', handleKeyDown);
-}, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-// smooth dragging
-useEffect(() => {
-  const handleGlobalMouseMove = (event) => {
-    if (isDraggingProgress) {
-      const progressContainer = document.querySelector('.progress-container');
-      if (progressContainer) {
-        const rect = progressContainer.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-        if (audioState.hasCurrentSong && audioState.duration) {
-          globalAudioManager.seekTo(percentage);
+  useEffect(() => {
+    const handleGlobalMouseMove = (event) => {
+      if (isDraggingProgress) {
+        const progressContainer = document.querySelector('.progress-container');
+        if (progressContainer) {
+          const rect = progressContainer.getBoundingClientRect();
+          const clickX = event.clientX - rect.left;
+          const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+          if (audioState.hasCurrentSong && audioState.duration) {
+            globalAudioManager.seekTo(percentage);
+          }
         }
       }
-    }
-    
-    if (isDraggingVolume) {
-      const volumeSlider = document.querySelector('.volume-slider');
-      if (volumeSlider) {
-        const rect = volumeSlider.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-        globalAudioManager.setVolume(percentage);
+      
+      if (isDraggingVolume) {
+        const volumeSlider = document.querySelector('.volume-slider');
+        if (volumeSlider) {
+          const rect = volumeSlider.getBoundingClientRect();
+          const clickX = event.clientX - rect.left;
+          const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+          globalAudioManager.setVolume(percentage);
+        }
       }
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDraggingProgress(false);
+      setIsDraggingVolume(false);
+    };
+
+    if (isDraggingProgress || isDraggingVolume) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      document.body.style.userSelect = 'none';
     }
-  };
 
-  const handleGlobalMouseUp = () => {
-    setIsDraggingProgress(false);
-    setIsDraggingVolume(false);
-  };
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.body.style.userSelect = '';
+    };
+  }, [isDraggingProgress, isDraggingVolume, audioState.hasCurrentSong, audioState.duration]);
 
-  if (isDraggingProgress || isDraggingVolume) {
-    document.addEventListener('mousemove', handleGlobalMouseMove);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    document.body.style.userSelect = 'none';
-  }
-
-  return () => {
-    document.removeEventListener('mousemove', handleGlobalMouseMove);
-    document.removeEventListener('mouseup', handleGlobalMouseUp);
-    document.body.style.userSelect = '';
-  };
-}, [isDraggingProgress, isDraggingVolume, audioState.hasCurrentSong, audioState.duration]);
+  // Close context menu on outside click
+  useEffect(() => {
+    const handleClick = () => setContextMenu({ show: false, x: 0, y: 0, songIndex: null });
+    if (contextMenu.show) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu.show]);
 
   const formatTime = (seconds) => {
     if (isNaN(seconds)) return '0:00';
@@ -513,15 +586,22 @@ useEffect(() => {
     }
   };
 
-  // navigation
   const openPlaylist = () => {
     playClickSound();
     setShowPlaylist(true);
+    setShowLibrary(false);
+  };
+
+  const openLibrary = () => {
+    playClickSound();
+    setShowLibrary(true);
+    setShowPlaylist(false);
   };
 
   const closePlaylistPopup = () => {
     playClickSound();
     setShowPlaylist(false);
+    setShowLibrary(false);
   };
 
   const goHome = () => {
@@ -540,7 +620,6 @@ useEffect(() => {
     setShowMiniPlayer(false);
   };
 
-  // playlist functions
   const toggleShuffle = () => {
     playClickSound();
     const newShuffled = !isShuffled;
@@ -588,35 +667,113 @@ useEffect(() => {
     closePlaylistPopup();
   };
 
-  // progress functions with smooth dragging
-const handleProgressInteraction = (event, isDragging = false) => {
-  if (!isDragging) playClickSound();
-  if (audioState.hasCurrentSong && audioState.duration) {
+  const handleSongRightClick = (e, index) => {
+    e.preventDefault();
+    e.stopPropagation();
+    playClickSound();
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      songIndex: index
+    });
+  };
+
+  const removeSongFromPlaylist = (index) => {
+    const song = playlist[index];
+    
+    if (song.isInApp) {
+      // Move to archived
+      setArchivedSongs(prev => [...prev, song]);
+    }
+    
+    // Remove from playlist
+    const newPlaylist = playlist.filter((_, i) => i !== index);
+    setPlaylist(newPlaylist);
+    globalAudioManager.removeAudioElement(index);
+    globalAudioManager.updatePlaylist(newPlaylist);
+    
+    setContextMenu({ show: false, x: 0, y: 0, songIndex: null });
+  };
+
+  const addSongBackToPlaylist = (song) => {
+    playClickSound();
+    
+    // Remove from archived
+    setArchivedSongs(prev => prev.filter(s => s.audioId !== song.audioId));
+    
+    // Add back to playlist
+    const newPlaylist = [...playlist, song];
+    setPlaylist(newPlaylist);
+    
+    // Create new audio element
+    const audio = new Audio();
+    const audioPath = audioFiles[song.audioId];
+    
+    if (audioPath) {
+      audio.src = audioPath;
+      audio.preload = 'metadata';
+      audio.volume = globalAudioManager.volume;
+      audio.loop = globalAudioManager.isRepeating;
+      
+      audio.addEventListener('loadedmetadata', () => {
+        console.log(`Loaded: ${song.title}`);
+      });
+      
+      audio.addEventListener('error', (e) => {
+        console.log(`Failed to load: ${song.title}`, e);
+      });
+      
+      audio.addEventListener('ended', () => {
+        if (globalAudioManager.isRepeating) {
+          audio.currentTime = 0;
+          audio.play();
+        } else {
+          globalAudioManager.nextSong();
+        }
+      });
+      
+      audio.addEventListener('timeupdate', () => {
+        globalAudioManager.currentTime = audio.currentTime;
+        globalAudioManager.duration = audio.duration || 0;
+        globalAudioManager.notify('timeUpdate', {
+          currentTime: globalAudioManager.currentTime,
+          duration: globalAudioManager.duration
+        });
+      });
+      
+      globalAudioManager.addAudioElement(audio, song);
+      globalAudioManager.updatePlaylist(newPlaylist);
+    }
+  };
+
+  const handleProgressInteraction = (event, isDragging = false) => {
+    if (!isDragging) playClickSound();
+    if (audioState.hasCurrentSong && audioState.duration) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+      globalAudioManager.seekTo(percentage);
+    }
+  };
+
+  const handleProgressMouseDown = (event) => {
+    setIsDraggingProgress(true);
+    handleProgressInteraction(event);
+  };
+
+  const handleVolumeInteraction = (event, isDragging = false) => {
+    if (!isDragging) playClickSound();
     const rect = event.currentTarget.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-    globalAudioManager.seekTo(percentage);
-  }
-};
+    globalAudioManager.setVolume(percentage);
+  };
 
-const handleProgressMouseDown = (event) => {
-  setIsDraggingProgress(true);
-  handleProgressInteraction(event);
-};
-
-// volume functions with smooth dragging
-const handleVolumeInteraction = (event, isDragging = false) => {
-  if (!isDragging) playClickSound();
-  const rect = event.currentTarget.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
-  const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-  globalAudioManager.setVolume(percentage);
-};
-
-const handleVolumeMouseDown = (event) => {
-  setIsDraggingVolume(true);
-  handleVolumeInteraction(event);
-};
+  const handleVolumeMouseDown = (event) => {
+    setIsDraggingVolume(true);
+    handleVolumeInteraction(event);
+  };
 
   const toggleRepeat = () => {
     playClickSound();
@@ -634,7 +791,6 @@ const handleVolumeMouseDown = (event) => {
     setFavorites(newFavorites);
   };
 
-  // file uploading functionality 
   const handleDragOver = (event) => {
     event.preventDefault();
     event.currentTarget.classList.add('dragover');
@@ -661,77 +817,73 @@ const handleVolumeMouseDown = (event) => {
   };
 
   const addAudioFiles = (files) => {
-  playClickSound();
-  const newSongs = [];
-  
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    if (!file.type.startsWith('audio/')) continue;
+    playClickSound();
+    const newSongs = [];
     
-    const objectUrl = URL.createObjectURL(file);
-    const song = {
-      title: file.name.replace(/\.[^/.]+$/, ""),
-      subtitle: 'Uploaded song',
-      audioId: `uploaded-${Date.now()}-${i}`,
-      artist: 'Unknown',
-      coverImage: null, // no cover image for uploaded songs
-      coverColor: 'linear-gradient(135deg, #8B4513, #CD853F)',
-      file: file,
-      objectUrl: objectUrl
-};
-    newSongs.push(song);
-    
-    // create and configure audio element for the global audio manager (uploaded audio basically)
-    const audio = new Audio();
-    audio.src = objectUrl;
-    audio.preload = 'metadata';
-    audio.volume = globalAudioManager.volume;
-    audio.loop = globalAudioManager.isRepeating;
-    
-    // setup event listeners like the original initialization
-    audio.addEventListener('loadedmetadata', () => {
-      console.log(`Loaded uploaded: ${song.title}`);
-    });
-    
-    audio.addEventListener('error', (e) => {
-      console.log(`Failed to load uploaded: ${song.title}`, e);
-    });
-    
-    audio.addEventListener('ended', () => {
-      if (globalAudioManager.isRepeating) {
-        audio.currentTime = 0;
-        audio.play();
-      } else {
-        globalAudioManager.nextSong();
-      }
-    });
-    
-    audio.addEventListener('timeupdate', () => {
-      globalAudioManager.currentTime = audio.currentTime;
-      globalAudioManager.duration = audio.duration || 0;
-      globalAudioManager.notify('timeUpdate', {
-        currentTime: globalAudioManager.currentTime,
-        duration: globalAudioManager.duration
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith('audio/')) continue;
+      
+      const objectUrl = URL.createObjectURL(file);
+      const song = {
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        subtitle: 'Uploaded song',
+        audioId: `uploaded-${Date.now()}-${i}`,
+        artist: 'Unknown',
+        coverImage: null,
+        coverColor: 'linear-gradient(135deg, #8B4513, #CD853F)',
+        file: file,
+        objectUrl: objectUrl,
+        isInApp: false
+      };
+      newSongs.push(song);
+      
+      const audio = new Audio();
+      audio.src = objectUrl;
+      audio.preload = 'metadata';
+      audio.volume = globalAudioManager.volume;
+      audio.loop = globalAudioManager.isRepeating;
+      
+      audio.addEventListener('loadedmetadata', () => {
+        console.log(`Loaded uploaded: ${song.title}`);
       });
-    });
+      
+      audio.addEventListener('error', (e) => {
+        console.log(`Failed to load uploaded: ${song.title}`, e);
+      });
+      
+      audio.addEventListener('ended', () => {
+        if (globalAudioManager.isRepeating) {
+          audio.currentTime = 0;
+          audio.play();
+        } else {
+          globalAudioManager.nextSong();
+        }
+      });
+      
+      audio.addEventListener('timeupdate', () => {
+        globalAudioManager.currentTime = audio.currentTime;
+        globalAudioManager.duration = audio.duration || 0;
+        globalAudioManager.notify('timeUpdate', {
+          currentTime: globalAudioManager.currentTime,
+          duration: globalAudioManager.duration
+        });
+      });
+      
+      globalAudioManager.addAudioElement(audio, song);
+    }
     
-    // Use the new addAudioElement method instead of directly pushing
-    globalAudioManager.addAudioElement(audio, song);
-  }
-  
-  if (newSongs.length > 0) {
-    // Update playlist state and sync with audio manager
-    const newPlaylist = [...playlist, ...newSongs];
-    setPlaylist(newPlaylist);
-    globalAudioManager.updatePlaylist(newPlaylist);
-    
-    alert(`Added ${newSongs.length} song(s) to playlist!`);
-  } else {
-    alert('No valid audio files were selected.');
-  }
-};
+    if (newSongs.length > 0) {
+      const newPlaylist = [...playlist, ...newSongs];
+      setPlaylist(newPlaylist);
+      globalAudioManager.updatePlaylist(newPlaylist);
+      
+      alert(`Added ${newSongs.length} song(s) to playlist!`);
+    } else {
+      alert('No valid audio files were selected.');
+    }
+  };
 
-  // get current song info - now use audioState.currentSong from audio manager
   const getCurrentSong = () => {
     return audioState.currentSong || playlist[audioState.currentSongIndex] || {};
   };
@@ -740,46 +892,41 @@ const handleVolumeMouseDown = (event) => {
     <>
       <div className="music-player-container">
         <div className="app-container">
-          {/* loading message */}
           {showLoading && (
             <div className="loading-message">Loading audio...</div>
           )}
 
-          {/* mini player */}
           {showMiniPlayer && (
             <div className="mini-player" onClick={showPlayerScreen}>
               <div>♪ {getCurrentSong().title || 'No song playing'}</div>
             </div>
           )}
 
-          {/* homescreen */}
           {showHome && (
             <div className="home-screen">
               <div className="app-title">MUSICPLAYER<br />Zai's</div>
               
               <div className="character-placeholder">
-            <img 
-              src="./assets/kaoru2.gif" 
-              alt="Kaoru Character"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: '6px'
-              }}
-              onError={(e) => {
-                // if GIF doesn't load
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML = 'oh no.. image not loading.. <br/> cri';
-              }}
-            />
-          </div>
+                <img 
+                  src="./assets/kaoru2.gif" 
+                  alt="Kaoru Character"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '6px'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = 'oh no.. image not loading.. <br/> cri';
+                  }}
+                />
+              </div>
 
               <button className="playlist-btn" onClick={openPlaylist}>PLAYLIST</button>
             </div>
           )}
 
-          {/* playlist */}
           {showPlaylist && (
             <div className="playlist-popup">
               <div className="popup-header">
@@ -795,6 +942,9 @@ const handleVolumeMouseDown = (event) => {
                   SHUFFLE
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
+                <button className="control-btn library-btn" onClick={openLibrary}>
+                  ★ LIBRARY
+                </button>
               </div>
 
               <div className="song-list">
@@ -808,6 +958,7 @@ const handleVolumeMouseDown = (event) => {
                       key={index}
                       className={`song-item ${isCurrentlyPlaying ? 'playing' : ''}`}
                       onClick={() => isAvailable && selectSong(index)}
+                      onContextMenu={(e) => isAvailable && handleSongRightClick(e, index)}
                       style={{
                         cursor: isAvailable ? 'pointer' : 'not-allowed',
                         opacity: isAvailable ? 1 : 0.5
@@ -820,7 +971,7 @@ const handleVolumeMouseDown = (event) => {
                             {song.subtitle} {!isAvailable ? '(File not found)' : ''}
                           </div>
                         </div>
-                        <div style={{ fontSize: '10px', color: isFavorite ? '#FF6347' : 'transparent' }}>♤</div>
+                        <div style={{ fontSize: '10px', color: isFavorite ? '#FF6347' : 'transparent' }}>♥</div>
                       </div>
                     </div>
                   );
@@ -851,18 +1002,67 @@ const handleVolumeMouseDown = (event) => {
             </div>
           )}
 
-          {/* playerscreen*/}
+          {showLibrary && (
+            <div className="playlist-popup">
+              <div className="popup-header">
+                ★ LIBRARY
+                <div className="close-btn" onClick={closePlaylistPopup}>×</div>
+              </div>
+              
+              <div className="playlist-controls">
+                <button className="control-btn" onClick={openPlaylist}>
+                  ← BACK TO PLAYLIST
+                </button>
+              </div>
+
+              <div className="song-list">
+                {archivedSongs.length === 0 ? (
+                  <div className="empty-library">
+                    <div style={{ fontSize: '14px', textAlign: 'center', padding: '20px', color: '#1E1A19' }}>
+                      no archived songs ^0^
+                    </div>
+                  </div>
+                ) : (
+                  archivedSongs.map((song, index) => (
+                    <div 
+                      key={index}
+                      className="song-item archived-song"
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        playClickSound();
+                        addSongBackToPlaylist(song);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div>{song.title}</div>
+                          <div style={{ fontSize: '10px', opacity: 0.8 }}>
+                            {song.subtitle}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#7C8B6A' }}>Right-click to restore</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
           {showPlayer && (
             <div className="player-screen">
               <button className="back-btn" onClick={goHome}>←</button>
               
               <div className="cd-container">
                 <div 
-                className={`album-cover ${audioState.isPlaying ? 'playing' : ''} ${getCurrentSong().audioId?.startsWith('uploaded-') ? 'uploaded-cover' : ''}`}
-                style={{ 
-                  background: getCurrentSong().coverImage 
-                  ? `url(${getCurrentSong().coverImage}) center/cover no-repeat, ${getCurrentSong().coverColor || 'linear-gradient(135deg, #8B4513, #CD853F)'}`: getCurrentSong().coverColor || 'linear-gradient(135deg, #8B4513, #CD853F)'
-                }}
+                  className={`album-cover ${audioState.isPlaying ? 'playing' : ''} ${getCurrentSong().audioId?.startsWith('uploaded-') ? 'uploaded-cover' : ''}`}
+                  style={{ 
+                    background: getCurrentSong().coverImage 
+                      ? `url(${getCurrentSong().coverImage}) center/cover no-repeat, ${getCurrentSong().coverColor || 'linear-gradient(135deg, #8B4513, #CD853F)'}`
+                      : getCurrentSong().coverColor || 'linear-gradient(135deg, #8B4513, #CD853F)'
+                  }}
                 >
                   {!getCurrentSong().coverImage && (getCurrentSong().title?.toUpperCase() || 'SELECT A SONG FROM PLAYLIST')}
                 </div>
@@ -879,16 +1079,15 @@ const handleVolumeMouseDown = (event) => {
               </div>
 
               <div 
-              className="progress-container" 
-              onMouseDown={handleProgressMouseDown}
-              style={{ cursor: isDraggingProgress ? 'grabbing' : 'pointer' }}
+                className="progress-container" 
+                onMouseDown={handleProgressMouseDown}
+                style={{ cursor: isDraggingProgress ? 'grabbing' : 'pointer' }}
               >
-                
-              <div 
-              className="progress-bar" 
-              style={{ width: audioState.duration ? `${(audioState.currentTime / audioState.duration) * 100}%` : '0%' }}
-              ></div>
-            </div>
+                <div 
+                  className="progress-bar" 
+                  style={{ width: audioState.duration ? `${(audioState.currentTime / audioState.duration) * 100}%` : '0%' }}
+                ></div>
+              </div>
 
               <div className="player-controls">
                 <button className="nav-btn" onClick={() => globalAudioManager.previousSong()}>‹</button>
@@ -911,24 +1110,43 @@ const handleVolumeMouseDown = (event) => {
                   onClick={toggleFavorite} 
                   title="Favorite"
                 >
-                  ♤
+                  ♥
                 </button>
               </div>
 
               <div className="volume-controls">
                 <span className="volume-label">VOL</span>
                 <div 
-                className="volume-slider" 
-                onMouseDown={handleVolumeMouseDown}
-                style={{ cursor: isDraggingVolume ? 'grabbing' : 'pointer' }}
+                  className="volume-slider" 
+                  onMouseDown={handleVolumeMouseDown}
+                  style={{ cursor: isDraggingVolume ? 'grabbing' : 'pointer' }}
                 >
-                <div 
-                className="volume-fill" 
-                style={{ width: `${audioState.volume * 100}%` }}
-                >
+                  <div 
+                    className="volume-fill" 
+                    style={{ width: `${audioState.volume * 100}%` }}
+                  ></div>
                 </div>
               </div>
             </div>
+          )}
+
+          {contextMenu.show && (
+            <div
+              className="context-menu"
+              style={{
+                position: 'fixed',
+                left: Math.min(contextMenu.x, window.innerWidth - 150),
+                top: Math.min(contextMenu.y, window.innerHeight - 60),
+                zIndex: 1000
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="context-menu-item"
+                onClick={() => removeSongFromPlaylist(contextMenu.songIndex)}
+              >
+                🗑️ Remove from Playlist
+              </div>
             </div>
           )}
         </div>
