@@ -16,10 +16,6 @@ const WhispersOfSeptember = () => {
       author: "Kim Dokja"
     },
     {
-      text: "“Talented people are cheaters. They get to improve without much work.”",
-      author: "Yatora Yaguchi"
-    },
-    {
       text: "“If I fail, it’s my fault. If I pass, it’s all thanks to me.”",
       author: "Yatora Yaguchi"
     },
@@ -38,10 +34,6 @@ const WhispersOfSeptember = () => {
     {
       text: "“Honest feelings can sometimes lead to cruel endings.”",
       author: "Sakata Gintoki"
-    },
-    {
-      text: "“I’m not antisocial; I’m just selective with who I interact with.”",
-      author: "Saiki Kusuo"
     },
     {
       text: "“The only lesson that humans can learn from history is that humans do not gain any lessons from history, and they're always repeating the same tragedies.”",
@@ -761,7 +753,7 @@ const WhispersOfSeptember = () => {
         {/* header */}
         <div style={styles.header}>
           <h1 style={styles.appTitle}>WHISPERS OF AUTUMN</h1>
-          <p style={styles.subtitle}>Give them a thought.. maybe..?</p>
+          <p style={styles.subtitle}>these are all i got ..</p>
         </div>
         
         {/* content */}
