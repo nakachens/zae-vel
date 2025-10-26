@@ -238,7 +238,7 @@ const AutumnTicTacToe = () => {
   },
   title: {
     fontFamily: "'Fredoka One', cursive",
-    fontSize: '2em', 
+    fontSize: '1.9em', 
     color: '#3E2B27',
     marginBottom: '5px', 
     textShadow: '2px 2px 4px rgba(30, 26, 25, 0.2)',
