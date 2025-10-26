@@ -311,27 +311,28 @@ export const CRITICAL_ASSETS = [
   { type: 'image', src: './assets/settings.png' },
   
   // === LEAVES GAME ASSETS (CRITICAL!) ===
-  { type: 'image', src: './hehe/basket.png' },
-  { type: 'image', src: './hehe/leaf-1.png' },
-  { type: 'image', src: './hehe/leaf-2.png' },
-  { type: 'image', src: './hehe/leaf-3.png' },
-  { type: 'audio', src: './hehe/catch2.mp3' },
-  { type: 'audio', src: './hehe/clickfr.mp3' },
-  { type: 'audio', src: './hehe/home-music.mp3' },
-  { type: 'audio', src: './hehe/game-music.mp3' },
+  { type: 'image', src: './hehe/basket.png', priority: 'critical' },
+  { type: 'image', src: './hehe/leaf-1.png', priority: 'critical' },
+  { type: 'image', src: './hehe/leaf-2.png', priority: 'critical' },
+  { type: 'image', src: './hehe/leaf-3.png', priority: 'critical' },
+  { type: 'audio', src: './hehe/catch2.mp3', priority: 'critical' },
+  { type: 'audio', src: './hehe/clickfr.mp3', priority: 'critical' },
+  { type: 'audio', src: './hehe/home-music.mp3', priority: 'critical' },
+  { type: 'audio', src: './hehe/game-music.mp3', priority: 'critical' },
+  { type: 'audio', src: './hehe/eat.mp3', priority: 'critical' },
   
   // === TIC TAC TOE ASSETS ===
   { type: 'image', src: './assets/silly.jpg' },
   
   // === MUSIC PLAYER ASSETS (CRITICAL!) ===
-  { type: 'image', src: './assets/kaoru2.gif' },
-  { type: 'image', src: './albums/1.jpg' },
-  { type: 'image', src: './albums/2.jpg' },
-  { type: 'image', src: './albums/3.jpg' },
-  { type: 'image', src: './albums/4.jfif' },
-  { type: 'image', src: './albums/4.jpg' },
-  { type: 'image', src: './albums/5.jpg' },
-  { type: 'image', src: './albums/7.png' },
+  { type: 'image', src: './assets/kaoru2.gif', priority: 'critical' },
+  { type: 'image', src: './albums/1.jpg', priority: 'critical' },
+  { type: 'image', src: './albums/2.jpg', priority: 'critical' },
+  { type: 'image', src: './albums/3.jpg', priority: 'critical' },
+  { type: 'image', src: './albums/4.jfif', priority: 'critical' },
+  { type: 'image', src: './albums/4.jpg', priority: 'critical' },
+  { type: 'image', src: './albums/5.jpg', priority: 'critical' },
+  { type: 'image', src: './albums/7.png', priority: 'critical' },
   
   // === CORKBOARD ASSETS (HIGHEST PRIORITY AFTER FONTS!) ===
   // Background and pin first
@@ -382,7 +383,6 @@ export const SECONDARY_ASSETS = [
   // === ADDITIONAL SOUNDS ===
   { type: 'audio', src: './flip.mp3' },
   { type: 'audio', src: './keyboard.mp3' },
-  { type: 'audio', src: './hehe/eat.mp3' },
   { type: 'audio', src: './memorygame-music.mp3' },
   { type: 'audio', src: './cardflip.mp3' },
   
@@ -395,9 +395,6 @@ export const SECONDARY_ASSETS = [
   { type: 'audio', src: './achievements/audios/unlock.mp3' },
   { type: 'audio', src: './achievements/audios/page-flip.mp3' },
 ];
-
-// Remove the separate CORKBOARD_ASSETS, MUSIC_ASSETS, GAME_ASSETS exports
-// as they're now in CRITICAL_ASSETS
 
 // SETTINGS EASTER EGG ASSETS - Lazy load
 export const SETTINGS_ASSETS = [

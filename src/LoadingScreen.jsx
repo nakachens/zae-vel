@@ -58,6 +58,7 @@ function LoadingScreen({ onLoadingComplete }) {
         await globalAssetPreloader.waitForFonts();
         await new Promise(resolve => setTimeout(resolve, 300));
 
+        
         // === PHASE 2: CRITICAL IMAGES (20-85%) ===
         setPhase('assets');
         const criticalNonFonts = CRITICAL_ASSETS.filter(
@@ -145,14 +146,24 @@ function LoadingScreen({ onLoadingComplete }) {
           })
         );
 
-        // Load LEAVES GAME assets
+        // Load LEAVES GAME assets (CRITICAL - load early!)
         updateProgress(loadedCount, totalAssets, 'Loading leaves game...', 'game assets');
-        const leavesAssets = imageAssets.filter(a => a.src.includes('hehe/'));
+        const leavesImages = imageAssets.filter(a => a.src.includes('hehe/') && !a.src.includes('.mp3'));
         await Promise.all(
-          leavesAssets.map(async (asset) => {
+          leavesImages.map(async (asset) => {
             await globalAssetPreloader.preloadImage(asset.src);
             loadedCount++;
             updateProgress(loadedCount, totalAssets, 'Loading leaves game...', asset.src.split('/').pop());
+          })
+        );
+
+        // Load leaves game audio immediately after images
+        const leavesAudio = audioAssets.filter(a => a.src.includes('hehe/'));
+        await Promise.all(
+          leavesAudio.map(async (asset) => {
+            await globalAssetPreloader.preloadAudio(asset.src);
+            loadedCount++;
+            updateProgress(loadedCount, totalAssets, 'Loading game sounds...', asset.src.split('/').pop());
           })
         );
 
@@ -230,7 +241,6 @@ function LoadingScreen({ onLoadingComplete }) {
             updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
           })
         );
-
         // === PHASE 3: SECONDARY ASSETS (85-98%) ===
         setPhase('secondary');
         updateProgress(loadedCount, totalAssets, 'Loading additional assets...', '');
