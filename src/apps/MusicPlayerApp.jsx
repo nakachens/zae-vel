@@ -38,7 +38,6 @@ class AudioManager {
       const song = playlist[i];
       const audio = new Audio();
       
-      // Handle both regular and uploaded songs
       const audioPath = song.objectUrl || audioFiles[song.audioId];
       
       if (audioPath) {
@@ -111,26 +110,21 @@ class AudioManager {
   }
 
   removeAudioElement(index) {
-    // Stop if currently playing
     if (index === this.currentSongIndex && this.isPlaying) {
       this.pause();
     }
     
-    // Clean up audio element
     if (this.audioElements[index]) {
       this.audioElements[index].pause();
       this.audioElements[index].src = '';
     }
     
-    // Remove from arrays
     this.audioElements.splice(index, 1);
     this.playlist.splice(index, 1);
     
-    // Update current song index if needed
     if (index < this.currentSongIndex) {
       this.currentSongIndex--;
     } else if (index === this.currentSongIndex) {
-      // Current song was removed, select next available
       if (this.audioElements.length > 0) {
         this.currentSongIndex = Math.min(this.currentSongIndex, this.audioElements.length - 1);
         this.currentAudioRef = this.audioElements[this.currentSongIndex];
@@ -369,7 +363,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     
     if (savedPlaylist) {
       const parsed = JSON.parse(savedPlaylist);
-      // Restore uploaded songs with their blob URLs
       if (savedUploaded) {
         const uploadedData = JSON.parse(savedUploaded);
         return parsed.map(song => {
@@ -402,7 +395,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const [showLibrary, setShowLibrary] = useState(false);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, songIndex: null });
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, songIndex: null });
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
 
@@ -410,17 +403,14 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const clickSoundRef = useRef(null);
   const unsubscribeRef = useRef(null);
 
-  // Save playlist to localStorage whenever it changes
   useEffect(() => {
     if (playlist.length > 0) {
-      // Save playlist structure (without blob URLs)
       const playlistToSave = playlist.map(song => {
         const { objectUrl, ...rest } = song;
         return rest;
       });
       localStorage.setItem('musicPlayerPlaylist', JSON.stringify(playlistToSave));
       
-      // Save uploaded songs metadata
       const uploadedSongs = {};
       playlist.forEach(song => {
         if (song.audioId && song.audioId.startsWith('uploaded-') && song.objectUrl) {
@@ -436,7 +426,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     }
   }, [playlist]);
 
-  // Save archived songs
   useEffect(() => {
     localStorage.setItem('musicPlayerArchived', JSON.stringify(archivedSongs));
   }, [archivedSongs]);
@@ -561,15 +550,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     };
   }, [isDraggingProgress, isDraggingVolume, audioState.hasCurrentSong, audioState.duration]);
 
-  // Close context menu on outside click
-  useEffect(() => {
-    const handleClick = () => setContextMenu({ show: false, x: 0, y: 0, songIndex: null });
-    if (contextMenu.show) {
-      document.addEventListener('click', handleClick);
-      return () => document.removeEventListener('click', handleClick);
-    }
-  }, [contextMenu.show]);
-
   const formatTime = (seconds) => {
     if (isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
@@ -602,6 +582,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     playClickSound();
     setShowPlaylist(false);
     setShowLibrary(false);
+    setDeleteConfirm({ show: false, songIndex: null });
   };
 
   const goHome = () => {
@@ -667,46 +648,42 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     closePlaylistPopup();
   };
 
-  const handleSongRightClick = (e, index) => {
-    e.preventDefault();
+  const showDeleteConfirm = (e, index) => {
     e.stopPropagation();
     playClickSound();
-    setContextMenu({
-      show: true,
-      x: e.clientX,
-      y: e.clientY,
-      songIndex: index
-    });
+    setDeleteConfirm({ show: true, songIndex: index });
   };
 
-  const removeSongFromPlaylist = (index) => {
+  const cancelDelete = () => {
+    playClickSound();
+    setDeleteConfirm({ show: false, songIndex: null });
+  };
+
+  const confirmRemoveSong = () => {
+    playClickSound();
+    const index = deleteConfirm.songIndex;
     const song = playlist[index];
     
     if (song.isInApp) {
-      // Move to archived
       setArchivedSongs(prev => [...prev, song]);
     }
     
-    // Remove from playlist
     const newPlaylist = playlist.filter((_, i) => i !== index);
     setPlaylist(newPlaylist);
     globalAudioManager.removeAudioElement(index);
     globalAudioManager.updatePlaylist(newPlaylist);
     
-    setContextMenu({ show: false, x: 0, y: 0, songIndex: null });
+    setDeleteConfirm({ show: false, songIndex: null });
   };
 
   const addSongBackToPlaylist = (song) => {
     playClickSound();
     
-    // Remove from archived
     setArchivedSongs(prev => prev.filter(s => s.audioId !== song.audioId));
     
-    // Add back to playlist
     const newPlaylist = [...playlist, song];
     setPlaylist(newPlaylist);
     
-    // Create new audio element
     const audio = new Audio();
     const audioPath = audioFiles[song.audioId];
     
@@ -943,7 +920,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
                 <button className="control-btn library-btn" onClick={openLibrary}>
-                  ★
+                  ★ LIBRARY
                 </button>
               </div>
 
@@ -958,20 +935,34 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                       key={index}
                       className={`song-item ${isCurrentlyPlaying ? 'playing' : ''}`}
                       onClick={() => isAvailable && selectSong(index)}
-                      onContextMenu={(e) => isAvailable && handleSongRightClick(e, index)}
                       style={{
                         cursor: isAvailable ? 'pointer' : 'not-allowed',
-                        opacity: isAvailable ? 1 : 0.5
+                        opacity: isAvailable ? 1 : 0.5,
+                        position: 'relative'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
+                        <div style={{ flex: 1 }}>
                           <div>{song.title}</div>
                           <div style={{ fontSize: '10px', opacity: 0.8 }}>
                             {song.subtitle} {!isAvailable ? '(File not found)' : ''}
                           </div>
                         </div>
-                        <div style={{ fontSize: '10px', color: isFavorite ? '#FF6347' : 'transparent' }}>♥</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ fontSize: '10px', color: isFavorite ? '#FF6347' : 'transparent' }}>♥</div>
+                          <button 
+                            className="delete-btn-circle"
+                            onClick={(e) => showDeleteConfirm(e, index)}
+                            title="Remove song"
+                          >
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                              <path 
+                                fill="currentColor" 
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1005,7 +996,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
           {showLibrary && (
             <div className="playlist-popup">
               <div className="popup-header">
-                ★ LIBRARY
+                ★
                 <div className="close-btn" onClick={closePlaylistPopup}>×</div>
               </div>
               
@@ -1027,12 +1018,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                     <div 
                       key={index}
                       className="song-item archived-song"
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        playClickSound();
-                        addSongBackToPlaylist(song);
-                      }}
+                      onClick={() => addSongBackToPlaylist(song)}
                       style={{ cursor: 'pointer' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1042,7 +1028,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                             {song.subtitle}
                           </div>
                         </div>
-                        <div style={{ fontSize: '10px', color: '#7C8B6A' }}>Right-click to restore</div>
+                        <div style={{ fontSize: '10px', color: '#7C8B6A' }}>Click to restore</div>
                       </div>
                     </div>
                   ))
@@ -1130,22 +1116,25 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
             </div>
           )}
 
-          {contextMenu.show && (
-            <div
-              className="context-menu"
-              style={{
-                position: 'fixed',
-                left: Math.min(contextMenu.x, window.innerWidth - 150),
-                top: Math.min(contextMenu.y, window.innerHeight - 60),
-                zIndex: 1000
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div
-                className="context-menu-item"
-                onClick={() => removeSongFromPlaylist(contextMenu.songIndex)}
-              >
-                🗑️ Remove from Playlist
+          {deleteConfirm.show && (
+            <div className="delete-confirm-overlay" onClick={cancelDelete}>
+              <div className="delete-confirm-popup" onClick={(e) => e.stopPropagation()}>
+                <div className="delete-confirm-header">
+                  Remove this song from playlist?
+                </div>
+                <div className="delete-confirm-message">
+                  {playlist[deleteConfirm.songIndex]?.isInApp 
+                    ? "removing in-app songs will move them to library" 
+                    : "your uploaded songs are deleted fr fr, upload them again if u want it back!"}
+                </div>
+                <div className="delete-confirm-buttons">
+                  <button className="confirm-btn-yes" onClick={confirmRemoveSong}>
+                    YES, REMOVE
+                  </button>
+                  <button className="confirm-btn-no" onClick={cancelDelete}>
+                    CANCEL
+                  </button>
+                </div>
               </div>
             </div>
           )}

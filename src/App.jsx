@@ -2473,7 +2473,7 @@ function Desktop({ apps, onOpenApp }) {
     <div 
       className="h-full w-full relative overflow-hidden"
       style={{
-        backgroundImage: `url('./assets/desktop12.jpg')`,
+        backgroundImage: `url('./assets/1.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
