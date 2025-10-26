@@ -943,7 +943,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
                 <button className="control-btn" onClick={openLibrary} style={{ background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)' }}>
-                  ★
+                  ᯓ‎𝄞 ˎˊ˗
                 </button>
               </div>
 
