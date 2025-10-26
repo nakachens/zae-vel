@@ -170,7 +170,6 @@
   display: flex;
   gap: 8px;
   justify-content: center;
-  flex-wrap: wrap;
 }
 
 .music-player-container .control-btn {
@@ -187,10 +186,6 @@
 
 .music-player-container .control-btn:hover {
   transform: translateY(-1px);
-}
-
-.music-player-container .library-btn {
-  background: linear-gradient(145deg, #7C8B6A, #5A6B4A);
 }
 
 .music-player-container .shuffle-active {
@@ -224,21 +219,6 @@
 .music-player-container .song-item.playing {
   background: linear-gradient(145deg, #8B2A2A, #6B1F1F);
   color: #E5DCC8;
-}
-
-.music-player-container .archived-song {
-  background: linear-gradient(145deg, #C6C1B5, #A3B1A2);
-  opacity: 0.8;
-}
-
-.music-player-container .archived-song:hover {
-  background: linear-gradient(145deg, #7C8B6A, #5A6B4A);
-  opacity: 1;
-}
-
-.music-player-container .empty-library {
-  padding: 20px;
-  text-align: center;
 }
 
 .music-player-container .upload-area {
@@ -501,32 +481,7 @@
   border-radius: 4px;
 }
 
-/* Context Menu Styles */
-.music-player-container .context-menu {
-  background: linear-gradient(145deg, #C6C1B5, #A3B1A2);
-  border: 3px solid #3E2B27;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-  overflow: hidden;
-  min-width: 150px;
-}
-
-.music-player-container .context-menu-item {
-  padding: 10px 15px;
-  font-size: 10px;
-  color: #1E1A19;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Press Start 2P', monospace;
-  background: transparent;
-}
-
-.music-player-container .context-menu-item:hover {
-  background: linear-gradient(145deg, #8B2A2A, #6B1F1F);
-  color: #E5DCC8;
-}
-
-/* Scrollbar */
+/* scrollbar */
 .music-player-container .song-list::-webkit-scrollbar {
   width: 6px;
 }

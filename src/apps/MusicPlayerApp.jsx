@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
-import './MusicPlayer.css';
+import './MusicPlayer.css'
 
-// Audio Manager with localStorage support
+// audio manager (global)
 class AudioManager {
   constructor() {
     this.audioElements = [];
@@ -37,8 +38,7 @@ class AudioManager {
     for (let i = 0; i < playlist.length; i++) {
       const song = playlist[i];
       const audio = new Audio();
-      
-      const audioPath = song.objectUrl || audioFiles[song.audioId];
+      const audioPath = audioFiles[song.audioId];
       
       if (audioPath) {
         audio.src = audioPath;
@@ -114,9 +114,10 @@ class AudioManager {
       this.pause();
     }
     
-    if (this.audioElements[index]) {
-      this.audioElements[index].pause();
-      this.audioElements[index].src = '';
+    const removedAudio = this.audioElements[index];
+    if (removedAudio) {
+      removedAudio.pause();
+      removedAudio.src = '';
     }
     
     this.audioElements.splice(index, 1);
@@ -357,34 +358,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     "song-7": "./soundzz/Drake - Passionfruit (Lyrics).mp3"
   };
 
-  const [playlist, setPlaylist] = useState(() => {
-    const savedPlaylist = localStorage.getItem('musicPlayerPlaylist');
-    const savedUploaded = localStorage.getItem('musicPlayerUploadedSongs');
-    
-    if (savedPlaylist) {
-      const parsed = JSON.parse(savedPlaylist);
-      if (savedUploaded) {
-        const uploadedData = JSON.parse(savedUploaded);
-        return parsed.map(song => {
-          if (song.audioId && song.audioId.startsWith('uploaded-')) {
-            const uploadedInfo = uploadedData[song.audioId];
-            if (uploadedInfo) {
-              return { ...song, objectUrl: uploadedInfo.objectUrl };
-            }
-          }
-          return song;
-        });
-      }
-      return parsed;
-    }
-    return initialPlaylist;
-  });
-
-  const [archivedSongs, setArchivedSongs] = useState(() => {
-    const saved = localStorage.getItem('musicPlayerArchived');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [playlist, setPlaylist] = useState([]);
+  const [library, setLibrary] = useState([]);
   const [audioState, setAudioState] = useState(globalAudioManager.getState());
   const [isShuffled, setIsShuffled] = useState(false);
   const [shuffledPlaylist, setShuffledPlaylist] = useState([]);
@@ -395,7 +370,9 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const [showLibrary, setShowLibrary] = useState(false);
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, songIndex: null });
+  const [hoveredSong, setHoveredSong] = useState(null);
+  const [removePopup, setRemovePopup] = useState(null);
+
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
 
@@ -403,32 +380,47 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const clickSoundRef = useRef(null);
   const unsubscribeRef = useRef(null);
 
+  // Load from localStorage on mount
   useEffect(() => {
-    if (playlist.length > 0) {
-      const playlistToSave = playlist.map(song => {
-        const { objectUrl, ...rest } = song;
-        return rest;
-      });
-      localStorage.setItem('musicPlayerPlaylist', JSON.stringify(playlistToSave));
+    try {
+      const savedUploadedSongs = localStorage.getItem('musicPlayerUploadedSongs');
+      const savedLibrary = localStorage.getItem('musicPlayerLibrary');
       
-      const uploadedSongs = {};
-      playlist.forEach(song => {
-        if (song.audioId && song.audioId.startsWith('uploaded-') && song.objectUrl) {
-          uploadedSongs[song.audioId] = {
-            objectUrl: song.objectUrl,
-            fileName: song.title
-          };
-        }
-      });
-      if (Object.keys(uploadedSongs).length > 0) {
-        localStorage.setItem('musicPlayerUploadedSongs', JSON.stringify(uploadedSongs));
+      let uploadedSongs = [];
+      let libraryData = [];
+      
+      if (savedUploadedSongs) {
+        uploadedSongs = JSON.parse(savedUploadedSongs);
       }
+      
+      if (savedLibrary) {
+        libraryData = JSON.parse(savedLibrary);
+      }
+      
+      // Combine in-app songs not in library with uploaded songs
+      const inAppSongsInPlaylist = initialPlaylist.filter(song => 
+        !libraryData.some(libSong => libSong.audioId === song.audioId)
+      );
+      
+      setPlaylist([...inAppSongsInPlaylist, ...uploadedSongs]);
+      setLibrary(libraryData);
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+      setPlaylist(initialPlaylist);
+      setLibrary([]);
     }
-  }, [playlist]);
+  }, []);
 
+  // Save uploaded songs to localStorage whenever playlist changes
   useEffect(() => {
-    localStorage.setItem('musicPlayerArchived', JSON.stringify(archivedSongs));
-  }, [archivedSongs]);
+    try {
+      const uploadedSongs = playlist.filter(song => !song.isInApp);
+      localStorage.setItem('musicPlayerUploadedSongs', JSON.stringify(uploadedSongs));
+      localStorage.setItem('musicPlayerLibrary', JSON.stringify(library));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  }, [playlist, library]);
 
   useEffect(() => {
     clickSoundRef.current = new Audio('/click.mp3');
@@ -438,12 +430,23 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   useEffect(() => {
     const initializeAudio = async () => {
       setShowLoading(true);
-      await globalAudioManager.initialize(playlist, audioFiles);
+      
+      // Recreate audio files object for uploaded songs
+      const combinedAudioFiles = { ...audioFiles };
+      playlist.forEach(song => {
+        if (song.objectUrl) {
+          combinedAudioFiles[song.audioId] = song.objectUrl;
+        }
+      });
+      
+      await globalAudioManager.initialize(playlist, combinedAudioFiles);
       setAudioState(globalAudioManager.getState());
       setShowLoading(false);
     };
 
-    initializeAudio();
+    if (playlist.length > 0) {
+      initializeAudio();
+    }
 
     const unsubscribe = globalAudioManager.subscribe((eventType, data) => {
       switch (eventType) {
@@ -581,8 +584,11 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   const closePlaylistPopup = () => {
     playClickSound();
     setShowPlaylist(false);
+  };
+
+  const closeLibraryPopup = () => {
+    playClickSound();
     setShowLibrary(false);
-    setDeleteConfirm({ show: false, songIndex: null });
   };
 
   const goHome = () => {
@@ -648,42 +654,46 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
     closePlaylistPopup();
   };
 
-  const showDeleteConfirm = (e, index) => {
-    e.stopPropagation();
+  const handleRemoveSong = (index, song) => {
     playClickSound();
-    setDeleteConfirm({ show: true, songIndex: index });
-  };
-
-  const cancelDelete = () => {
-    playClickSound();
-    setDeleteConfirm({ show: false, songIndex: null });
+    setRemovePopup({ index, song });
   };
 
   const confirmRemoveSong = () => {
-    playClickSound();
-    const index = deleteConfirm.songIndex;
-    const song = playlist[index];
+    if (!removePopup) return;
+    
+    const { index, song } = removePopup;
     
     if (song.isInApp) {
-      setArchivedSongs(prev => [...prev, song]);
+      // Move to library
+      setLibrary(prev => [...prev, song]);
     }
     
+    // Remove from playlist
     const newPlaylist = playlist.filter((_, i) => i !== index);
     setPlaylist(newPlaylist);
     globalAudioManager.removeAudioElement(index);
-    globalAudioManager.updatePlaylist(newPlaylist);
     
-    setDeleteConfirm({ show: false, songIndex: null });
+    setRemovePopup(null);
+    playClickSound();
   };
 
-  const addSongBackToPlaylist = (song) => {
+  const cancelRemoveSong = () => {
+    playClickSound();
+    setRemovePopup(null);
+  };
+
+  const addBackToPlaylist = (song) => {
     playClickSound();
     
-    setArchivedSongs(prev => prev.filter(s => s.audioId !== song.audioId));
+    // Remove from library
+    setLibrary(prev => prev.filter(s => s.audioId !== song.audioId));
     
+    // Add back to playlist
     const newPlaylist = [...playlist, song];
     setPlaylist(newPlaylist);
     
+    // Create audio element for the song
     const audio = new Audio();
     const audioPath = audioFiles[song.audioId];
     
@@ -692,14 +702,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       audio.preload = 'metadata';
       audio.volume = globalAudioManager.volume;
       audio.loop = globalAudioManager.isRepeating;
-      
-      audio.addEventListener('loadedmetadata', () => {
-        console.log(`Loaded: ${song.title}`);
-      });
-      
-      audio.addEventListener('error', (e) => {
-        console.log(`Failed to load: ${song.title}`, e);
-      });
       
       audio.addEventListener('ended', () => {
         if (globalAudioManager.isRepeating) {
@@ -720,7 +722,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
       });
       
       globalAudioManager.addAudioElement(audio, song);
-      globalAudioManager.updatePlaylist(newPlaylist);
     }
   };
 
@@ -919,7 +920,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                   SHUFFLE
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
-                <button className="control-btn library-btn" onClick={openLibrary}>
+                <button className="control-btn" onClick={openLibrary} style={{ background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)' }}>
                   ★ LIBRARY
                 </button>
               </div>
@@ -935,6 +936,8 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                       key={index}
                       className={`song-item ${isCurrentlyPlaying ? 'playing' : ''}`}
                       onClick={() => isAvailable && selectSong(index)}
+                      onMouseEnter={() => setHoveredSong(index)}
+                      onMouseLeave={() => setHoveredSong(null)}
                       style={{
                         cursor: isAvailable ? 'pointer' : 'not-allowed',
                         opacity: isAvailable ? 1 : 0.5,
@@ -950,18 +953,32 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ fontSize: '10px', color: isFavorite ? '#FF6347' : 'transparent' }}>♥</div>
-                          <button 
-                            className="delete-btn-circle"
-                            onClick={(e) => showDeleteConfirm(e, index)}
-                            title="Remove song"
-                          >
-                            <svg viewBox="0 0 24 24" width="16" height="16">
-                              <path 
-                                fill="currentColor" 
-                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-                              />
-                            </svg>
-                          </button>
+                          {hoveredSong === index && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSong(index, song);
+                              }}
+                              style={{
+                                width: '14px',
+                                height: '14px',
+                                borderRadius: '50%',
+                                background: '#8B2A2A',
+                                border: '1px solid #1E1A19',
+                                color: '#E5DCC8',
+                                fontSize: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                padding: 0,
+                                lineHeight: 1,
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              ×
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -996,29 +1013,31 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
           {showLibrary && (
             <div className="playlist-popup">
               <div className="popup-header">
-                ★
-                <div className="close-btn" onClick={closePlaylistPopup}>×</div>
-              </div>
-              
-              <div className="playlist-controls">
-                <button className="control-btn" onClick={openPlaylist}>
-                  ← BACK TO PLAYLIST
-                </button>
+                LIBRARY - ARCHIVED SONGS
+                <div className="close-btn" onClick={closeLibraryPopup}>×</div>
               </div>
 
-              <div className="song-list">
-                {archivedSongs.length === 0 ? (
-                  <div className="empty-library">
-                    <div style={{ fontSize: '14px', textAlign: 'center', padding: '20px', color: '#1E1A19' }}>
-                      no archived songs ^0^
-                    </div>
+              <div className="song-list" style={{ maxHeight: '280px' }}>
+                {library.length === 0 ? (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '40px 20px', 
+                    color: '#1E1A19',
+                    fontSize: '14px',
+                    lineHeight: '1.5'
+                  }}>
+                    no archived songs ^0^
+                    <br />
+                    <span style={{ fontSize: '10px', opacity: 0.7 }}>
+                      Songs removed from playlist appear here
+                    </span>
                   </div>
                 ) : (
-                  archivedSongs.map((song, index) => (
+                  library.map((song, index) => (
                     <div 
                       key={index}
-                      className="song-item archived-song"
-                      onClick={() => addSongBackToPlaylist(song)}
+                      className="song-item"
+                      onClick={() => addBackToPlaylist(song)}
                       style={{ cursor: 'pointer' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1028,11 +1047,82 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                             {song.subtitle}
                           </div>
                         </div>
-                        <div style={{ fontSize: '10px', color: '#7C8B6A' }}>Click to restore</div>
+                        <div style={{ fontSize: '10px', color: '#7C8B6A' }}>+ Add</div>
                       </div>
                     </div>
                   ))
                 )}
+              </div>
+
+              <div style={{ 
+                padding: '12px',
+                textAlign: 'center',
+                fontSize: '10px',
+                color: '#3E2B27',
+                borderTop: '2px solid #3E2B27'
+              }}>
+                Click on any song to add it back to playlist
+              </div>
+            </div>
+          )}
+
+          {removePopup && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '260px',
+              background: 'linear-gradient(145deg, #C6C1B5, #A3B1A2)',
+              border: '4px solid #3E2B27',
+              borderRadius: '12px',
+              padding: '15px',
+              zIndex: 200,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
+            }}>
+              <div style={{ 
+                fontSize: '14px', 
+                fontWeight: 'bold', 
+                marginBottom: '10px',
+                color: '#1E1A19',
+                textAlign: 'center'
+              }}>
+                Remove this song from playlist?
+              </div>
+              
+              <div style={{ 
+                fontSize: '10px', 
+                marginBottom: '15px',
+                color: '#3E2B27',
+                textAlign: 'center',
+                lineHeight: '1.4'
+              }}>
+                {removePopup.song.isInApp 
+                  ? "Removing in-app songs will move them to library. You can add them back anytime!"
+                  : "Your uploaded songs are deleted fr fr, upload them again if u want it back!"}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button
+                  onClick={confirmRemoveSong}
+                  className="control-btn"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #8B2A2A, #6B1F1F)',
+                    padding: '8px 16px'
+                  }}
+                >
+                  YES
+                </button>
+                <button
+                  onClick={cancelRemoveSong}
+                  className="control-btn"
+                  style={{ 
+                    background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)',
+                    padding: '8px 16px'
+                  }}
+                >
+                  NO
+                </button>
               </div>
             </div>
           )}
@@ -1111,29 +1201,6 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                     className="volume-fill" 
                     style={{ width: `${audioState.volume * 100}%` }}
                   ></div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {deleteConfirm.show && (
-            <div className="delete-confirm-overlay" onClick={cancelDelete}>
-              <div className="delete-confirm-popup" onClick={(e) => e.stopPropagation()}>
-                <div className="delete-confirm-header">
-                  Remove this song from playlist?
-                </div>
-                <div className="delete-confirm-message">
-                  {playlist[deleteConfirm.songIndex]?.isInApp 
-                    ? "removing in-app songs will move them to library" 
-                    : "your uploaded songs are deleted fr fr, upload them again if u want it back!"}
-                </div>
-                <div className="delete-confirm-buttons">
-                  <button className="confirm-btn-yes" onClick={confirmRemoveSong}>
-                    YES, REMOVE
-                  </button>
-                  <button className="confirm-btn-no" onClick={cancelDelete}>
-                    CANCEL
-                  </button>
                 </div>
               </div>
             </div>
