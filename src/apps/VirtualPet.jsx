@@ -49,7 +49,7 @@ const VirtualPet = ({ onPetClick }) => {
   
   // separate boundaries for walking vs dragging
   // walking boundaries (away from desktop icons and above taskbar)
-  const WALK_LEFT_BOUNDARY = 800; // away from desktop icons
+  const WALK_LEFT_BOUNDARY = 60; // away from desktop icons
   const WALK_RIGHT_BOUNDARY = window.innerWidth - PET_WIDTH - 50; // space from right edge
   const WALK_TOP_BOUNDARY = 250; // from desktop widgets area
   const WALK_BOTTOM_BOUNDARY = window.innerHeight - 250; // above taskbar
