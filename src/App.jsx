@@ -2461,6 +2461,24 @@ function Window({
 
 // desktop comp
 function Desktop({ apps, onOpenApp }) {
+  const [stars, setStars] = useState([]);
+  
+  // Generate stars once on mount
+  useEffect(() => {
+    const generateStars = () => {
+      return Array.from({ length: 50 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        size: Math.random() * 2 + 1,
+        animationDelay: Math.random() * 3,
+        animationDuration: 2 + Math.random() * 3
+      }));
+    };
+    
+    setStars(generateStars());
+  }, []); // Empty dependency array means this runs once on mount
+
   const handleDoubleClick = (app) => {
     onOpenApp(app);
   };
@@ -2489,8 +2507,28 @@ function Desktop({ apps, onOpenApp }) {
         `
       }}
     >
+      {/* Twinkling stars layer */}
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+        {stars.map((star) => (
+          <div
+            key={star.id}
+            className="absolute rounded-full"
+            style={{
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              background: 'white',
+              boxShadow: '0 0 2px white',
+              animation: `twinkle ${star.animationDuration}s ease-in-out ${star.animationDelay}s infinite`,
+              opacity: 0.8
+            }}
+          />
+        ))}
+      </div>
+
       {/* desktop icons */}
-      <div className="absolute top-6 left-6 flex gap-6">
+      <div className="absolute top-6 left-6 flex gap-6" style={{ zIndex: 2 }}>
         {/* 1st column - 8 apps */}
         <div className="flex flex-col gap-1">
           {apps.slice(0, 8).map(app => (
