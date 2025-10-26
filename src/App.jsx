@@ -2466,7 +2466,7 @@ function Desktop({ apps, onOpenApp }) {
   // Generate stars once on mount
   useEffect(() => {
     const generateStars = () => {
-      return Array.from({ length: 50 }, (_, i) => ({
+      return Array.from({ length: 15 }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
         top: Math.random() * 100,
