@@ -2477,6 +2477,26 @@ function Desktop({ apps, onOpenApp }) {
     };
     
     setStars(generateStars());
+    
+    // Add the keyframe animation to the document
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+      @keyframes twinkle {
+        0%, 100% {
+          opacity: 0.2;
+          transform: scale(0.8);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.2);
+        }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+    
+    return () => {
+      document.head.removeChild(styleSheet);
+    };
   }, []); // Empty dependency array means this runs once on mount
 
   const handleDoubleClick = (app) => {
@@ -2519,9 +2539,9 @@ function Desktop({ apps, onOpenApp }) {
               width: `${star.size}px`,
               height: `${star.size}px`,
               background: 'white',
-              boxShadow: '0 0 2px white',
-              animation: `twinkle ${star.animationDuration}s ease-in-out ${star.animationDelay}s infinite`,
-              opacity: 0.8
+              boxShadow: '0 0 3px white, 0 0 5px rgba(255, 255, 255, 0.5)',
+              animation: `twinkle ${star.animationDuration}s ease-in-out infinite`,
+              animationDelay: `${star.animationDelay}s`
             }}
           />
         ))}
