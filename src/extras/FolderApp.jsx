@@ -161,7 +161,7 @@ function FolderApp({ folderType = "files", onOpenFile }) {
     { name: "skincare-videocall-sesh", icon: getAssetPath("./images/3.jpeg"), type: "image" },
     { name: "haha-this-is-nothing", icon: getAssetPath("./images/4.jpeg"), type: "image" },
     { name: "she-hates-me-#hater", icon: getAssetPath("./images/5.jpeg"), type: "image" },
-    { name: "yandere-simulator", icon: getAssetPath("./images/6.jpeg"), type: "image" },
+    { name: "she-hates-me-2", icon: getAssetPath("./images/finger.jpeg"), type: "image" },
     { name: "oh-shes-everywhere", icon: getAssetPath("./images/7.jpeg"), type: "image" },
     { name: "what", icon: getAssetPath("./images/7.jpeg"), type: "image" },
     { name: "the-real-ones-get-it", icon: getAssetPath("./images/8.jpeg"), type: "image" },
@@ -171,35 +171,12 @@ function FolderApp({ folderType = "files", onOpenFile }) {
     { name: "omg-first-irl-meetup", icon: getAssetPath("./images/12.png"), type: "image" },
     { name: "feet", icon: getAssetPath("./images/13.jpeg"), type: "image" },
     { name: "best-name-era", icon: getAssetPath("./images/14.jpeg"), type: "image" },
-    { name: "tehee", icon: getAssetPath("./images/15.jpeg"), type: "image" },
-    { name: "me-when-i", icon: getAssetPath("./assets/img.png"), type: "image" },
-    { name: "cute-akechi", icon: getAssetPath("./assets/img.png"), type: "image" },
-    { name: "nom-nom", icon: getAssetPath("./assets/img.png"), type: "image" },
-    { name: "when-i-went-out-in-months", icon: getAssetPath("./assets/img.png"), type: "image" },
-    { name: "me-tryna-explain-this-project", icon: getAssetPath("./assets/img.png"), type: "image" }
-  ];
-
-  // yara letters (for zaza's birthday!)
-  const yaraItems = [
-    { name: "letter-1-remember-when.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-2-10th-grade.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-3-11th-grade-distance.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-4-12th-grade-saved-us.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-5-so-proud-of-you.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-6-about-our-fights.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-7-i-get-careless.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-8-you-mean-so-much.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-9-dont-have-many-friends.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-10-id-love-if-you-stayed.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-11-even-if-we-break-apart.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-12-were-so-similar.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-13-youve-been-distant.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-14-youre-shouldering-things.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-15-remember-when-you-helped.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-16-i-want-to-help-you.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-17-you-mean-so-much-again.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-18-im-worried-about-you.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" },
-    { name: "letter-19-happy-birthday.txt", icon: getAssetPath("./assets/txt.png"), type: "txt" }
+    { name: "MINI-ZAI", icon: getAssetPath("./images/minizai.jpeg"), type: "image" },
+    { name: "8-years-ago", icon: getAssetPath("./images/rando.jpeg"), type: "image" },
+    { name: "CUTE-CUTE-CUTE-CUTE", icon: getAssetPath("./images/minizai2.jpeg"), type: "image" },
+    { name: "the history-goes-long", icon: getAssetPath("./images/oldisgold.jpeg"), type: "image" },
+    { name: "our-cool-meetup", icon: getAssetPath("./images/img-20.jpeg"), type: "image" },
+    { name: "SHES-SO-FUCKING-ADORABLE", icon: getAssetPath("./images/CUTEST.jpeg"), type: "image" }
   ];
 
   const items = folderType === "files" ? fileItems : 

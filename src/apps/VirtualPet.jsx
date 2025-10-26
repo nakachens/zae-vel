@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const VirtualPet = ({ onPetClick }) => {
-  const [position, setPosition] = useState({ x: 200, y: window.innerHeight - 420 });
-  const [direction, setDirection] = useState(1);
+  // Fix 1: Spawn above taskbar (48px + margin = 120px from bottom)
+  const [position, setPosition] = useState({ x: 200, y: window.innerHeight - 420 }); // Spawn above taskbar
+  const [direction, setDirection] = useState(1); // 1 for right, -1 for left
   const [currentAnimation, setCurrentAnimation] = useState('walkRight');
   const [isClicked, setIsClicked] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -14,18 +15,17 @@ const VirtualPet = ({ onPetClick }) => {
   
   const [mouseDownPosition, setMouseDownPosition] = useState(null);
   const [dragThreshold] = useState(5); 
+  // layer management 
   const [isInBackground, setIsInBackground] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  
-  // forcing re-render of images
-  const [animationKey, setAnimationKey] = useState(0);
   
   const petRef = useRef(null);
   const animationRef = useRef(null);
   const clickTimeoutRef = useRef(null);
   const contextMenuRef = useRef(null);
   
+  // cute drag dialogues
   const dragDialogues = [
     " waa not again~! ",
     " w-what are you trying to do!! ",
@@ -36,7 +36,8 @@ const VirtualPet = ({ onPetClick }) => {
     " ill cry pls put me down ",
     " what have i done wrong waaaa ",
     " zochan save mee~ ",
-    "im scared of heights!!"
+    "im scared of heights!!",
+    "hey!!! i a-already told you!!"
   ];
   
   const PET_WIDTH = 300;  
@@ -46,18 +47,23 @@ const VirtualPet = ({ onPetClick }) => {
   const CLICKABLE_OFFSET_X = (PET_WIDTH - CLICKABLE_WIDTH) / 2; 
   const CLICKABLE_OFFSET_Y = (PET_HEIGHT - CLICKABLE_HEIGHT) / 2; 
   
-  const WALK_LEFT_BOUNDARY = 50;
-  const WALK_RIGHT_BOUNDARY = window.innerWidth - PET_WIDTH - 50;
-  const WALK_TOP_BOUNDARY = 250;
-  const WALK_BOTTOM_BOUNDARY = window.innerHeight - 250;
+  // separate boundaries for walking vs dragging
+  // walking boundaries (away from desktop icons and above taskbar)
+  const WALK_LEFT_BOUNDARY = 50; // away from desktop icons
+  const WALK_RIGHT_BOUNDARY = window.innerWidth - PET_WIDTH - 50; // space from right edge
+  const WALK_TOP_BOUNDARY = 250; // from desktop widgets area
+  const WALK_BOTTOM_BOUNDARY = window.innerHeight - 250; // above taskbar
   
+  // dragging boundaries (nearly fullscreen)
   const DRAG_LEFT_BOUNDARY = 20; 
   const DRAG_RIGHT_BOUNDARY = window.innerWidth - PET_WIDTH - 20; 
-  const DRAG_TOP_BOUNDARY = 10;
+  const DRAG_TOP_BOUNDARY = 10; // small edge margin
   const DRAG_BOTTOM_BOUNDARY = window.innerHeight - 250;
   
+  // walking speed
   const WALK_SPEED = 1;
 
+  // animation sources with loop control
   const animations = {
     walkRight: './animations/walking_right.gif',
     walkLeft: './animations/walking_left.gif',
@@ -66,11 +72,7 @@ const VirtualPet = ({ onPetClick }) => {
     drag: './animations/drag.png' 
   };
 
-  // Simplified animation source getter 
-  const getAnimationSrc = (animationType) => {
-    return animations[animationType];
-  };
-
+  // animation loop
   const walkingLoop = useCallback(() => {
     if (!isWalking || isDragging || isClicked) return;
 
@@ -78,6 +80,7 @@ const VirtualPet = ({ onPetClick }) => {
       let newX = prev.x + (direction * WALK_SPEED);
       let newDirection = direction;
 
+      // walking boundaries and reverse direction
       if (newX <= WALK_LEFT_BOUNDARY) {
         newX = WALK_LEFT_BOUNDARY;
         newDirection = 1;
@@ -96,6 +99,7 @@ const VirtualPet = ({ onPetClick }) => {
     animationRef.current = requestAnimationFrame(walkingLoop);
   }, [direction, isWalking, isDragging, isClicked]);
 
+  // start walking animation
   useEffect(() => {
     if (isWalking && !isDragging && !isClicked) {
       animationRef.current = requestAnimationFrame(walkingLoop);
@@ -107,16 +111,20 @@ const VirtualPet = ({ onPetClick }) => {
     };
   }, [walkingLoop, isWalking, isDragging, isClicked]);
 
+  // handle right click to show context menu (changed from left click)
   const handlePetRightClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
+    // dont trigger context menu if dragging
     if (isDragging) return;
 
+    // show context menu
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setShowContextMenu(true);
   };
 
+  // context menu actions with proper state management
   const handleMoveToBack = () => {
     console.log('Moving to back...');
     
@@ -147,6 +155,7 @@ const VirtualPet = ({ onPetClick }) => {
     setShowContextMenu(false);
   };
 
+  // click detection with position checking and drag threshold
   const isClickInPetCenter = (clientX, clientY) => {
     if (!petRef.current) return false;
     
@@ -154,6 +163,7 @@ const VirtualPet = ({ onPetClick }) => {
     const relativeX = clientX - rect.left;
     const relativeY = clientY - rect.top;
     
+    // check if click is within the centered clickable area
     return (
       relativeX >= CLICKABLE_OFFSET_X &&
       relativeX <= CLICKABLE_OFFSET_X + CLICKABLE_WIDTH &&
@@ -162,52 +172,69 @@ const VirtualPet = ({ onPetClick }) => {
     );
   };
 
-  // simplified click handler
   const handlePetClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
+    // in background mode, don't do click animations, just allow dragging
     if (isInBackground) return;
+
+    // don't trigger click if already clicked, dragging, or just finished dragging
     if (isClicked || isDragging || justFinishedDragging) return;
+
+    //  trigger click animation if clicking in the pet's center area
     if (!isClickInPetCenter(e.clientX, e.clientY)) return;
 
-    console.log('Pet clicked - starting click animation');
+    console.log('cutie was clicked in center area!');
     
-    // no delays, immediate reaction
     setIsClicked(true);
     setIsWalking(false);
     
-    // set click animation immediately
+    // using directional click animation based on current walking direction
     const clickAnimationType = direction === 1 ? 'clickRight' : 'clickLeft';
-    setCurrentAnimation(clickAnimationType);
     
-    // force rendering
-    setAnimationKey(prev => prev + 1);
-    
+    // preload animation and control looping
+    const img = new Image();
+    img.onload = () => {
+      setCurrentAnimation(clickAnimationType);
+      
+      // force reload the GIF to prevent looping by adding timestamp
+      const timestamp = Date.now();
+      const imgElement = petRef.current?.querySelector('img');
+      if (imgElement) {
+        imgElement.src = `${animations[clickAnimationType]}?t=${timestamp}`;
+      }
+    };
+    img.onerror = () => {
+      console.warn(`Failed to load click animation: ${animations[clickAnimationType]}`);
+      setCurrentAnimation(direction === 1 ? 'walkRight' : 'walkLeft');
+    };
+    img.src = animations[clickAnimationType];
+
     if (onPetClick) {
       onPetClick();
     }
 
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-    }
-
-    // resume walking after animation
+    // shorter timeout and ensure animation plays only once
     clickTimeoutRef.current = setTimeout(() => {
       console.log('Click animation finished, resuming walking...');
       setIsClicked(false);
       if (!isInBackground) {
         setIsWalking(true);
         setCurrentAnimation(direction === 1 ? 'walkRight' : 'walkLeft');
-        setAnimationKey(prev => prev + 1); // Force re-render for walking animation
       }
-    }, 1500);
+    }, 1500); 
   };
 
+  // mouse down handler with position tracking
   const handleMouseDown = (e) => {
+    // no dragging during click animation (unless in background where clicks are disabled)
     if (isClicked && !isInBackground) return;
 
+    // Store mouse down position for drag threshold calculation
     setMouseDownPosition({ x: e.clientX, y: e.clientY });
+
+    console.log('Mouse down detected...');
     
     const rect = petRef.current.getBoundingClientRect();
     setDragOffset({
@@ -215,14 +242,17 @@ const VirtualPet = ({ onPetClick }) => {
       y: e.clientY - rect.top
     });
 
+    // clear any pending click timeout
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
       clickTimeoutRef.current = null;
     }
 
+    // hide context menu if mouse down starts
     setShowContextMenu(false);
   };
 
+  // improved dragging with threshold detection
   useEffect(() => {
     let hasMoved = false;
     let hasPassedThreshold = false;
@@ -230,17 +260,19 @@ const VirtualPet = ({ onPetClick }) => {
     const handleMouseMove = (e) => {
       if (!mouseDownPosition) return;
 
+      // calculate distance from initial mouse down position
       const deltaX = Math.abs(e.clientX - mouseDownPosition.x);
       const deltaY = Math.abs(e.clientY - mouseDownPosition.y);
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
+      // only start dragging if we've moved beyond the threshold
       if (distance > dragThreshold && !hasPassedThreshold) {
         hasPassedThreshold = true;
         setIsDragging(true);
         setIsWalking(false);
         setCurrentAnimation('drag');
-        setAnimationKey(prev => prev + 1);
         
+        // random dialogue when dragging starts
         const randomDialogue = dragDialogues[Math.floor(Math.random() * dragDialogues.length)];
         setCurrentDragDialogue(randomDialogue);
         
@@ -250,6 +282,7 @@ const VirtualPet = ({ onPetClick }) => {
       if (isDragging || hasPassedThreshold) {
         hasMoved = true;
 
+        // different boundaries for dragging
         const leftBoundary = DRAG_LEFT_BOUNDARY;
         const rightBoundary = DRAG_RIGHT_BOUNDARY;
         const topBoundary = DRAG_TOP_BOUNDARY;
@@ -275,6 +308,7 @@ const VirtualPet = ({ onPetClick }) => {
         console.log('Drag ended, resuming walking...');
         setIsDragging(false);
         
+        // set flag that we just finished dragging to prevent immediate click
         if (hasMoved) {
           setJustFinishedDragging(true);
           setTimeout(() => {
@@ -284,18 +318,19 @@ const VirtualPet = ({ onPetClick }) => {
         
         setIsWalking(true);
         setCurrentAnimation(direction === 1 ? 'walkRight' : 'walkLeft');
-        setAnimationKey(prev => prev + 1);
         
         if (hasMoved) {
           e.preventDefault();
           e.stopPropagation();
         }
       } else if (mouseDownPosition && !hasMoved) {
+        // trigger click if we didn't drag AND mouse is still in pet center
         if (isClickInPetCenter(e.clientX, e.clientY)) {
           handlePetClick(e);
         }
       }
       
+      // reset mouse tracking
       setMouseDownPosition(null);
     };
 
@@ -314,6 +349,7 @@ const VirtualPet = ({ onPetClick }) => {
     };
   }, [isDragging, dragOffset, direction, mouseDownPosition, dragThreshold, isInBackground, isClicked, justFinishedDragging]);
 
+  // close context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
@@ -356,10 +392,12 @@ const VirtualPet = ({ onPetClick }) => {
         onMouseDown={handleMouseDown}
         onDragStart={(e) => e.preventDefault()}
       >
-        {/* rendered image */}
+        {/* image with better animation control */}
         <img
-          key={`${currentAnimation}-${animationKey}`} // forces to create a new img element
-          src={getAnimationSrc(currentAnimation)}
+          src={currentAnimation === 'clickRight' || currentAnimation === 'clickLeft' 
+            ? `${animations[currentAnimation]}?t=${Date.now()}` // Force reload for click animations
+            : animations[currentAnimation]
+          }
           alt="Haku"
           className="w-full h-full object-contain"
           style={{
@@ -368,13 +406,15 @@ const VirtualPet = ({ onPetClick }) => {
             userSelect: 'none'
           }}
           draggable={false}
-          onError={(e) => {
-            console.warn(`Failed to load pet animation: ${e.target.src}`);
-            e.target.src = './animations/walking_right.gif';
+          onLoad={(e) => {
+            e.target.onerror = () => {
+              console.warn(`Failed to load pet animation: ${animations[currentAnimation]}`);
+            };
           }}
         />
         
-        {/* click animation chat */}
+        
+        {/* click animation bubble */}
         {isClicked && !isInBackground && (
           <div
             className="absolute left-1/2 transform -translate-x-1/2 bg-amber-100 border-2 px-2 py-1 rounded-lg text-xs font-bold"
@@ -387,11 +427,11 @@ const VirtualPet = ({ onPetClick }) => {
               zIndex: 101
             }}
           >
-            Hello! ^_^
+            Hello zaza! ^_^
           </div>
         )}
 
-        {/* drag animation chat*/}
+        {/* drag animation bubble */}
         {isDragging && (
           <div
             className="absolute left-1/2 transform -translate-x-1/2 bg-orange-100 border-2 px-4 py-2 rounded-lg text-xs font-bold animate-bounce"
@@ -410,7 +450,7 @@ const VirtualPet = ({ onPetClick }) => {
         )}
       </div>
 
-      {/* context menu */}
+      {/* context */}
       {showContextMenu && (
         <div
           ref={contextMenuRef}

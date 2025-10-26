@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const VideoPlayerWindow = ({ isMuted, volume }) => {
+const VideoPlayerWindow = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
   const videoRef = useRef(null);
   const clickSoundRef = useRef(null);
 
   useEffect(() => {
     clickSoundRef.current = new Audio('./achievements/audios/click.mp3');
+    clickSoundRef.current.volume = 0.3;
   }, []);
 
   const playClick = () => {
-    if (clickSoundRef.current && !isMuted) {
+    if (clickSoundRef.current) {
       clickSoundRef.current.currentTime = 0;
-      clickSoundRef.current.volume = volume;
       clickSoundRef.current.play().catch(e => console.log('Click sound error:', e));
     }
   };
@@ -50,6 +52,19 @@ const VideoPlayerWindow = ({ isMuted, volume }) => {
         videoRef.current.play();
       }
       setIsVideoPlaying(!isVideoPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    playClick();
+    setIsMuted(!isMuted);
+  };
+
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = isMuted ? 0 : newVolume;
     }
   };
 
@@ -104,7 +119,7 @@ const VideoPlayerWindow = ({ isMuted, volume }) => {
       }}>
         <video
           ref={videoRef}
-          src={`./achievements/videos/secret${currentVideoIndex + 1}.mp4`}
+          src={`./achievements/videos/${currentVideoIndex + 1}.mp4`}
           style={{
             width: '100%',
             height: '100%',
@@ -128,11 +143,11 @@ const VideoPlayerWindow = ({ isMuted, volume }) => {
           bottom: 0,
           left: 0,
           right: 0,
-          background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-          padding: '10px',
+          background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+          padding: '15px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          gap: '10px',
           margin: 0,
           boxSizing: 'border-box'
         }}>
@@ -164,106 +179,165 @@ const VideoPlayerWindow = ({ isMuted, volume }) => {
             margin: 0,
             padding: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button
-  onClick={toggleVideoPlay}
-  style={{
-    background: 'rgba(212, 175, 55, 0.8)',
-    border: 'none',
-    color: '#000',
-    padding: '4px 8px',
-    cursor: 'pointer',
-    borderRadius: '3px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    transition: 'all 0.2s ease',
-    transform: 'scale(1)'
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = 'scale(1.1)';
-    e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = 'scale(1)';
-    e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
-  }}
->
-  {isVideoPlaying ? '❚❚' : '▶'}
-</button>
+                onClick={toggleVideoPlay}
+                style={{
+                  background: 'rgba(212, 175, 55, 0.8)',
+                  border: 'none',
+                  color: '#000',
+                  padding: '6px 10px',
+                  cursor: 'pointer',
+                  borderRadius: '3px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  transform: 'scale(1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                  e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
+                }}
+              >
+                {isVideoPlaying ? '⏸' : '▶'}
+              </button>
               
               <span style={{ fontSize: '11px' }}>
                 {formatTime(videoProgress)} / {formatTime(videoDuration)}
               </span>
+
+              {/* Volume Control Section */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                marginLeft: '12px'
+              }}>
+                <button
+                  onClick={toggleMute}
+                  style={{
+                    background: 'rgba(212, 175, 55, 0.8)',
+                    border: 'none',
+                    color: '#000',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    borderRadius: '3px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease',
+                    transform: 'scale(1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
+                  }}
+                >
+                  {isMuted ? '🔇' : '🔊'}
+                </button>
+                
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  disabled={isMuted}
+                  style={{
+                    width: '80px',
+                    height: '4px',
+                    background: isMuted 
+                      ? '#666' 
+                      : `linear-gradient(90deg, #D4AF37 0%, #D4AF37 ${volume * 100}%, #666 ${volume * 100}%, #666 100%)`,
+                    borderRadius: '2px',
+                    outline: 'none',
+                    cursor: isMuted ? 'not-allowed' : 'pointer',
+                    opacity: isMuted ? 0.5 : 1
+                  }}
+                />
+                
+                <span style={{ fontSize: '10px', minWidth: '35px' }}>
+                  {Math.round(volume * 100)}%
+                </span>
+              </div>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {/* Prev button */}
-<button
-  onClick={prevVideo}
-  disabled={currentVideoIndex === 0}
-  style={{
-    background: currentVideoIndex === 0 ? '#666' : 'rgba(212, 175, 55, 0.8)',
-    border: 'none',
-    color: currentVideoIndex === 0 ? '#999' : '#000',
-    padding: '4px 8px',
-    cursor: currentVideoIndex === 0 ? 'not-allowed' : 'pointer',
-    borderRadius: '3px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    transition: 'all 0.2s ease',
-    transform: 'scale(1)'
-  }}
-  onMouseEnter={(e) => {
-    if (currentVideoIndex !== 0) {
-      e.currentTarget.style.transform = 'scale(1.1)';
-      e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
-    }
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = 'scale(1)';
-    if (currentVideoIndex !== 0) {
-      e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
-    }
-  }}
->
-  ◀ Prev
-</button>
+              <button
+                onClick={prevVideo}
+                disabled={currentVideoIndex === 0}
+                style={{
+                  background: currentVideoIndex === 0 ? '#666' : 'rgba(212, 175, 55, 0.8)',
+                  border: 'none',
+                  color: currentVideoIndex === 0 ? '#999' : '#000',
+                  padding: '4px 8px',
+                  cursor: currentVideoIndex === 0 ? 'not-allowed' : 'pointer',
+                  borderRadius: '3px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  transform: 'scale(1)'
+                }}
+                onMouseEnter={(e) => {
+                  if (currentVideoIndex !== 0) {
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  if (currentVideoIndex !== 0) {
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
+                  }
+                }}
+              >
+                ◀ Prev
+              </button>
               
               <span style={{ fontSize: '11px', color: '#D4AF37' }}>
                 {currentVideoIndex + 1}/5
               </span>
               
               {/* Next button */}
-<button
-  onClick={nextVideo}
-  disabled={currentVideoIndex === 4}
-  style={{
-    background: currentVideoIndex === 4 ? '#666' : 'rgba(212, 175, 55, 0.8)',
-    border: 'none',
-    color: currentVideoIndex === 4 ? '#999' : '#000',
-    padding: '4px 8px',
-    cursor: currentVideoIndex === 4 ? 'not-allowed' : 'pointer',
-    borderRadius: '3px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    transition: 'all 0.2s ease',
-    transform: 'scale(1)'
-  }}
-  onMouseEnter={(e) => {
-    if (currentVideoIndex !== 4) {
-      e.currentTarget.style.transform = 'scale(1.1)';
-      e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
-    }
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = 'scale(1)';
-    if (currentVideoIndex !== 4) {
-      e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
-    }
-  }}
->
-  Next ▶
-</button>
+              <button
+                onClick={nextVideo}
+                disabled={currentVideoIndex === 4}
+                style={{
+                  background: currentVideoIndex === 4 ? '#666' : 'rgba(212, 175, 55, 0.8)',
+                  border: 'none',
+                  color: currentVideoIndex === 4 ? '#999' : '#000',
+                  padding: '4px 8px',
+                  cursor: currentVideoIndex === 4 ? 'not-allowed' : 'pointer',
+                  borderRadius: '3px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'all 0.2s ease',
+                  transform: 'scale(1)'
+                }}
+                onMouseEnter={(e) => {
+                  if (currentVideoIndex !== 4) {
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  if (currentVideoIndex !== 4) {
+                    e.currentTarget.style.background = 'rgba(212, 175, 55, 0.8)';
+                  }
+                }}
+              >
+                Next ▶
+              </button>
             </div>
           </div>
         </div>
@@ -285,7 +359,7 @@ const VideoPlayerWindow = ({ isMuted, volume }) => {
           padding: 0,
           textShadow: '0 0 5px rgba(212, 175, 55, 0.3)'
         }}>
-          🎉 Congratulations on completing all achievements! Enjoy these special videos.
+          🎉 Congratulations on reading your praises~ Enjoy these special videos now!
         </p>
       </div>
     </div>

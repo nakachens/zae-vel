@@ -3,8 +3,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { questionsData, friends } from './data';
 
 const AchievementsApp = ({ onOpenExternalWindow }) => {
-  const [completedAnswers, setCompletedAnswers] = useState({});
-  const [likedAnswers, setLikedAnswers] = useState([]);
+  // Initialize state from localStorage or use defaults
+  const [completedAnswers, setCompletedAnswers] = useState(() => {
+    const saved = localStorage.getItem('achievementsCompletedAnswers');
+    return saved ? JSON.parse(saved) : {};
+  });
+  
+  const [likedAnswers, setLikedAnswers] = useState(() => {
+    const saved = localStorage.getItem('achievementsLikedAnswers');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const [showFavorites, setShowFavorites] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -16,6 +25,16 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
   const clickSoundRef = useRef(null);
 
   const questions = questionsData;
+
+  // Save to localStorage whenever completedAnswers changes
+  useEffect(() => {
+    localStorage.setItem('achievementsCompletedAnswers', JSON.stringify(completedAnswers));
+  }, [completedAnswers]);
+
+  // Save to localStorage whenever likedAnswers changes
+  useEffect(() => {
+    localStorage.setItem('achievementsLikedAnswers', JSON.stringify(likedAnswers));
+  }, [likedAnswers]);
 
   const generateAnswers = (questionId) => {
     const question = questionsData.find(q => q.id === questionId);
@@ -60,8 +79,10 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
   }, [isMuted, volume]);
 
   const getProgress = (questionId) => {
+    const question = questionsData.find(q => q.id === questionId);
+    const totalAnswers = question ? question.answers.length : 0;
     const answers = completedAnswers[questionId] || [];
-    return Math.round((answers.length / 12) * 100);
+    return totalAnswers > 0 ? Math.round((answers.length / totalAnswers) * 100) : 0;
   };
 
   const getTotalProgress = () => {
@@ -118,6 +139,7 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
         questionId: question.id,
         questionText: question.text,
         currentAnswerIndex: 0,
+        totalAnswers: question.answers.length,
         generateAnswers,
         completedAnswers,
         likedAnswers,
@@ -140,6 +162,7 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
         questionId: likedAnswer.questionId,
         questionText: likedAnswer.questionText,
         currentAnswerIndex: likedAnswer.answerIndex,
+        totalAnswers: question ? question.answers.length : 0,
         generateAnswers,
         completedAnswers,
         likedAnswers,
@@ -167,9 +190,7 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
     
     if (onOpenExternalWindow) {
       onOpenExternalWindow({
-        type: 'video',
-        isMuted,
-        volume
+        type: 'video'
       });
     }
   };
@@ -189,6 +210,17 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
   const toggleMute = () => {
     playClick();
     setIsMuted(!isMuted);
+  };
+
+  // Add reset progress function
+  const resetProgress = () => {
+    if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+      playClick();
+      setCompletedAnswers({});
+      setLikedAnswers([]);
+      localStorage.removeItem('achievementsCompletedAnswers');
+      localStorage.removeItem('achievementsLikedAnswers');
+    }
   };
 
   const visibleQuestions = [];
@@ -796,6 +828,37 @@ const AchievementsApp = ({ onOpenExternalWindow }) => {
                   }} />
                 </div>
               </div>
+
+              {/* Reset Progress Button */}
+              <button
+                onClick={resetProgress}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: 'linear-gradient(145deg, #8B2A2A, #6B1F1F)',
+                  border: '2px solid',
+                  borderColor: '#D2691E #4A2410 #4A2410 #D2691E',
+                  color: '#F4E4C1',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '11px',
+                  borderRadius: '4px',
+                  transition: 'all 0.2s ease',
+                  transform: 'scale(1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.background = 'linear-gradient(145deg, #A52A2A, #8B1F1F)';
+                  e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = 'linear-gradient(145deg, #8B2A2A, #6B1F1F)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                🔄 Reset Progress
+              </button>
             </div>
           </div>
         </div>

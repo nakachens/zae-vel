@@ -8,7 +8,7 @@ function ImageViewerApp({ imageName = "img-1.jpg", onClose, onTitleChange }) {
     { name: "skincare-videocall-sesh", url: "./images/3.jpeg" },
     { name: "haha-this-is-nothing", url: "./images/4.jpeg" },
     { name: "she-hates-me-#hater", url: "./images/5.jpeg" },
-    { name: "yandere-simulator", url: "./images/6.jpeg" },
+    { name: "she-hates-me-2", url: "./images/finger.jpeg" },
     { name: "oh-shes-everywhere", url: "./images/7.jpeg" },
     { name: "what", url: "./images/8.jpeg" },
     { name: "the-real-ones-get-it", url: "./images/9.jpeg" },
@@ -18,12 +18,12 @@ function ImageViewerApp({ imageName = "img-1.jpg", onClose, onTitleChange }) {
     { name: "omg-first-irl-meetup", url: "./images/13.jpeg" },
     { name: "feet", url: "./images/14.jpeg" },
     { name: "best-name-era", url: "./images/15.jfif" },
-    { name: "tehee", url: "./images/img-16.jpg" },
-    { name: "me-when-i", url: "./images/img-17.jpg" },
-    { name: "cute-akechi", url: "./images/img-18.jpg" },
-    { name: "nom-nom", url: "./images/img-19.jpg" },
+    { name: "MINI-ZAI", url: "./images/minizai.jpeg" },
+    { name: "8-years-ago", url: "./images/rando.jpeg" },
+    { name: "CUTE-CUTE-CUTE-CUTE", url: "./images/minizai2.jpeg" },
+    { name: "the history-goes-long", url: "./images/oldisgold.jpeg" },
     { name: "our-cool-meetup", url: "./images/img-20.jpeg" },
-    { name: "me-tryna-explain-this-project", url: "./images/img-21.jpg" },
+    { name: "SHES-SO-FUCKING-ADORABLE", url: "./images/CUTEST.jpeg" },
   ];
 
   const getInitialIndex = () => {

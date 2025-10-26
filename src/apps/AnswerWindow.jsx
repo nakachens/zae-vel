@@ -5,6 +5,7 @@ const AnswerWindow = ({
   questionId, 
   questionText, 
   initialAnswerIndex = 0,
+  totalAnswers = 12,
   generateAnswers,
   completedAnswers,
   likedAnswers,
@@ -19,15 +20,43 @@ const AnswerWindow = ({
   const [isCurrentLiked, setIsCurrentLiked] = useState(false);
   const clickSoundRef = useRef(null);
 
+  // Get actual answers and their count
+  const answers = generateAnswers(questionId);
+  const actualTotalAnswers = answers.length;
+
+  // Custom short titles for each question
+  const getQuestionTitle = (qId) => {
+    const titleMap = {
+      1: "First Meet",
+      2: "Her Personality",
+      3: "First Impression",
+      4: "Changed View",
+      5: "Color Match",
+      6: "Song Vibe",
+      7: "Reading Emotions",
+      8: "Know Her",
+      9: "Room Improve",
+      10: "Face Talk",
+      11: "Down Times",
+      12: "Happy Moments",
+      13: "Future Meet",
+      14: "Good Friend",
+      15: "Helped Out",
+      16: "Birthday Wish"
+    };
+    return titleMap[qId] || "Question " + qId;
+  };
+
   useEffect(() => {
     clickSoundRef.current = new Audio('./achievements/audios/click.mp3');
   }, []);
 
   useEffect(() => {
     if (onTitleChange) {
-      onTitleChange(`📖 ${questionText} - Answer ${currentAnswerIndex + 1}/12`);
+      const shortTitle = getQuestionTitle(questionId);
+      onTitleChange(`📖 ${shortTitle} - Answer ${currentAnswerIndex + 1}/${actualTotalAnswers}`);
     }
-  }, [currentAnswerIndex, questionText, onTitleChange]);
+  }, [currentAnswerIndex, questionId, actualTotalAnswers, onTitleChange]);
 
   useEffect(() => {
     setIsCurrentLiked(isLiked(questionId, currentAnswerIndex));
@@ -43,7 +72,11 @@ const AnswerWindow = ({
 
   const nextAnswer = () => {
     playClick();
-    if (currentAnswerIndex < 11) {
+    // Loop back to first answer if at the end
+    if (currentAnswerIndex >= actualTotalAnswers - 1) {
+      setCurrentAnswerIndex(0);
+      markAnswerAsRead(questionId, 0);
+    } else {
       const newIndex = currentAnswerIndex + 1;
       setCurrentAnswerIndex(newIndex);
       markAnswerAsRead(questionId, newIndex);
@@ -52,8 +85,14 @@ const AnswerWindow = ({
 
   const prevAnswer = () => {
     playClick();
-    if (currentAnswerIndex > 0) {
-      setCurrentAnswerIndex(currentAnswerIndex - 1);
+    // Loop to last answer if at the beginning
+    if (currentAnswerIndex === 0) {
+      setCurrentAnswerIndex(actualTotalAnswers - 1);
+      markAnswerAsRead(questionId, actualTotalAnswers - 1);
+    } else {
+      const newIndex = currentAnswerIndex - 1;
+      setCurrentAnswerIndex(newIndex);
+      markAnswerAsRead(questionId, newIndex);
     }
   };
 
@@ -69,8 +108,28 @@ const AnswerWindow = ({
     }
   }, [questionId, currentAnswerIndex]);
 
-  const answers = generateAnswers(questionId);
+  // Safety check - make sure we have a valid answer
   const currentAnswer = answers[currentAnswerIndex];
+
+  if (!currentAnswer) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#F4E4C1',
+        fontFamily: 'monospace',
+        color: '#2C1810'
+      }}>
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '10px' }}>⚠️</div>
+          <div>No answer available at this index</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -128,26 +187,22 @@ const AnswerWindow = ({
       }}>
         <button
           onClick={prevAnswer}
-          disabled={currentAnswerIndex === 0}
           style={{
             padding: '6px 12px',
-            background: currentAnswerIndex === 0 ? '#5C4A3A' : 'linear-gradient(145deg, #8B6914, #6B5214)',
+            background: 'linear-gradient(145deg, #8B6914, #6B5214)',
             border: '2px solid',
-            borderColor: currentAnswerIndex === 0 ? '#4A3828 #3E2723 #3E2723 #4A3828' : '#D4AF37 #5C4A1A #5C4A1A #D4AF37',
+            borderColor: '#D4AF37 #5C4A1A #5C4A1A #D4AF37',
             color: '#F4E4C1',
-            cursor: currentAnswerIndex === 0 ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
             fontWeight: 'bold',
             fontSize: '11px',
             borderRadius: '4px',
-            opacity: currentAnswerIndex === 0 ? 0.5 : 1,
             transition: 'all 0.2s ease',
             transform: 'scale(1)'
           }}
           onMouseEnter={(e) => {
-            if (currentAnswerIndex !== 0) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.4)';
-            }
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.4)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
@@ -190,26 +245,22 @@ const AnswerWindow = ({
 
         <button
           onClick={nextAnswer}
-          disabled={currentAnswerIndex === 11}
           style={{
             padding: '6px 12px',
-            background: currentAnswerIndex === 11 ? '#5C4A3A' : 'linear-gradient(145deg, #8B6914, #6B5214)',
+            background: 'linear-gradient(145deg, #8B6914, #6B5214)',
             border: '2px solid',
-            borderColor: currentAnswerIndex === 11 ? '#4A3828 #3E2723 #3E2723 #4A3828' : '#D4AF37 #5C4A1A #5C4A1A #D4AF37',
+            borderColor: '#D4AF37 #5C4A1A #5C4A1A #D4AF37',
             color: '#F4E4C1',
-            cursor: currentAnswerIndex === 11 ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
             fontWeight: 'bold',
             fontSize: '11px',
             borderRadius: '4px',
-            opacity: currentAnswerIndex === 11 ? 0.5 : 1,
             transition: 'all 0.2s ease',
             transform: 'scale(1)'
           }}
           onMouseEnter={(e) => {
-            if (currentAnswerIndex !== 11) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.4)';
-            }
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '2px 2px 4px rgba(0,0,0,0.4)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
