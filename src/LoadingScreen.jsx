@@ -3,291 +3,235 @@ import { globalAssetPreloader, CRITICAL_ASSETS, SECONDARY_ASSETS } from './Asset
 
 function LoadingScreen({ onLoadingComplete }) {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState('zae\'vel LOADING...');
+  const [loadingText, setLoadingText] = useState('ZAE\'VEL LOADING...');
   const [currentAsset, setCurrentAsset] = useState('');
-  const [phase, setPhase] = useState('initial');
   const isMountedRef = useRef(true);
 
   useEffect(() => {
     isMountedRef.current = true;
 
     const loadAssets = async () => {
-      const totalAssets = CRITICAL_ASSETS.length + SECONDARY_ASSETS.length;
-      let loadedCount = 0;
-
-      const updateProgress = (loaded, total, message, asset = '') => {
-        if (!isMountedRef.current) return;
-        const percent = (loaded / total) * 100;
-        setProgress(percent);
-        setLoadingText(message);
-        if (asset) setCurrentAsset(asset);
-      };
+      const loadingTexts = [
+        'ZAE\'VEL LOADING...',
+        'Loading desktop assets...',
+        'Preparing applications...',
+        'Loading fonts...',
+        'oh im crying as im making this',
+        'Loading zozafont...',
+        'Almost ready...',
+        'please bare with me..',
+        'pure pain..'
+      ];
 
       try {
-        // === PHASE 1: CRITICAL FONTS (0-20%) ===
-        setPhase('fonts');
-        updateProgress(0, totalAssets, 'Loading system fonts...', 'zozafont');
+        // asset loading
+        let loadedCount = 0;
+        const totalAssets = CRITICAL_ASSETS.length + SECONDARY_ASSETS.length + 3; // +3 for additional font loading phases
 
-        // Load zozafont first
-        const zozafont = CRITICAL_ASSETS.find(a => a.fontFamily === 'zozafont');
-        if (zozafont) {
-          await globalAssetPreloader.preloadFont(
-            zozafont.fontFamily,
-            zozafont.src,
-            { ...zozafont.descriptors, display: 'block' }
-          );
-          loadedCount++;
-          updateProgress(loadedCount, totalAssets, 'zozafont loaded', '');
-        }
+        // loading text rotation while loading
+        const textInterval = setInterval(() => {
+          if (isMountedRef.current) {
+            const textIndex = Math.floor((loadedCount / totalAssets) * loadingTexts.length);
+            setLoadingText(loadingTexts[Math.min(textIndex, loadingTexts.length - 1)]);
+          }
+        }, 800);
 
-        // Load ALL Google Fonts in parallel (including notebook fonts)
-        const googleFonts = CRITICAL_ASSETS.filter(a => a.type === 'google-font');
-        await Promise.all(
-          googleFonts.map(async (font) => {
-            await globalAssetPreloader.preloadGoogleFont(
-              font.fontFamily,
-              font.weights,
-              font.styles
-            );
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, `Loading ${font.fontFamily}...`, '');
-          })
-        );
+        // Load all CRITICAL_ASSETS
+        for (let i = 0; i < CRITICAL_ASSETS.length; i++) {
+          if (!isMountedRef.current) break;
 
-        // Extra font wait to ensure rendering
-        await globalAssetPreloader.waitForFonts();
-        await new Promise(resolve => setTimeout(resolve, 300));
+          const asset = CRITICAL_ASSETS[i];
+          setCurrentAsset(asset.src ? asset.src.split('/').pop() : asset.fontFamily);
 
-        
-        // === PHASE 2: CRITICAL IMAGES (20-85%) ===
-        setPhase('assets');
-        const criticalNonFonts = CRITICAL_ASSETS.filter(
-          a => a.type !== 'font' && a.type !== 'google-font'
-        );
-
-        const imageAssets = criticalNonFonts.filter(a => a.type === 'image');
-        const audioAssets = criticalNonFonts.filter(a => a.type === 'audio');
-
-        // Load wallpaper first
-        const wallpaper = imageAssets.find(a => a.src.includes('1.jpg'));
-        if (wallpaper) {
-          updateProgress(loadedCount, totalAssets, 'Loading desktop...', 'wallpaper');
-          await globalAssetPreloader.preloadImage(wallpaper.src);
-          loadedCount++;
-        }
-
-        // === CORKBOARD ASSETS (HIGHEST PRIORITY!) ===
-        updateProgress(loadedCount, totalAssets, 'Loading corkboard...', 'background');
-        
-        // Load corkboard background and pin first
-        const corkboardBg = imageAssets.find(a => a.src.includes('corkboard/corkboard.jpg'));
-        if (corkboardBg) {
-          await globalAssetPreloader.preloadImage(corkboardBg.src);
-          loadedCount++;
-        }
-        
-        const boardPin = imageAssets.find(a => a.src.includes('boardpin.png'));
-        if (boardPin) {
-          await globalAssetPreloader.preloadImage(boardPin.src);
-          loadedCount++;
-        }
-
-        // Load ALL polaroids with progress feedback
-        updateProgress(loadedCount, totalAssets, 'Loading polaroids...', 'photos');
-        const polaroids = imageAssets.filter(a => a.src.includes('polaroids/'));
-        
-        // Load polaroids in parallel batches of 3 for speed
-        const polaroidBatches = [];
-        for (let i = 0; i < polaroids.length; i += 3) {
-          polaroidBatches.push(polaroids.slice(i, i + 3));
-        }
-
-        for (const batch of polaroidBatches) {
-          await Promise.all(
-            batch.map(async (asset) => {
+          try {
+            if (asset.type === 'image') {
               await globalAssetPreloader.preloadImage(asset.src);
-              loadedCount++;
-              const polaroidNum = asset.src.split('/').pop();
-              updateProgress(loadedCount, totalAssets, 'Loading polaroids...', polaroidNum);
-            })
-          );
-        }
+            } else if (asset.type === 'audio') {
+              await globalAssetPreloader.preloadAudio(asset.src);
+            } else if (asset.type === 'google-font') {
+              await globalAssetPreloader.preloadGoogleFont(asset.fontFamily, asset.weights, asset.styles);
+            } else if (asset.type === 'font') {
+              await globalAssetPreloader.preloadFont(asset.fontFamily, asset.src, asset.descriptors);
+            }
+          } catch (error) {
+            console.warn(`Failed to load ${asset.src || asset.fontFamily}:`, error);
+          }
 
-        // Load ALL stickers with progress feedback
-        updateProgress(loadedCount, totalAssets, 'Loading stickers...', 'decorations');
-        const corkboardStickers = imageAssets.filter(a => 
-          a.src.includes('corkboard/sticker') && !a.src.includes('polaroids')
-        );
-        
-        // Load stickers in parallel batches of 4 for speed
-        const stickerBatches = [];
-        for (let i = 0; i < corkboardStickers.length; i += 4) {
-          stickerBatches.push(corkboardStickers.slice(i, i + 4));
-        }
-
-        for (const batch of stickerBatches) {
-          await Promise.all(
-            batch.map(async (asset) => {
-              await globalAssetPreloader.preloadImage(asset.src);
-              loadedCount++;
-              const stickerNum = asset.src.split('/').pop();
-              updateProgress(loadedCount, totalAssets, 'Loading stickers...', stickerNum);
-            })
-          );
-        }
-
-        // Load corkboard audio
-        const corkboardAudio = audioAssets.filter(a => a.src.includes('corkboard/audio'));
-        await Promise.all(
-          corkboardAudio.map(async (asset) => {
-            await globalAssetPreloader.preloadAudio(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
-          })
-        );
-
-        // Load LEAVES GAME assets (CRITICAL - load early!)
-        updateProgress(loadedCount, totalAssets, 'Loading leaves game...', 'game assets');
-        const leavesImages = imageAssets.filter(a => a.src.includes('hehe/') && !a.src.includes('.mp3'));
-        await Promise.all(
-          leavesImages.map(async (asset) => {
-            await globalAssetPreloader.preloadImage(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading leaves game...', asset.src.split('/').pop());
-          })
-        );
-
-        // Load leaves game audio immediately after images
-        const leavesAudio = audioAssets.filter(a => a.src.includes('hehe/'));
-        await Promise.all(
-          leavesAudio.map(async (asset) => {
-            await globalAssetPreloader.preloadAudio(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading game sounds...', asset.src.split('/').pop());
-          })
-        );
-
-        // Load TIC TAC TOE pfp
-        updateProgress(loadedCount, totalAssets, 'Loading tic tac toe...', 'profile');
-        const tttPfp = imageAssets.find(a => a.src.includes('silly.jpg'));
-        if (tttPfp) {
-          await globalAssetPreloader.preloadImage(tttPfp.src);
           loadedCount++;
+          if (isMountedRef.current) {
+            setProgress((loadedCount / totalAssets) * 100);
+          }
         }
 
-        // Load MUSIC PLAYER assets
-        updateProgress(loadedCount, totalAssets, 'Loading music player...', 'albums');
-        const musicAssets = imageAssets.filter(a => 
-          a.src.includes('kaoru2.gif') || a.src.includes('albums/')
-        );
-        await Promise.all(
-          musicAssets.map(async (asset) => {
-            await globalAssetPreloader.preloadImage(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading music player...', asset.src.split('/').pop());
-          })
-        );
+        // Load all SECONDARY_ASSETS
+        for (let i = 0; i < SECONDARY_ASSETS.length; i++) {
+          if (!isMountedRef.current) break;
 
-        // Load pet animations
-        updateProgress(loadedCount, totalAssets, 'Loading pet animations...', 'hakuchin');
-        const petAnimations = imageAssets.filter(a => a.src.includes('animations/'));
-        await Promise.all(
-          petAnimations.map(async (asset) => {
-            await globalAssetPreloader.preloadImage(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading pet animations...', asset.src.split('/').pop());
-          })
-        );
+          const asset = SECONDARY_ASSETS[i];
+          setCurrentAsset(asset.src ? asset.src.split('/').pop() : '');
 
-        // Load login image
-        const loginImage = imageAssets.find(a => a.src.includes('zhong.jpg'));
-        if (loginImage) {
-          updateProgress(loadedCount, totalAssets, 'Loading profile...', 'profile picture');
-          await globalAssetPreloader.preloadImage(loginImage.src);
-          loadedCount++;
-        }
-
-        // Load app icons
-        updateProgress(loadedCount, totalAssets, 'Loading app icons...', 'icons');
-        const appIcons = imageAssets.filter(a => 
-          a.src.includes('assets/') && 
-          !a.src.includes('1.jpg') &&
-          !a.src.includes('zhong.jpg') &&
-          !a.src.includes('silly.jpg') &&
-          !a.src.includes('kaoru')
-        );
-        
-        const iconBatches = [];
-        for (let i = 0; i < appIcons.length; i += 5) {
-          iconBatches.push(appIcons.slice(i, i + 5));
-        }
-
-        for (const batch of iconBatches) {
-          await Promise.all(
-            batch.map(async (asset) => {
+          try {
+            if (asset.type === 'image') {
               await globalAssetPreloader.preloadImage(asset.src);
-              loadedCount++;
-              updateProgress(loadedCount, totalAssets, 'Loading app icons...', asset.src.split('/').pop());
-            })
-          );
+            } else if (asset.type === 'audio') {
+              await globalAssetPreloader.preloadAudio(asset.src);
+            }
+          } catch (error) {
+            console.warn(`Failed to load ${asset.src}:`, error);
+          }
+
+          loadedCount++;
+          if (isMountedRef.current) {
+            setProgress((loadedCount / totalAssets) * 100);
+          }
         }
 
-        // Load remaining audio
-        const remainingAudio = audioAssets.filter(a => !a.src.includes('corkboard/audio'));
-        await Promise.all(
-          remainingAudio.map(async (asset) => {
-            await globalAssetPreloader.preloadAudio(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
-          })
-        );
-        // === PHASE 3: SECONDARY ASSETS (85-98%) ===
-        setPhase('secondary');
-        updateProgress(loadedCount, totalAssets, 'Loading additional assets...', '');
-
-        const secondaryImages = SECONDARY_ASSETS.filter(a => a.type === 'image');
-        const secondaryAudio = SECONDARY_ASSETS.filter(a => a.type === 'audio');
-
-        await Promise.all([
-          ...secondaryImages.map(async (asset) => {
-            await globalAssetPreloader.preloadImage(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading characters...', asset.src.split('/').pop());
-          }),
-          ...secondaryAudio.map(async (asset) => {
-            await globalAssetPreloader.preloadAudio(asset.src);
-            loadedCount++;
-            updateProgress(loadedCount, totalAssets, 'Loading sounds...', asset.src.split('/').pop());
-          })
-        ]);
-
-        // === PHASE 4: FINALIZATION (98-100%) ===
-        setPhase('finalizing');
-        updateProgress(loadedCount, totalAssets, 'Finalizing...', '');
-
-        // Final font check
-        await globalAssetPreloader.waitForFonts();
-        if (document.fonts && document.fonts.ready) {
-          await document.fonts.ready;
+        // zozafont loading and testing
+        if (isMountedRef.current) {
+          setCurrentAsset('zozafont');
+          setLoadingText('Loading zozafont...');
+          
+          // testing element
+          const zozoTestEl = document.createElement('div');
+          zozoTestEl.style.position = 'fixed';
+          zozoTestEl.style.left = '-9999px';
+          zozoTestEl.style.top = '-9999px';
+          zozoTestEl.style.visibility = 'hidden';
+          zozoTestEl.style.fontFamily = 'zozafont, monospace';
+          zozoTestEl.style.fontSize = '64px';
+          zozoTestEl.style.fontWeight = 'bold';
+          zozoTestEl.textContent = "zae'vel";
+          
+          document.body.appendChild(zozoTestEl);
+          
+          // forcing reflow
+          zozoTestEl.offsetHeight;
+          zozoTestEl.getBoundingClientRect();
+      
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          ctx.font = '64px monospace';
+          const fallbackWidth = ctx.measureText("zae'vel").width;
+          
+          ctx.font = '64px zozafont, monospace';
+          const zozoWidth = ctx.measureText("zae'vel").width;
+          
+          if (Math.abs(zozoWidth - fallbackWidth) < 5) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+          }
+          
+          // remove testing element
+          setTimeout(() => {
+            if (zozoTestEl.parentNode) {
+              zozoTestEl.parentNode.removeChild(zozoTestEl);
+            }
+          }, 200);
+          
+          // load properly
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          loadedCount++;
+          setProgress((loadedCount / totalAssets) * 100);
         }
 
-        // Extra delay to ensure everything is settled
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Crimson Text & Lora font loading
+        if (isMountedRef.current) {
+          setCurrentAsset('Crimson Text & Lora fonts');
+          setLoadingText('Loading Crimson Text & Lora fonts...');
+          
+          const testTexts = [
+            'Whispers of the Quill',
+            'Mysterious dude', 
+            'Dear diary magical entry',
+            'My Collected Thoughts'
+          ];
+          
+          testTexts.forEach((text, index) => {
+            const testEl = document.createElement('div');
+            testEl.style.position = 'fixed';
+            testEl.style.left = '-9999px';
+            testEl.style.top = '-9999px';
+            testEl.style.visibility = 'hidden';
+            testEl.style.fontFamily = '"Crimson Text", serif';
+            testEl.style.fontSize = '16px';
+            testEl.textContent = text;
+            
+            document.body.appendChild(testEl);
+            
+            testEl.offsetHeight;
+            testEl.getBoundingClientRect();
+            
+            setTimeout(() => {
+              if (testEl.parentNode) {
+                testEl.parentNode.removeChild(testEl);
+              }
+            }, 100 + (index * 50));
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          loadedCount++;
+          setProgress((loadedCount / totalAssets) * 100);
+        }
 
-        updateProgress(totalAssets, totalAssets, 'Welcome to zae\'vel!', '');
+        // system fonts finalization
+        if (isMountedRef.current) {
+          setCurrentAsset('system fonts');
+          setLoadingText('Finalizing font loading...');
+          
+          try {
+            if (document.fonts && document.fonts.ready) {
+              await document.fonts.ready;
+            }
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.font = '64px monospace';
+            const monoWidth = ctx.measureText("zae'vel").width;
+            
+            ctx.font = '64px zozafont, monospace';
+            const zozoWidth = ctx.measureText("zae'vel").width;
+            
+            ctx.font = '20px serif';
+            const serifWidth = ctx.measureText('Mysterious dude').width;
+            
+            ctx.font = '20px "Crimson Text", serif';
+            const crimsonWidth = ctx.measureText('Mysterious dude').width;
+            
+            if (Math.abs(zozoWidth - monoWidth) < 2 || Math.abs(crimsonWidth - serifWidth) < 1) {
+              console.warn('Key fonts may not be fully loaded, waiting...');
+              await new Promise(resolve => setTimeout(resolve, 800));
+            }
+          
+            await new Promise(resolve => setTimeout(resolve, 400));
+            
+          } catch (error) {
+            console.warn('Font loading check failed:', error);
+          }
+          
+          loadedCount++;
+          setProgress((loadedCount / totalAssets) * 100);
+        }
 
-        // Show welcome message
-        await new Promise(resolve => setTimeout(resolve, 800));
+        clearInterval(textInterval);
 
-        // Trigger completion
-        if (isMountedRef.current && onLoadingComplete) {
-          onLoadingComplete();
+        if (isMountedRef.current) {
+          setLoadingText("Welcome to zae'vel!");
+          setCurrentAsset('');
+          
+          setTimeout(() => {
+            if (isMountedRef.current && onLoadingComplete) {
+              onLoadingComplete();
+            }
+          }, 1000);
         }
 
       } catch (error) {
-        console.error('Loading error:', error);
+        console.error('Loading failed:', error);
         if (isMountedRef.current && onLoadingComplete) {
-          onLoadingComplete();
+          onLoadingComplete(); 
         }
       }
     };
@@ -299,124 +243,34 @@ function LoadingScreen({ onLoadingComplete }) {
     };
   }, [onLoadingComplete]);
 
-  const getPhaseMessage = () => {
-    switch (phase) {
-      case 'fonts':
-        return 'Preparing typography...';
-      case 'assets':
-        return 'Loading interface...';
-      case 'secondary':
-        return 'Polishing details...';
-      case 'finalizing':
-        return 'Almost ready...';
-      default:
-        return 'Starting up...';
-    }
-  };
-
   return (
     <div 
-      className="h-screen w-screen flex items-center justify-center relative overflow-hidden"
+      className="h-screen w-screen flex items-center justify-center"
       style={{
-        background: 'linear-gradient(135deg, #3E2B27 0%, #2A1F1D 25%, #1E1A19 50%, #252120 75%, #1E1A19 100%)',
+        background: 'linear-gradient(135deg, #3E2B27 0%, #1E1A19 100%)',
       }}
     >
-      {/* Ambient particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
-              background: ['#8B2A2A', '#7C8B6A', '#A3B1A2', '#C6C1B5'][Math.floor(Math.random() * 4)],
-              opacity: 0.3 + Math.random() * 0.4
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="text-center relative z-10">
-        <div className="text-6xl mb-6 animate-pulse" style={{ color: '#E5DCC8' }}>
-          🌧️
-        </div>
-
-        <div 
-          className="text-4xl mb-2 font-bold"
-          style={{
-            fontFamily: 'zozafont, monospace',
-            color: '#E5DCC8',
-            textShadow: '2px 2px 0px #1E1A19, 4px 4px 8px rgba(0,0,0,0.5)',
-            letterSpacing: '0.1em'
-          }}
-        >
-          zae'vel
-        </div>
-        <div 
-          className="text-sm mb-8 opacity-70"
-          style={{
-            fontFamily: 'Crimson Text, serif',
-            color: '#A3B1A2',
-            letterSpacing: '0.2em'
-          }}
-        >
-          Specialised Computing Experience
-        </div>
-
-        <div 
-          className="text-base mb-4"
-          style={{
-            fontFamily: 'Courier New, monospace',
-            color: '#C6C1B5',
-            minHeight: '24px'
-          }}
-        >
+      <div className="text-center">
+        {/* status */}
+        <div className="text-xl mb-8 font-mono" style={{ color: '#E5DCC8' }}>
           {loadingText}
         </div>
 
-        <div 
-          className="w-96 h-4 border-2 mx-auto mb-3"
-          style={{ 
-            background: '#2A1F1D',
-            borderColor: '#C6C1B5 #1E1A19 #1E1A19 #C6C1B5',
-            borderStyle: 'solid',
-            maxWidth: '90vw'
-          }}
-        >
+        {/* progress bar */}
+        <div className="w-96 h-6 border-2" style={{ 
+          background: '#2A1F1D',
+          borderColor: '#C6C1B5 #1E1A19 #1E1A19 #C6C1B5',
+          borderStyle: 'solid'
+        }}>
           <div 
-            className="h-full transition-all duration-300 ease-out"
-            style={{ 
-              width: `${Math.max(progress, 2)}%`,
-              background: 'linear-gradient(to right, #8B2A2A, #7C8B6A)',
-              boxShadow: progress > 5 ? '0 0 10px rgba(139, 42, 42, 0.5)' : 'none'
-            }}
+            className="h-full bg-gradient-to-r from-orange-400 to-amber-300 animate-pulse" 
+            style={{ width: `${Math.max(progress, 2)}%` }}
           />
         </div>
 
-        <div 
-          className="text-xs opacity-60"
-          style={{
-            fontFamily: 'Courier New, monospace',
-            color: '#A3B1A2',
-            minHeight: '18px'
-          }}
-        >
-          {Math.round(progress)}%
-          {currentAsset && ` • ${currentAsset}`}
-        </div>
-
-        <div 
-          className="text-xs mt-4 opacity-50"
-          style={{
-            fontFamily: 'Courier New, monospace',
-            color: '#7C8B6A',
-            fontStyle: 'italic'
-          }}
-        >
-          {getPhaseMessage()}
+        {/* progress text */}
+        <div className="text-sm mt-6 font-mono" style={{ color: '#A3B1A2' }}>
+          {Math.round(progress)}%{currentAsset && ` • ${currentAsset}`}
         </div>
       </div>
     </div>
