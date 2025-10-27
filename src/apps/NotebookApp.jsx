@@ -87,8 +87,9 @@ const NotebookApp = () => {
         setEditorContent(parsedState.editorContent || '');
         setTheme(parsedState.theme || 'light');
         setAutoSaveEnabled(parsedState.autoSaveEnabled || false);
-        setCurrentScreen(parsedState.currentScreen || 'start');
-        setCurrentMainScreen(parsedState.currentMainScreen || 'myNotes');
+        // ALWAYS start at 'start' screen when app opens - FIX FOR FLASH
+        setCurrentScreen('start');
+        setCurrentMainScreen('myNotes');
       } catch (e) {
         console.warn('Could not parse app state from storage:', e);
         loadNotesFromStorage();

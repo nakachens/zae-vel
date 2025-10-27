@@ -63,9 +63,9 @@ const SearchEngine = () => {
     setSelectedEngine(engine);
   };
 
-  const performSearch = () => {
+  const performSearch = (queryOverride = null) => {
     playClickSound();
-    const query = searchQuery.trim();
+    const query = (queryOverride || searchQuery).trim();
     if (!query) {
       alert('Please enter a search query!');
       return;
@@ -84,7 +84,7 @@ const SearchEngine = () => {
   const searchFor = (query) => {
     playClickSound();
     setSearchQuery(query);
-    setTimeout(() => performSearch(), 100);
+    performSearch(query);
   };
 
   const handleInputChange = (e) => {

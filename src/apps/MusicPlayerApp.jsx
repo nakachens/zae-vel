@@ -448,6 +448,9 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
         
         setPlaylist([...inAppSongsInPlaylist, ...uploadedSongsMeta]);
         setLibrary(libraryData);
+        
+        // Small delay to ensure component is fully mounted - FIX FOR FLASH
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error) {
         console.error('Error loading from localStorage:', error);
         setPlaylist(initialPlaylist);
@@ -943,7 +946,7 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
                 </button>
                 <button className="control-btn" onClick={playAll}>PLAY ALL</button>
                 <button className="control-btn" onClick={openLibrary} style={{ background: 'linear-gradient(145deg, #7C8B6A, #5A6B4A)' }}>
-                  ᯓ‎𝄞 ˎˊ˗
+                  ✦
                 </button>
               </div>
 

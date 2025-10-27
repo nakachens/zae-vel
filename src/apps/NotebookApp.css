@@ -22,6 +22,8 @@
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     color: var(--text-primary);
     transition: all 0.3s ease;
+    /* Prevent flash of content - FIX */
+    opacity: 1;
 }
 
 .notebook-app-wrapper.dark-theme {

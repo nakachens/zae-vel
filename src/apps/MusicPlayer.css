@@ -17,6 +17,8 @@
   padding: 10px;
   position: relative;
   overflow: hidden;
+  /* Prevent flash of content - FIX */
+  opacity: 1;
 }
 
 .music-player-container .app-container {

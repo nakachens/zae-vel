@@ -28,6 +28,8 @@ import WiFiSidebar from './extras/WiFiSidebar';
 import TxtFileApp from './extras/TxtFileApp';
 import { FolderApp, fileContents } from './extras/FolderApp';
 import ImageViewerApp from './extras/ImageViewerApp';
+
+import LoadingScreen from './LoadingScreen';
 //asset finder
 const getAssetPath = (path) => {
   // Check if we're in Electron environment
@@ -1029,13 +1031,6 @@ const appsList = [
     size: { width: 400, height: 480 } 
   },
   { 
-    id: "achievements", 
-    name: "Achievements", 
-    icon: getAssetPath("./assets/folder.png"), 
-    component: AchievementsApp, 
-    size: { width: 500, height: 400 } 
-  },
-  { 
     id: "memory", 
     name: "Memory Game", 
     icon: getAssetPath("./assets/memory.png"), 
@@ -1049,13 +1044,6 @@ const appsList = [
   component: SnakeGame, 
   size: { width: 450, height: 500 } 
 },
-{ 
-  id: "yara", 
-  name: "Corkboard", 
-  icon: getAssetPath("./assets/heart.png"), 
-  component: CorkboardApp, 
-  size: { width: 500, height: 500 } 
-},
   { 
     id: "paint", 
     name: "Paint", 
@@ -1063,6 +1051,13 @@ const appsList = [
     component: PaintApp, 
     size: { width: 900, height: 700 } 
   },
+  { 
+  id: "yara", 
+  name: "Corkboard", 
+  icon: getAssetPath("./assets/heart.png"), 
+  component: CorkboardApp, 
+  size: { width: 500, height: 500 } 
+},
   { 
     id: "settings", 
     name: "Settings", 
@@ -1083,7 +1078,14 @@ const appsList = [
     icon: getAssetPath("./assets/folder.png"), 
     component: FolderApp, 
     size: { width: 600, height: 500 } 
-  }
+  },
+  { 
+    id: "achievements", 
+    name: "Achievements", 
+    icon: getAssetPath("./assets/folder.png"), 
+    component: AchievementsApp, 
+    size: { width: 500, height: 400 } 
+  },
 ];
 
 // welcome screen component
@@ -2993,7 +2995,7 @@ function Taskbar({ openWindows, onToggleWindow, onOpenStartMenu, isStartMenuOpen
 
 // main App comp
 export default function RetroOS() {
-  const [stage, setStage] = useState('welcome');
+  const [stage, setStage] = useState('loading'); 
   const [openWindows, setOpenWindows] = useState([]);
   const [activeWindow, setActiveWindow] = useState(null);
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
@@ -3218,6 +3220,10 @@ const handleOpenExternalWindow = (windowData) => {
   };
 
   // stage/screen transitions
+  if (stage === 'loading') {
+    return <LoadingScreen onLoadingComplete={() => setStage('welcome')} />;
+  }
+  
   if (stage === 'welcome') {
     return <WelcomeScreen onContinue={() => setStage('login')} />;
   }
