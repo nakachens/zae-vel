@@ -28,9 +28,9 @@ const getAssetPath = (path) => {
 const fileContents = {
   "zozo-message.txt": `h-hi
 
-hi hi yes yes im the developer of this desktop os system, designed and developed by me and me alone for my best friend. i worked hard on this for like a month and man.. my back hurts genuinely i feel like i felt a crack too..
+hi hi yes yes this is your developer fren who made this desktop os system, yeah.. designed and developed by me and me alone for my best friend, you. i worked hard on this for like a month and man(2 months actually).. my back hurts genuinely i feel like i felt a crack too..
 
-anyways ive been sleep deprived cuz of this thing, i hope my best fren loves it, and whoever tries it out also likes it, i tried my best to maintain perfect functionality, made everything from scratch, used google and AI to figure out the logics and yeah + several allnighters and here we are
+anyways ive been sleep deprived cuz of this thing, i hope u like it, i hate the wallpaper, cant decide on one but oh well and yeah i hope whoever else tries it out also likes it, i tried my best to maintain perfect functionality, made everything from scratch, used google and ai shit to figure out the logics and yeah (which doesnt wokr) + several allnighters and here we are
 oh you wouldnt want a developer friend man im so tired or id explain each and everything in this code.. but this is fine.. yeah.. this.. is.... f-fine..
 
 - zoha 
@@ -41,15 +41,15 @@ oh you wouldnt want a developer friend man im so tired or id explain each and ev
 this project was planned in early august and the work on it began in early september..(づ ◕‿◕ )づ♡
 finished the prototype in 2 weeks and submitted to a coding challenge and lost miserably, but idc it was going to be made for my best fren anyway
 so heres the v 3.something with ALL NEW FEATURES~
-now heres some stuff to know about me
-I love:
+now heres my favourite thingies cuz im bored
+I love uh:
 - PLAYING GAMES
 - SLEEPING
 - SLEEPING 2X
 - BUILDING
 - WORKING MYSELF TO THE BONE
 yeah ok yup yup 
-Hope zaza enjoyed exploring! (っ╥﹏╥)っ`,
+Hope u enjoyed exploring yara! (っ╥﹏╥)っ`,
 
   "what-i-learnt.txt": `What I Learned Building This Desktop (ᵕ—ᴗ—)!
 
