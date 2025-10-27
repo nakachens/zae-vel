@@ -2514,11 +2514,11 @@ function Desktop({ apps, onOpenApp }) {
       className="h-full w-full relative overflow-hidden"
       style={{
         backgroundImage: `url('./assets/1.jpg')`,
-        backgroundSize: 'cover',
+        backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         background: `
-          url('./assets/1.jpg') center/cover no-repeat,
+          url('./assets/1.jpg') center/contain no-repeat,
           linear-gradient(135deg, 
             #3E2B27 0%, 
             #2A1F1D 25%, 
