@@ -2616,7 +2616,7 @@ function DesktopIcon({ app, onDoubleClick }) {
       <img 
         src={app.icon} 
         alt={app.name}
-        className="w-10 h-10 mb-1 filter drop-shadow-sm object-contain"
+        className="w-8 h-8 mb-1 filter drop-shadow-sm object-contain"
         style={{ imageRendering: 'pixelated' }}
       />
       <span 
