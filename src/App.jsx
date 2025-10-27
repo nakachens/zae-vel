@@ -2514,7 +2514,7 @@ function Desktop({ apps, onOpenApp }) {
       className="h-full w-full relative overflow-hidden"
       style={{
         backgroundImage: `url('./assets/1.jpg')`,
-        backgroundSize: 'cover',
+        backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         background: `
