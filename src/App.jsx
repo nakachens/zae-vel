@@ -2601,7 +2601,7 @@ function Desktop({ apps, onOpenApp }) {
 function DesktopIcon({ app, onDoubleClick }) {
   return (
     <div
-      className="flex flex-col items-center p-3 m-2 w-20 cursor-pointer rounded-lg transition-all duration-200"
+      className="flex flex-col items-center p-3 m-2 w-24 cursor-pointer rounded-lg transition-all duration-200"
       onDoubleClick={() => onDoubleClick(app)}
       style={{
         background: 'transparent'
@@ -2616,10 +2616,17 @@ function DesktopIcon({ app, onDoubleClick }) {
       <img 
         src={app.icon} 
         alt={app.name}
-        className="w-9 h-9 mb-2 filter drop-shadow-sm object-contain"
+        className="w-12 h-12 mb-2 filter drop-shadow-sm object-contain"
         style={{ imageRendering: 'pixelated' }}
       />
-      <span className="text-xs text-center font-medium" style={{ fontFamily: 'serif', color: '#E5DCC8' }}>
+      <span 
+        className="text-xs text-center font-medium" 
+        style={{ 
+          fontFamily: 'serif', 
+          color: '#E5DCC8',
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.6), 1px -1px 2px rgba(0, 0, 0, 0.6), -1px 1px 2px rgba(0, 0, 0, 0.6)'
+        }}
+      >
         {app.name}
       </span>
     </div>
