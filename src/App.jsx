@@ -3116,18 +3116,26 @@ const handleOpenExternalWindow = (windowData) => {
   };
 
   const closeWindow = (id) => {
-    setClosingWindows(prev => new Set([...prev, id]));
-    
-    setTimeout(() => {
-      setOpenWindows(prev => prev.filter(w => w.id !== id));
-      setActiveWindow(prev => prev === id ? null : prev);
-      setClosingWindows(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
-      });
-    }, 50);
-  };
+  setClosingWindows(prev => new Set([...prev, id]));
+  
+  // Notify the music player to stop if it's being closed
+  if (id === 'music') {
+    // Trigger cleanup for music player
+    setOpenWindows(prev => 
+      prev.map(w => w.id === id ? { ...w, isClosing: true } : w)
+    );
+  }
+  
+  setTimeout(() => {
+    setOpenWindows(prev => prev.filter(w => w.id !== id));
+    setActiveWindow(prev => prev === id ? null : prev);
+    setClosingWindows(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+  }, 50);
+};
 
   const minimizeWindow = (id) => {
     setOpenWindows(prev => 
@@ -3323,11 +3331,11 @@ const handleOpenExternalWindow = (windowData) => {
                !window.id.startsWith('video-') &&
                !['folder', 'images'].includes(window.id) && (
                 window.id === 'music' ? (
-                  <AppComponent 
-                    onAppClose={window.isClosing} 
-                    isClosing={closingWindows.has(window.id)}
-                    {...(window.componentProps || {})}
-                  />
+  <AppComponent 
+    onAppClose={window.isClosing} 
+    isClosing={window.isClosing || false}
+    {...(window.componentProps || {})}
+  />
                 ) : window.id === 'achievements' ? (
                   <AppComponent {...(window.componentProps || {})} />
                 ) : (

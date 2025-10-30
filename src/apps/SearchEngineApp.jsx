@@ -38,26 +38,6 @@ const SearchEngine = () => {
     }
   };
 
-  // handle Enter key press in search input
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter') {
-        performSearch();
-      }
-    };
-
-    const searchInput = document.querySelector('.search-input');
-    if (searchInput) {
-      searchInput.addEventListener('keypress', handleKeyPress);
-    }
-
-    return () => {
-      if (searchInput) {
-        searchInput.removeEventListener('keypress', handleKeyPress);
-      }
-    };
-  }, []);
-
   const selectEngine = (engine) => {
     playClickSound();
     setSelectedEngine(engine);
@@ -91,6 +71,13 @@ const SearchEngine = () => {
     setSearchQuery(e.target.value);
   };
 
+  // Handle Enter key press - moved to onKeyPress handler
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  };
+
   // typing sounds
   const handleKeyDown = (e) => {
     // play keyboard sound for all key presses except modifier keys
@@ -115,9 +102,10 @@ const SearchEngine = () => {
               placeholder="Enter your search query..."
               value={searchQuery}
               onChange={handleInputChange}
-              onKeyDown={handleKeyDown} 
+              onKeyDown={handleKeyDown}
+              onKeyPress={handleKeyPress}
             />
-            <button className="search-btn" onClick={performSearch}>
+            <button className="search-btn" onClick={() => performSearch()}>
               SEARCH
             </button>
           </div>

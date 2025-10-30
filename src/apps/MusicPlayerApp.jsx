@@ -527,12 +527,17 @@ const RetroAutumnMusicPlayer = ({ onAppClose, isClosing }) => {
   }, [audioState.isPlaying, showHome, showPlayer]);
 
   useEffect(() => {
-    if (isClosing) {
-      globalAudioManager.destroy();
-    }
-    
-    return () => {};
-  }, [isClosing]);
+  if (isClosing) {
+    globalAudioManager.pause();
+    globalAudioManager.destroy();
+  }
+  
+  // Cleanup on unmount - this ensures music stops when window closes
+  return () => {
+    globalAudioManager.pause();
+    globalAudioManager.destroy();
+  };
+}, [isClosing]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
