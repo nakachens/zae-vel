@@ -2222,8 +2222,6 @@ function Window({
     }
   };
 
-  if (isMinimized) return null;
-
   const windowStyle = isFullscreen
     ? { top: 0, left: 0, width: '100vw', height: 'calc(100vh - 48px)' }
     : {
@@ -3144,7 +3142,7 @@ const handleOpenExternalWindow = (windowData) => {
 
   const minimizeWindow = (id) => {
     setOpenWindows(prev => 
-      prev.map(w => w.id === id ? { ...w, minimized: !w.minimized } : w)
+      prev.map(w => w.id === id ? { ...w, minimized: !w.minimized, isClosing: false } : w)
     );
     
     if (activeWindow === id) {
@@ -3338,7 +3336,7 @@ const handleOpenExternalWindow = (windowData) => {
                 window.id === 'music' ? (
   <AppComponent 
     onAppClose={window.isClosing} 
-    isClosing={window.isClosing || false}
+    isClosing={window.isClosing === true}
     {...(window.componentProps || {})}
   />
                 ) : window.id === 'achievements' ? (
