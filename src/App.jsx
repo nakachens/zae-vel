@@ -2233,6 +2233,11 @@ function Window({
         height: size.height
       };
 
+  // Hide minimized windows instead of unmounting them (important for music player)
+  if (isMinimized) {
+    windowStyle.display = 'none';
+  }
+
   return (
     <div
       ref={windowRef}
